@@ -9,6 +9,8 @@
 <meta property="og:title" content="Porra Mundial 2026"/>
 <meta property="og:description" content="Quiniela express del Mundial 2026 — plan de Manolin. Marca 1/X/2 y exporta tu PDF."/>
 <meta property="og:type" content="website"/>
+<meta property="og:url" content="https://porra-mundial-2026-rust.vercel.app/"/>
+<meta property="og:image" content="https://porra-mundial-2026-rust.vercel.app/assets/banner.gif"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%86</text></svg>"/>
 <title>Porra Mundial 2026 🏆</title>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -57,7 +59,14 @@ input,select,textarea{color:#fff;}
 @media(min-width:1280px){.xl\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:640px){.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.sm\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.sm\:col-span-2{grid-column:span 2/span 2}.sm\:p-6{padding:1.5rem}}
 @media(min-width:1024px){.lg\:col-span-3{grid-column:span 3/span 3}.lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}
-#boot-error{background:#7f1d1d;color:#fecaca;padding:1rem;margin:1rem;border-radius:8px;border:1px solid #ef4444;}
+.boot-error-card{background:linear-gradient(135deg,#1a2744 0%,#111827 100%);border:1px solid rgba(239,68,68,.45);border-radius:16px;padding:1.25rem 1.5rem;margin:1rem auto;max-width:42rem;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.35);}
+.boot-error-card .boot-error-icon{font-size:2.5rem;margin-bottom:.5rem;}
+.boot-error-card h2{margin:0 0 .5rem;font-size:1.05rem;color:#fff;}
+.boot-error-card p{margin:0 0 1rem;font-size:.85rem;color:#9ca3af;line-height:1.5;}
+.boot-error-card .boot-error-actions{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;}
+.boot-error-btn{background:#2563eb;color:#fff;border:none;border-radius:.5rem;padding:.55rem 1rem;font-size:.8rem;font-weight:600;cursor:pointer;min-height:44px;}
+.boot-error-btn.secondary{background:#374151;color:#e5e7eb;}
+.boot-error-detail{font-size:.7rem;color:#6b7280;margin-top:.75rem;word-break:break-word;}
 .pick-btn{transition:all .15s ease;cursor:pointer;user-select:none;border:1.5px solid #374151;color:#6b7280;background:transparent;}
 .pick-btn:hover{transform:scale(1.08);}
 .pick-btn:active{transform:scale(.95);}
@@ -85,11 +94,18 @@ input,select,textarea{color:#fff;}
 .progress-fill{height:100%;border-radius:99px;transition:width .4s ease;}
 @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(250,204,21,.4);}50%{box-shadow:0 0 0 6px rgba(250,204,21,0);}}
 .trophy-anim{animation:pulse-glow 2s infinite;border-radius:50%;display:inline-block;}
+.wc-trophy-icon{display:inline-block;object-fit:contain;flex-shrink:0;vertical-align:middle;}
+.wc-trophy-icon--xs{width:.95rem;height:1.15rem;}
+.wc-trophy-icon--sm{width:1rem;height:1.25rem;}
+.wc-trophy-icon--md{width:1.35rem;height:1.7rem;}
+.wc-trophy-icon--lg{width:1.75rem;height:2.15rem;}
+.wc-trophy-icon--header{width:1.65rem;height:2rem;}
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:#111827;}
 ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px;}
 .sede-badge{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);color:#93c5fd;font-size:10px;padding:1px 6px;border-radius:6px;}
-.hora-badge{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.2);color:#fcd34d;font-size:10px;padding:1px 6px;border-radius:6px;}
+.hora-badge{display:inline-flex;align-items:center;gap:.3rem;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.2);color:#fcd34d;font-size:10px;padding:1px 6px;border-radius:6px;}
+.hora-badge .flag-icon{width:14px;height:10px;}
 .result-badge{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.35);color:#93c5fd;font-size:10px;padding:1px 6px;border-radius:6px;font-weight:600;}
 .result-badge.correct{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86efac;}
 .result-badge.wrong{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#fca5a5;}
@@ -110,11 +126,21 @@ input,select,textarea{color:#fff;}
 .countdown-digits{font-size:1.6rem;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;letter-spacing:.06em;text-shadow:0 0 20px rgba(250,204,21,.35);}
 .countdown-digits.urgent{color:#fca5a5;animation:pulse-glow 1s infinite;}
 .welcome-card{position:relative;overflow:hidden;}
-.mundial-banner{position:relative;border-radius:12px;overflow:hidden;margin-bottom:1rem;height:9rem;background:#0f172a;border:1px solid #374151;}
-.mundial-banner img{width:100%;height:100%;object-fit:cover;opacity:.85;}
-.mundial-banner-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,14,26,.92) 0%,rgba(10,14,26,.4) 55%,rgba(10,14,26,.85) 100%);display:flex;align-items:center;padding:1rem;gap:1rem;}
-.mundial-banner-text h3{margin:0 0 .25rem;font-size:1rem;font-weight:800;color:#facc15;}
-.mundial-banner-text p{margin:0;font-size:.75rem;color:#d1d5db;line-height:1.4;}
+.mundial-banner{border-radius:14px;overflow:hidden;margin-bottom:1rem;border:1px solid #374151;background:#0a0e1a;}
+.mundial-banner-media{width:100%;background:#000;line-height:0;}
+.mundial-banner-img{width:100%;height:auto;display:block;min-height:12rem;max-height:30rem;object-fit:contain;object-position:center;background:#0a0e1a;}
+.mundial-banner-caption{display:flex;align-items:center;gap:.85rem;padding:1rem 1.15rem;background:linear-gradient(135deg,#1e3a5f 0%,#14532d 100%);border-top:1px solid rgba(255,255,255,.08);}
+.mundial-banner-text h3{margin:0 0 .3rem;font-size:1.05rem;font-weight:800;color:#facc15;}
+.mundial-banner-text p{margin:0;font-size:.78rem;color:#e5e7eb;line-height:1.45;}
+@media(min-width:640px){
+  .mundial-banner-img{min-height:13rem;max-height:32rem;}
+  .mundial-banner-caption{padding:1.15rem 1.35rem;}
+  .mundial-banner-text h3{font-size:1.2rem;}
+  .mundial-banner-text p{font-size:.85rem;}
+}
+@media(min-width:1024px){
+  .mundial-banner-img{min-height:15rem;max-height:36rem;}
+}
 .mascots-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem;}
 .mascot-card{background:rgba(255,255,255,.04);border:1px solid #374151;border-radius:12px;padding:.5rem;text-align:center;}
 .mascot-avatar{position:relative;width:4rem;height:4rem;margin:0 auto .35rem;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,.15);}
@@ -156,6 +182,8 @@ input,select,textarea{color:#fff;}
 .fab-next:hover{transform:translateY(-2px);}
 .fab-next.hidden-fab{opacity:0;pointer-events:none;transform:translateY(12px);}
 .progress-fill.complete{background:linear-gradient(90deg,#22c55e,#facc15)!important;}
+.celebration-toast{position:fixed;top:5.5rem;left:50%;transform:translateX(-50%) translateY(-1rem);z-index:60;background:linear-gradient(135deg,#14532d,#1e3a5f);border:2px solid #22c55e;color:#fff;padding:.75rem 1.25rem;border-radius:999px;font-size:.85rem;font-weight:700;box-shadow:0 8px 32px rgba(34,197,94,.35);opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;white-space:nowrap;max-width:calc(100% - 2rem);text-align:center;}
+.celebration-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .export-hint{font-size:.85rem;color:#9ca3af;margin:0 0 1rem;line-height:1.5;}
 .export-hint strong{color:#facc15;}
 .btn-export-lg{width:100%;max-width:22rem;margin:0 auto;font-size:1rem;padding:.85rem 1.5rem;min-height:52px;border-radius:.75rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;}
@@ -248,12 +276,12 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 </head>
 <body class="min-h-screen text-white">
 <noscript><div style="background:#7f1d1d;color:#fff;padding:1rem;text-align:center">Activa JavaScript para usar la porra.</div></noscript>
-<div id="boot-error" class="hidden max-w-6xl" role="alert"></div>
+<div id="boot-error" class="hidden max-w-6xl px-4" role="alert" aria-live="polite"></div>
 
 <header class="app-header sticky top-0 z-50">
   <div class="max-w-6xl mx-auto header-inner">
     <div class="header-title-wrap">
-      <span class="text-2xl trophy-anim flex-shrink-0">🏆</span>
+      <span class="trophy-anim flex-shrink-0"><img src="/assets/wc-trophy.svg" class="wc-trophy-icon wc-trophy-icon--header" alt="" aria-hidden="true"/></span>
       <div class="header-title">
         <h1 class="font-bold text-white">Porra Mundial 2026</h1>
         <p>Fase de grupos · 11–27 jun · Hora España</p>
@@ -286,22 +314,24 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 
 <!-- Bienvenida / presentación -->
 <div id="welcomeSection" class="max-w-6xl mx-auto px-4 pt-5">
-  <div class="welcome-card p-5 sm:p-6 relative">
-    <button onclick="dismissWelcome()" class="absolute top-3 right-3 z-10 text-gray-500 hover:text-white text-lg leading-none" title="Cerrar">×</button>
+  <div class="welcome-card p-5 sm:p-6">
     <div class="mundial-banner">
-      <img src="assets/banner.svg" alt="" loading="eager" width="800" height="200"/>
-      <div class="mundial-banner-overlay">
-        <span class="text-3xl flex-shrink-0">🏆</span>
+      <div class="mundial-banner-media">
+        <img class="mundial-banner-img" src="/assets/banner-goal.gif" alt="Gol de Iniesta en la final del Mundial 2010 — España campeona" loading="eager"
+          onerror="this.onerror=null;this.src='/assets/banner.svg';"/>
+      </div>
+      <div class="mundial-banner-caption">
+        <span class="flex-shrink-0 text-3xl" aria-hidden="true">⚽</span>
         <div class="mundial-banner-text">
           <h3>Mundial 2026 · USA · México · Canadá</h3>
-          <p>48 selecciones · La fiesta del fútbol empieza ya. ¡A por la porra!</p>
+          <p>Sudáfrica 2010 — el gol que nos dio el primer Mundial. ¡A por otra leyenda!</p>
         </div>
       </div>
     </div>
     <div class="mascots-row" aria-label="Mascotas oficiales del Mundial 2026">
       <div class="mascot-card maple">
         <div class="mascot-avatar">
-          <img class="mascot-flag" src="assets/flags/ca.png" alt="" loading="eager" width="80" height="60"/>
+          <img class="mascot-flag" src="/assets/flags/ca.png" alt="" loading="eager" width="80" height="60"/>
           <span class="mascot-emoji" aria-hidden="true">🫎</span>
         </div>
         <div class="m-name">Maple</div>
@@ -309,7 +339,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       </div>
       <div class="mascot-card zayu">
         <div class="mascot-avatar">
-          <img class="mascot-flag" src="assets/flags/mx.png" alt="" loading="eager" width="80" height="60"/>
+          <img class="mascot-flag" src="/assets/flags/mx.png" alt="" loading="eager" width="80" height="60"/>
           <span class="mascot-emoji" aria-hidden="true">🐆</span>
         </div>
         <div class="m-name">Zayu</div>
@@ -317,7 +347,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       </div>
       <div class="mascot-card clutch">
         <div class="mascot-avatar">
-          <img class="mascot-flag" src="assets/flags/us.png" alt="" loading="eager" width="80" height="60"/>
+          <img class="mascot-flag" src="/assets/flags/us.png" alt="" loading="eager" width="80" height="60"/>
           <span class="mascot-emoji" aria-hidden="true">🦅</span>
         </div>
         <div class="m-name">Clutch</div>
@@ -424,7 +454,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
     <div class="legend-item"><span class="legend-swatch bg-red-500 text-white">1</span>Gana local</div>
     <div class="legend-item"><span class="legend-swatch bg-yellow-400 text-gray-900">X</span>Empate</div>
     <div class="legend-item"><span class="legend-swatch bg-green-500 text-white">2</span>Gana visitante</div>
-    <div class="legend-item legend-spacer" style="margin-left:auto"><span class="sede-badge">📍 Sede</span><span class="hora-badge">🕐 Hora ESP</span></div>
+    <div class="legend-item legend-spacer" style="margin-left:auto"><span class="sede-badge">📍 Sede</span><span class="hora-badge"><img src="https://flagcdn.com/w20/es.png" alt="" class="flag-icon" width="14" height="10" loading="lazy"/> Hora ESP</span></div>
   </div>
 </div>
 
@@ -455,6 +485,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 <button type="button" id="fabNext" class="fab-next hidden-fab" onclick="scrollToFirstIncomplete()" aria-label="Ir al siguiente partido pendiente">
   ⏭ Siguiente
 </button>
+<div id="celebrationToast" class="celebration-toast" role="status" aria-live="polite">🏆 ¡Quiniela completa! Ya puedes exportar tu PDF</div>
 
 <!-- Barra fija en PC: acceso rápido al exportar sin perder el bloque al final -->
 <div id="exportDock" class="export-dock dock-hidden" aria-label="Acceso rápido a exportar PDF">
@@ -762,6 +793,71 @@ function updateExportButton() {
   if (note) {
     note.style.display = isExtrasOpen() ? 'none' : '';
   }
+
+  maybeCelebrate(canExport);
+}
+
+let _wasExportReady = false;
+let _celebrationInitDone = false;
+
+function maybeCelebrate(canExport) {
+  if (!_celebrationInitDone) {
+    _celebrationInitDone = true;
+    _wasExportReady = canExport;
+    return;
+  }
+  if (canExport && !_wasExportReady) {
+    _wasExportReady = true;
+    fireConfetti();
+    const toast = document.getElementById('celebrationToast');
+    if (toast) {
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4500);
+    }
+  }
+  if (!canExport) _wasExportReady = false;
+}
+
+function fireConfetti() {
+  const canvas = document.createElement('canvas');
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;width:100%;height:100%;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+  resize();
+  const colors = ['#ef4444', '#facc15', '#22c55e', '#3b82f6', '#fff', '#dc2626'];
+  const pieces = Array.from({ length: 160 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height * 0.5 - canvas.height * 0.5,
+    w: Math.random() * 8 + 4,
+    h: Math.random() * 5 + 3,
+    c: colors[Math.floor(Math.random() * colors.length)],
+    vy: Math.random() * 2.5 + 1.5,
+    vx: Math.random() * 2.4 - 1.2,
+    rot: Math.random() * 360,
+    vr: Math.random() * 12 - 6
+  }));
+  let frame = 0;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      p.vy += 0.04;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 200) requestAnimationFrame(tick);
+    else canvas.remove();
+  }
+  tick();
 }
 
 function handleExportClick() {
@@ -786,16 +882,22 @@ function handleExportDockClick() {
 function initExportDock() {
   const dock = document.getElementById('exportDock');
   const section = document.getElementById('exportSection');
-  if (!dock || !section || !window.IntersectionObserver) {
-    if (dock) dock.classList.remove('dock-hidden');
+  if (!dock || !section) return;
+  if (!window.IntersectionObserver) {
+    dock.classList.remove('dock-hidden');
     return;
   }
-  const obs = new IntersectionObserver((entries) => {
-    const visible = entries.some(e => e.isIntersecting);
-    dock.classList.toggle('dock-hidden', visible);
-  }, { threshold: 0.15, rootMargin: '0px 0px -4rem 0px' });
-  obs.observe(section);
-  dock.classList.remove('dock-hidden');
+  try {
+    const obs = new IntersectionObserver((entries) => {
+      const visible = entries.some(e => e.isIntersecting);
+      dock.classList.toggle('dock-hidden', visible);
+    }, { threshold: 0.12, rootMargin: '0px 0px -64px 0px' });
+    obs.observe(section);
+    dock.classList.remove('dock-hidden');
+  } catch (e) {
+    console.warn('exportDock', e);
+    dock.classList.remove('dock-hidden');
+  }
 }
 
 function getCountdownToGroupsClose() {
@@ -939,18 +1041,39 @@ function loadState() {
   try {
     const saved = localStorage.getItem('porra2026v5');
     picks = saved ? JSON.parse(saved) : {};
-    const name = localStorage.getItem('porra2026_name5');
-    document.getElementById('playerName').value = name || '';
+    const nameEl = document.getElementById('playerName');
+    if (nameEl) nameEl.value = localStorage.getItem('porra2026_name5') || '';
     const savedExtras = localStorage.getItem('porra2026_extras5');
     if (savedExtras) extras = normalizeExtras(JSON.parse(savedExtras));
     results = {};
-    if (localStorage.getItem('porra2026_welcome_dismissed') === '1') {
-      document.getElementById('welcomeSection').classList.add('hidden');
-    }
   } catch (e) {
     picks = {};
     results = {};
+    extras = normalizeExtras({});
   }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function showBootError(err, soft) {
+  const box = document.getElementById('boot-error');
+  if (!box) return;
+  box.classList.remove('hidden');
+  box.innerHTML =
+    '<div class="boot-error-card">' +
+    '<div class="boot-error-icon">' + (soft ? '⚽' : '🛠️') + '</div>' +
+    '<h2>' + (soft ? 'Pequeño tropiezo al cargar' : 'No se pudo cargar la porra') + '</h2>' +
+    '<p>' + (soft
+      ? 'Puedes seguir usando la quiniela. Si algo se ve mal, recarga la página.'
+      : 'Recarga con el botón de abajo. Usa el enlace de Vercel, no abras el archivo .html del ordenador.') + '</p>' +
+    '<div class="boot-error-actions">' +
+    '<button type="button" class="boot-error-btn" onclick="location.reload()">🔄 Recargar página</button>' +
+    '<button type="button" class="boot-error-btn secondary" onclick="document.getElementById(\'boot-error\').classList.add(\'hidden\')">Seguir de todos modos</button>' +
+    '</div>' +
+    (err && err.message ? '<p class="boot-error-detail">' + escapeHtml(err.message) + '</p>' : '') +
+    '</div>';
 }
 
 function saveState() {
@@ -963,11 +1086,6 @@ function saveState() {
 
 function saveResults() {
   try { localStorage.setItem('porra2026_results', JSON.stringify(results)); } catch (e) {}
-}
-
-function dismissWelcome() {
-  document.getElementById('welcomeSection').classList.add('hidden');
-  try { localStorage.setItem('porra2026_welcome_dismissed', '1'); } catch (e) {}
 }
 
 function setPick(matchId, choice) {
@@ -987,6 +1105,7 @@ function clearAll() {
   if (!confirm('¿Borrar tus selecciones de ' + parts.join(' y ') + '?')) return;
   if (canG) picks = {};
   if (canE) extras = { semis: ['', '', '', ''], finalists: ['', ''], champion: '' };
+  _wasExportReady = false;
   saveState();
   renderGroups();
   renderExtras();
@@ -1044,7 +1163,7 @@ function renderExtras() {
       </div>
     </div>
     <div>
-      <p class="text-xs font-bold text-yellow-400 mb-2">🏆 CAMPEÓN DEL MUNDO</p>
+      <p class="text-xs font-bold text-yellow-400 mb-2 flex items-center gap-1"><img src="/assets/wc-trophy.svg" class="wc-trophy-icon wc-trophy-icon--xs" alt="" aria-hidden="true"/> CAMPEÓN DEL MUNDO</p>
       ${teamSelectHTML('champion', 'champion', 0, extras.champion)}
     </div>`;
   updateExtrasStatus();
@@ -1102,6 +1221,7 @@ function scrollToGroup(id) {
 
 function renderGroups() {
   const container = document.getElementById('groups-grid');
+  if (!container) throw new Error('No se encontró la cuadrícula de grupos');
   container.innerHTML = '';
   groups.forEach(g => {
     const card = document.createElement('div');
@@ -1523,29 +1643,27 @@ function exportResultsJson() {
 // INIT
 // ============================================================
 function bootApp() {
-  try {
-    loadState();
-    extras = normalizeExtras(extras);
-    window._schedGroups = isGroupsOpen();
-    window._schedExtras = isExtrasOpen();
-    renderScheduleBanner();
-    renderExtras();
-    renderGroups();
-    renderAdminEditor();
-    const nameEl = document.getElementById('playerName');
-    if (nameEl) nameEl.addEventListener('input', () => { saveState(); updateExportButton(); });
-    updateExportButton();
-    initExportDock();
-    loadOfficialResults();
-    setInterval(tickSchedule, 1000);
-  } catch (err) {
-    console.error('Porra boot error:', err);
-    const box = document.getElementById('boot-error');
-    if (box) {
-      box.classList.remove('hidden');
-      box.innerHTML = '<strong>No se pudo cargar la porra.</strong> Prueba recargar (Ctrl+F5) o abrir con un servidor local.<br><small>' + err.message + '</small>';
-    }
+  try { loadState(); } catch (e) { console.warn('loadState', e); picks = {}; extras = normalizeExtras({}); }
+  extras = normalizeExtras(extras);
+  window._schedGroups = isGroupsOpen();
+  window._schedExtras = isExtrasOpen();
+
+  try { renderScheduleBanner(); } catch (e) { console.warn(e); }
+  try { renderExtras(); } catch (e) { console.warn(e); }
+  try { renderGroups(); } catch (e) {
+    console.error(e);
+    showBootError(e, false);
+    return;
   }
+
+  try { renderAdminEditor(); } catch (e) { console.warn(e); }
+  const nameEl = document.getElementById('playerName');
+  if (nameEl) nameEl.addEventListener('input', () => { saveState(); updateExportButton(); });
+  updateExportButton();
+  initExportDock();
+
+  loadOfficialResults().catch(e => console.warn('results.json', e));
+  try { setInterval(tickSchedule, 1000); } catch (e) {}
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', bootApp);
