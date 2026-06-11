@@ -71,6 +71,26 @@ Sustituye `TU_USUARIO` y `TU_REPO` por los tuyos.
 
 A partir de ahí, **cada `git push` a `main` redespliega solo** la web en Vercel.
 
+### Mejorar el enlace de Vercel
+
+Por defecto Vercel genera algo como `porra-mundial-2026-abc123.vercel.app`. Para un enlace más limpio:
+
+1. En el proyecto de Vercel → **Settings** → **General**
+2. En **Project Name**, pon: `porra-mundial-2026` (o `porra-manolin-2026`)
+3. Guarda. La URL quedará: **`https://porra-mundial-2026.vercel.app`**
+
+Opcional: en **Settings → Domains** puedes añadir un dominio propio si tienes uno.
+
+### Importante: sincronizar `index.html`
+
+Vercel sirve **`index.html`** en la raíz. Tras editar la app, copia siempre:
+
+```bash
+cp porra-mundial-2026.html index.html
+```
+
+Las imágenes del banner y mascotas están en **`assets/`** (incluidas en el repo) para que carguen en Vercel sin depender de Giphy u otros externos.
+
 ### Archivo `vercel.json`
 
 Ya está configurado:
@@ -112,8 +132,9 @@ Vercel publica los cambios en unos segundos.
 
 | Archivo | Descripción |
 |---------|-------------|
-| `index.html` | App principal (la que sirve Vercel en `/`) |
-| `porra-mundial-2026.html` | Copia de la app (mismo contenido) |
+| `index.html` | App principal (la que sirve Vercel en `/`) — **debe estar sincronizada** |
+| `porra-mundial-2026.html` | Copia de trabajo (mismo contenido que `index.html`) |
+| `assets/` | Banner y banderas de mascotas (servidas desde el propio repo) |
 | `results.json` | Resultados oficiales compartidos |
 | `vercel.json` | Configuración de despliegue |
 | `iniciar.bat` | Servidor local en Windows |

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" role="img" aria-label="Mundial 2026">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="50%" stop-color="#14532d"/>
+      <stop offset="100%" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="1.2" fill="#fff" opacity=".08"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="200" fill="url(#bg)"/>
+  <rect width="800" height="200" fill="url(#dots)"/>
+  <circle cx="120" cy="100" r="70" fill="#facc15" opacity=".12"/>
+  <circle cx="680" cy="80" r="55" fill="#3b82f6" opacity=".15"/>
+  <circle cx="400" cy="160" r="40" fill="#22c55e" opacity=".12"/>
+  <text x="400" y="88" text-anchor="middle" fill="#facc15" font-family="Arial,sans-serif" font-size="42" font-weight="800">½</text>
+  <text x="400" y="128" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="28" font-weight="800">MUNDIAL 2026</text>
+  <text x="400" y="158" text-anchor="middle" fill="#d1d5db" font-family="Arial,sans-serif" font-size="16">USA · México · Canadá</text>
+</svg>
