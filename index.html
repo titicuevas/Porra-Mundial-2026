@@ -188,6 +188,27 @@ input,select,textarea{color:#fff;}
 .progress-fill.complete{background:linear-gradient(90deg,#22c55e,#facc15)!important;}
 .celebration-toast{position:fixed;top:5.5rem;left:50%;transform:translateX(-50%) translateY(-1rem);z-index:60;background:linear-gradient(135deg,#14532d,#1e3a5f);border:2px solid #22c55e;color:#fff;padding:.75rem 1.25rem;border-radius:999px;font-size:.85rem;font-weight:700;box-shadow:0 8px 32px rgba(34,197,94,.35);opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;white-space:nowrap;max-width:calc(100% - 2rem);text-align:center;}
 .celebration-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.phase-tabs-wrap{position:sticky;top:3.25rem;z-index:35;background:rgba(10,14,26,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid #1f2937;}
+.phase-tabs{display:flex;gap:.35rem;padding:.55rem 1rem;max-width:72rem;margin:0 auto;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.phase-tab{flex:1;min-width:5.5rem;padding:.5rem .45rem;border-radius:10px;border:1px solid #374151;background:#111827;color:#9ca3af;font-size:.72rem;font-weight:700;text-align:center;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.phase-tab.active{background:linear-gradient(135deg,#1e3a5f,#172554);border-color:#3b82f6;color:#fff;}
+.phase-tab.is-locked::after{content:' 🔒';font-size:.62rem;}
+.phase-panel.hidden{display:none!important;}
+.phase-lock-toast{position:fixed;top:5.5rem;left:50%;transform:translateX(-50%) translateY(-1rem);z-index:60;background:#1e293b;border:2px solid #facc15;color:#fff;padding:.75rem 1.1rem;border-radius:12px;font-size:.82rem;line-height:1.45;box-shadow:0 8px 32px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;max-width:calc(100% - 2rem);text-align:center;}
+.phase-lock-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.leaderboard-card{background:linear-gradient(135deg,#1a2332,#111827);border:1px solid #374151;border-radius:16px;}
+.leaderboard-table{width:100%;border-collapse:collapse;font-size:.85rem;margin:1rem 0;}
+.leaderboard-table th,.leaderboard-table td{padding:.55rem .5rem;text-align:left;border-bottom:1px solid #1f2937;}
+.leaderboard-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;font-weight:700;}
+.leaderboard-table tr.leaderboard-me td{background:rgba(37,99,235,.12);}
+.leaderboard-rank{width:2rem;color:#9ca3af;font-weight:700;}
+.leaderboard-points{font-weight:800;color:#facc15;text-align:right;}
+.my-score-card{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:.85rem 1rem;margin:1rem 0;}
+.score-form{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;margin-top:1rem;}
+.score-form label{font-size:.72rem;color:#9ca3af;display:block;margin-bottom:.2rem;}
+.score-input-pts{width:5rem;background:#111827;border:1px solid #4b5563;border-radius:8px;color:#fff;padding:.5rem .65rem;font-size:1rem;font-weight:700;}
+.btn-score{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:.55rem .85rem;font-size:.78rem;font-weight:700;cursor:pointer;min-height:44px;}
+.btn-score-secondary{background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;}
 .export-hint{font-size:.85rem;color:#9ca3af;margin:0 0 1rem;line-height:1.5;}
 .export-hint strong{color:#facc15;}
 .btn-export-lg{width:100%;max-width:22rem;margin:0 auto;font-size:1rem;padding:.85rem 1.5rem;min-height:52px;border-radius:.75rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;}
@@ -316,6 +337,16 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 
 <div id="scheduleBanner" class="max-w-6xl mx-auto px-4 pt-3"></div>
 
+<nav class="phase-tabs-wrap" aria-label="Secciones de la porra">
+  <div class="phase-tabs max-w-6xl">
+    <button type="button" id="tabGrupos" class="phase-tab active" onclick="switchPhaseTab('grupos')">⚽ Grupos</button>
+    <button type="button" id="tabExtras" class="phase-tab is-locked" onclick="switchPhaseTab('extras')">🏅 Fase final</button>
+    <button type="button" id="tabLeaderboard" class="phase-tab is-locked" onclick="switchPhaseTab('leaderboard')">🏆 Clasificación</button>
+  </div>
+</nav>
+<div id="phaseLockToast" class="phase-lock-toast" role="status" aria-live="polite"></div>
+
+<div id="panelGrupos" class="phase-panel">
 <!-- Bienvenida / presentación -->
 <div id="welcomeSection" class="max-w-6xl mx-auto px-4 pt-5">
   <div class="welcome-card p-5 sm:p-6">
@@ -430,16 +461,6 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
   </div>
 </div>
 
-<!-- Pronósticos especiales: semis, final, campeón (abre 12 jul 7:00) -->
-<div id="extrasSection" class="max-w-6xl mx-auto px-4 py-3">
-  <div class="extras-card p-5 sm:p-6">
-    <h2 class="text-lg font-bold text-white mb-1">🏅 Fase final del torneo</h2>
-    <p id="extrasSubtitle" class="text-xs text-gray-500 mb-4">Se abrirá el 12 de julio a las 7:00 (hora peninsular).</p>
-    <div id="extras-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    <p id="extrasStatus" class="text-xs text-yellow-500 font-medium mt-3"></p>
-  </div>
-</div>
-
 <!-- Panel admin resultados (?admin=1) -->
 <div id="adminPanel" class="max-w-6xl mx-auto px-4 py-3 hidden">
   <div class="admin-panel px-4 py-3">
@@ -450,6 +471,15 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       <button onclick="exportResultsJson()" class="text-xs text-green-400 hover:text-green-300">Copiar JSON → results.json</button>
     </div>
     <div id="adminEditor" class="hidden max-h-64 overflow-y-auto space-y-1"></div>
+    <div class="border-t border-gray-700 mt-3 pt-3">
+      <p class="text-xs font-bold text-yellow-400 mb-1">🏆 Clasificación (leaderboard.json)</p>
+      <p class="text-xs text-gray-500 mb-2">Añade puntuaciones que os envíen por WhatsApp. Copia el JSON y súbelo a Vercel.</p>
+      <div id="adminLeaderboardEditor" class="space-y-1 mb-2"></div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="adminAddLeaderboardRow()" class="text-xs text-blue-400 hover:text-blue-300">+ Añadir fila</button>
+        <button type="button" onclick="exportLeaderboardJson()" class="text-xs text-green-400 hover:text-green-300">Copiar JSON → leaderboard.json</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -477,6 +507,47 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       Exportar mi porra en PDF
     </button>
     <p id="exportPhaseNote" class="text-xs text-gray-500 mt-3">La fase final (semis, final y campeón) se abrirá el 12 de julio y también será obligatoria antes de exportar.</p>
+  </div>
+</div>
+</div><!-- /panelGrupos -->
+
+<div id="panelExtras" class="phase-panel hidden">
+  <div id="extrasSection" class="max-w-6xl mx-auto px-4 py-5">
+    <div class="extras-card p-5 sm:p-6">
+      <h2 class="text-lg font-bold text-white mb-1">🏅 Fase final del torneo</h2>
+      <p id="extrasSubtitle" class="text-xs text-gray-500 mb-4">Se abrirá el 12 de julio a las 7:00 (hora peninsular).</p>
+      <div id="extras-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <p id="extrasStatus" class="text-xs text-yellow-500 font-medium mt-3"></p>
+    </div>
+  </div>
+</div>
+
+<div id="panelLeaderboard" class="phase-panel hidden">
+  <div class="max-w-6xl mx-auto px-4 py-5">
+    <div class="leaderboard-card p-5 sm:p-6">
+      <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación provisional</h2>
+      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Cuando termine la fase de grupos, cuenta los aciertos de tu PDF (1 punto por acierto) y registra tu puntuación aquí. Manolin publicará la tabla oficial para todos.</p>
+      <div id="myScoreCard" class="my-score-card hidden">
+        <p class="text-xs text-gray-500 mb-1">Tu registro en este dispositivo</p>
+        <p class="text-white font-bold"><span id="myScoreName">—</span> · <span id="myScorePoints" class="text-yellow-400">0</span> puntos</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="leaderboard-table" id="leaderboardTable" aria-label="Clasificación">
+          <thead><tr><th>#</th><th>Nombre</th><th style="text-align:right">Puntos</th></tr></thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+      <p id="leaderboardEmpty" class="text-sm text-gray-500 text-center py-4 hidden">Todavía no hay nadie en la tabla. ¡Sé el primero en registrar tus puntos!</p>
+      <div class="score-form">
+        <div>
+          <label for="scorePoints">Tus puntos (de tu PDF)</label>
+          <input type="number" id="scorePoints" class="score-input-pts" min="0" max="79" placeholder="0"/>
+        </div>
+        <button type="button" class="btn-score" onclick="saveMyScore()">Guardar mi puntuación</button>
+        <button type="button" class="btn-score btn-score-secondary" onclick="copyScoreForManolin()">Copiar para enviar</button>
+      </div>
+      <p id="scoreAutoHint" class="text-xs text-gray-500 mt-2"></p>
+    </div>
   </div>
 </div>
 
@@ -634,19 +705,23 @@ const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 
 // Horarios peninsulares (CEST, UTC+2)
 const SCHEDULE = {
-  groupsClose: '2026-06-11T21:00:00+02:00', // cierre fase de grupos
+  groupsClose: '2026-06-11T21:00:00+02:00', // cierre pronósticos fase de grupos
+  leaderboardOpen: '2026-06-27T23:59:00+02:00', // fin partidos fase de grupos
   extrasOpen:  '2026-07-12T07:00:00+02:00', // apertura fase final
 };
 
 function isGroupsOpen() { return Date.now() < new Date(SCHEDULE.groupsClose).getTime(); }
+function isLeaderboardOpen() { return Date.now() >= new Date(SCHEDULE.leaderboardOpen).getTime(); }
 function isExtrasOpen()  { return Date.now() >= new Date(SCHEDULE.extrasOpen).getTime(); }
 function progressTotal() { return isExtrasOpen() ? MATCH_TOTAL + EXTRAS_TOTAL : MATCH_TOTAL; }
 
 let picks = {};
 let results = {};
 let extras = { semis: ['', '', '', ''], finalists: ['', ''], champion: '' };
+let leaderboardData = { entries: [] };
 const flagCache = {};
 let trophyCache = null;
+let activePhaseTab = 'grupos';
 
 function getAllTeams() {
   const map = new Map();
@@ -990,17 +1065,205 @@ function updateCountdownDisplay() {
 }
 
 function tickSchedule() {
-  const g = isGroupsOpen(), e = isExtrasOpen();
+  const g = isGroupsOpen(), e = isExtrasOpen(), lb = isLeaderboardOpen();
   updateCountdownDisplay();
-  if (g !== window._schedGroups || e !== window._schedExtras) {
+  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard) {
     window._schedGroups = g;
     window._schedExtras = e;
+    window._schedLeaderboard = lb;
     renderScheduleBanner();
     renderGroups();
     renderExtras();
     updateProgress();
     updateExportButton();
+    updatePhaseTabs();
   }
+}
+
+function getPlayerDisplayName() {
+  const raw = (document.getElementById('playerName')?.value || '').trim();
+  return raw || 'amigo/a';
+}
+
+function showPhaseLockMessage(what, when) {
+  const toast = document.getElementById('phaseLockToast');
+  if (!toast) return;
+  const name = getPlayerDisplayName();
+  toast.innerHTML = `Hola, <strong>${name}</strong> — ${what} aún no está abierta.<br><span style="color:#fde68a">${when}</span>`;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 5000);
+}
+
+function switchPhaseTab(tab) {
+  if (tab === 'extras' && !isExtrasOpen()) {
+    showPhaseLockMessage('La fase final', 'Se abrirá el <strong>12 de julio a las 7:00</strong> (hora peninsular).');
+    return;
+  }
+  if (tab === 'leaderboard' && !isLeaderboardOpen()) {
+    showPhaseLockMessage('La clasificación provisional', 'Se abrirá cuando termine la <strong>fase de grupos (27 de junio)</strong>.');
+    return;
+  }
+  activePhaseTab = tab;
+  document.getElementById('panelGrupos').classList.toggle('hidden', tab !== 'grupos');
+  document.getElementById('panelExtras').classList.toggle('hidden', tab !== 'extras');
+  document.getElementById('panelLeaderboard').classList.toggle('hidden', tab !== 'leaderboard');
+  ['grupos', 'extras', 'leaderboard'].forEach(id => {
+    const btn = document.getElementById('tab' + id.charAt(0).toUpperCase() + id.slice(1));
+    if (btn) btn.classList.toggle('active', tab === id);
+  });
+  if (tab === 'leaderboard') renderLeaderboard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updatePhaseTabs() {
+  const tabExtras = document.getElementById('tabExtras');
+  const tabLb = document.getElementById('tabLeaderboard');
+  if (tabExtras) tabExtras.classList.toggle('is-locked', !isExtrasOpen());
+  if (tabLb) tabLb.classList.toggle('is-locked', !isLeaderboardOpen());
+  if (activePhaseTab === 'extras' && !isExtrasOpen()) switchPhaseTab('grupos');
+  if (activePhaseTab === 'leaderboard' && !isLeaderboardOpen()) switchPhaseTab('grupos');
+}
+
+function loadMyScore() {
+  try {
+    const raw = localStorage.getItem('porra2026_my_score');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function saveMyScore() {
+  if (!isLeaderboardOpen()) {
+    showPhaseLockMessage('La clasificación provisional', 'Se abrirá cuando termine la <strong>fase de grupos (27 de junio)</strong>.');
+    return;
+  }
+  const name = getPlayerDisplayName();
+  if (!name || name === 'amigo/a') {
+    showPhaseLockMessage('Necesitas tu nombre', 'Escríbelo en la pestaña <strong>Grupos</strong> antes de registrar puntos.');
+    switchPhaseTab('grupos');
+    const nameEl = document.getElementById('playerName');
+    if (nameEl) { nameEl.focus(); nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    return;
+  }
+  const pts = parseInt(document.getElementById('scorePoints')?.value, 10);
+  if (isNaN(pts) || pts < 0) { alert('Introduce un número de puntos válido (0 o más).'); return; }
+  const { played } = scoreStats();
+  const entry = { name, points: pts, played: played || null, updatedAt: new Date().toISOString() };
+  localStorage.setItem('porra2026_my_score', JSON.stringify(entry));
+  renderLeaderboard();
+  const toast = document.getElementById('phaseLockToast');
+  if (toast) {
+    toast.innerHTML = `✅ Guardado: <strong>${pts}</strong> puntos para <strong>${name}</strong>`;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+}
+
+function copyScoreForManolin() {
+  const name = getPlayerDisplayName();
+  const pts = document.getElementById('scorePoints')?.value;
+  if (!name || name === 'amigo/a' || pts === '' || pts == null) {
+    alert('Escribe tu nombre y tus puntos antes de copiar.');
+    return;
+  }
+  const text = `Porra Mundial 2026 — ${name}: ${pts} puntos (fase de grupos, provisional)`;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Copiado al portapapeles.\nEnvíaselo a Manolin por WhatsApp para que te meta en la tabla oficial.');
+  }).catch(() => prompt('Copia este mensaje:', text));
+}
+
+function getLeaderboardEntries() {
+  const shared = (leaderboardData.entries || []).slice();
+  const my = loadMyScore();
+  const names = new Set(shared.map(e => e.name.toLowerCase()));
+  if (my && my.name && !names.has(my.name.toLowerCase())) {
+    shared.push({ name: my.name, points: my.points, local: true });
+  }
+  return shared.sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
+}
+
+function renderLeaderboard() {
+  if (!isLeaderboardOpen()) return;
+  const tbody = document.getElementById('leaderboardBody');
+  const empty = document.getElementById('leaderboardEmpty');
+  const myCard = document.getElementById('myScoreCard');
+  const hint = document.getElementById('scoreAutoHint');
+  const ptsInput = document.getElementById('scorePoints');
+  if (!tbody) return;
+
+  const { played, correct } = scoreStats();
+  if (ptsInput && (ptsInput.value === '' || ptsInput.dataset.auto === '1')) {
+    if (played > 0) {
+      ptsInput.value = correct;
+      ptsInput.dataset.auto = '1';
+      if (hint) hint.textContent = `En este móvil tienes ${correct} aciertos de ${played} partidos con resultado (puedes ajustarlo si cuentas desde el PDF).`;
+    } else if (hint) {
+      hint.textContent = 'Cuenta los aciertos de tu PDF y escribe el total aquí.';
+    }
+  }
+
+  const my = loadMyScore();
+  if (myCard) {
+    if (my) {
+      myCard.classList.remove('hidden');
+      document.getElementById('myScoreName').textContent = my.name;
+      document.getElementById('myScorePoints').textContent = my.points;
+      if (ptsInput && ptsInput.value === '') ptsInput.value = my.points;
+    } else {
+      myCard.classList.add('hidden');
+    }
+  }
+
+  const entries = getLeaderboardEntries();
+  const myName = getPlayerDisplayName().toLowerCase();
+  if (!entries.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+  tbody.innerHTML = entries.map((e, i) => {
+    const isMe = e.name.toLowerCase() === myName || e.local;
+    const suffix = e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
+    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${i + 1}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td></tr>`;
+  }).join('');
+}
+
+async function loadOfficialLeaderboard() {
+  try {
+    const res = await fetch('leaderboard.json?t=' + Date.now());
+    if (!res.ok) return;
+    const data = await res.json();
+    leaderboardData = data && Array.isArray(data.entries) ? data : { entries: [] };
+    renderLeaderboard();
+    if (IS_ADMIN) renderAdminLeaderboardEditor();
+  } catch (e) { /* sin leaderboard aún */ }
+}
+
+function renderAdminLeaderboardEditor() {
+  if (!IS_ADMIN) return;
+  const el = document.getElementById('adminLeaderboardEditor');
+  if (!el) return;
+  if (!leaderboardData.entries) leaderboardData.entries = [];
+  el.innerHTML = leaderboardData.entries.map((e, i) =>
+    `<div class="flex items-center gap-2 text-xs py-1">
+      <input class="flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white" value="${(e.name || '').replace(/"/g, '&quot;')}" onchange="leaderboardData.entries[${i}].name=this.value"/>
+      <input type="number" min="0" class="w-14 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white" value="${e.points || 0}" onchange="leaderboardData.entries[${i}].points=parseInt(this.value,10)||0"/>
+      <button type="button" onclick="leaderboardData.entries.splice(${i},1);renderAdminLeaderboardEditor();renderLeaderboard();" class="text-red-400">✕</button>
+    </div>`
+  ).join('') || '<p class="text-xs text-gray-600">Sin entradas — añade filas o espera envíos por WhatsApp.</p>';
+}
+
+function adminAddLeaderboardRow() {
+  if (!leaderboardData.entries) leaderboardData.entries = [];
+  leaderboardData.entries.push({ name: '', points: 0 });
+  renderAdminLeaderboardEditor();
+}
+
+function exportLeaderboardJson() {
+  const json = JSON.stringify({ updated: new Date().toISOString().slice(0, 10), entries: leaderboardData.entries || [] }, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    alert('JSON copiado.\nPégalo en leaderboard.json y vuelve a desplegar en Vercel.');
+  }).catch(() => prompt('Copia este JSON a leaderboard.json:', json));
 }
 
 // ============================================================
@@ -1878,6 +2141,7 @@ function bootApp() {
   extras = normalizeExtras(extras);
   window._schedGroups = isGroupsOpen();
   window._schedExtras = isExtrasOpen();
+  window._schedLeaderboard = isLeaderboardOpen();
 
   try { renderScheduleBanner(); } catch (e) { console.warn(e); }
   try { renderExtras(); } catch (e) { console.warn(e); }
@@ -1890,10 +2154,14 @@ function bootApp() {
   try { renderAdminEditor(); } catch (e) { console.warn(e); }
   const nameEl = document.getElementById('playerName');
   if (nameEl) nameEl.addEventListener('input', () => { saveState(); updateExportButton(); });
+  const scorePts = document.getElementById('scorePoints');
+  if (scorePts) scorePts.addEventListener('input', () => { scorePts.dataset.auto = '0'; });
   updateExportButton();
+  updatePhaseTabs();
   initExportDock();
 
-  loadOfficialResults().catch(e => console.warn('results.json', e));
+  loadOfficialResults().then(() => { updateScoreHeader(); renderLeaderboard(); }).catch(e => console.warn('results.json', e));
+  loadOfficialLeaderboard().catch(e => console.warn('leaderboard.json', e));
   try { setInterval(tickSchedule, 1000); } catch (e) {}
 }
 if (document.readyState === 'loading') {
