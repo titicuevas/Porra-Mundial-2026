@@ -210,9 +210,29 @@ input,select,textarea{color:#fff;}
 .btn-score{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:.55rem .85rem;font-size:.78rem;font-weight:700;cursor:pointer;min-height:44px;}
 .btn-score-secondary{background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;}
 /* === Eliminatorias === */
-.ko-user-bar{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;}
-.ko-user-bar label{font-size:.72rem;color:#9ca3af;font-weight:600;}
-.ko-user-select{background:#1f2937;border:1px solid #4b5563;border-radius:8px;color:#fff;padding:.5rem .75rem;font-size:.85rem;font-weight:600;min-width:12rem;flex:1;max-width:20rem;}
+.ko-user-bar{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.5rem .75rem;align-items:center;}
+.ko-user-bar label{font-size:.72rem;color:#9ca3af;font-weight:600;flex:0 0 auto;}
+.ko-user-select{background:#1f2937;border:1px solid #4b5563;border-radius:8px;color:#fff;padding:.5rem .75rem;font-size:.85rem;font-weight:600;min-width:12rem;flex:1;max-width:22rem;}
+.ko-user-hint{flex:1 1 100%;font-size:.68rem;color:#64748b;margin:0;}
+.ko-team-pick.winner.ko-team-pick--alive{background:rgba(234,179,8,.34)!important;border-color:#eab308!important;color:#fef9c3!important;box-shadow:0 0 0 2px rgba(250,204,21,.5)!important;}
+.ko-team-pick.winner.ko-team-pick--alive::after{color:#fde047!important;}
+.ko-extras-summary-chip--alive{border-color:rgba(250,204,21,.65)!important;background:rgba(250,204,21,.14)!important;box-shadow:0 0 0 1px rgba(250,204,21,.25);}
+.ko-extras-alive-row{margin-top:.7rem;padding-top:.65rem;border-top:1px solid rgba(250,204,21,.22);}
+.ko-extras-alive-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .55rem;border-radius:8px;border:1px solid rgba(250,204,21,.55);background:rgba(250,204,21,.16);font-size:.67rem;font-weight:700;color:#fde047;}
+.ko-list-match{border-bottom:1px solid #1f2937;padding-top:.15rem;padding-bottom:.15rem;}
+.ko-list-match:last-child{border-bottom:none;}
+.ko-list-pair{display:flex;flex-direction:column;gap:.35rem;margin-top:.35rem;}
+.ko-list-pair.has-pick .ko-team-pick:not(.winner):not(.eliminated){opacity:.85;}
+.ko-upcoming-rounds{background:rgba(15,23,42,.4);border:1px solid #334155;border-radius:10px;padding:.55rem .8rem;margin-top:.25rem;}
+.ko-upcoming-title{font-size:.62rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:0 0 .35rem;}
+.ko-upcoming-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.7rem;color:#9ca3af;padding:.22rem 0;border-bottom:1px solid rgba(51,65,85,.45);}
+.ko-upcoming-row:last-child{border-bottom:none;padding-bottom:0;}
+.ko-upcoming-date{font-size:.65rem;color:#6b7280;white-space:nowrap;}
+.ko-round-waiting{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .85rem;background:rgba(15,23,42,.45);border:1px solid #334155;border-radius:10px;margin-bottom:.45rem;}
+.ko-round-waiting-title{margin:0;font-size:.78rem;font-weight:700;color:#e5e7eb;}
+.ko-round-waiting-hint{margin:.1rem 0 0;font-size:.65rem;color:#6b7280;}
+.ko-round-waiting-badge{font-size:.62rem;font-weight:700;color:#94a3b8;background:#1e293b;border:1px solid #475569;border-radius:999px;padding:.2rem .55rem;white-space:nowrap;}
+.ko-round-card{margin-bottom:.65rem;}
 .ko-preview-badge{font-size:.65rem;background:rgba(250,204,21,.15);color:#fde68a;border:1px solid rgba(250,204,21,.35);padding:.2rem .5rem;border-radius:999px;}
 .ko-bracket-scroll-wrap{position:relative;margin:0 -.25rem;}
 .ko-scroll-hint{display:none;font-size:.68rem;color:#64748b;text-align:center;margin:0 0 .5rem;font-weight:600;}
@@ -254,7 +274,14 @@ input,select,textarea{color:#fff;}
 @media(max-width:768px){.ko-bracket-board{align-items:flex-start;}.ko-bracket-grid{grid-template-columns:repeat(4,minmax(5.5rem,6.75rem));}.ko-team-pick{min-height:44px;font-size:.68rem;padding:.45rem .5rem;}}
 /* Pronósticos especiales KO */
 .ko-extras-panel{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid #334155;}
-.ko-bracket-section{margin-top:.5rem;}
+.ko-extras-summary{background:rgba(15,23,42,.5);border:1px solid #334155;border-radius:14px;padding:1rem;}
+.ko-extras-done-msg{margin:0 0 .75rem;font-size:.75rem;color:#4ade80;font-weight:600;}
+.ko-extras-deadline-hint{margin:0 0 .75rem;font-size:.72rem;color:#93c5fd;line-height:1.45;}
+.ko-extras-summary-label{margin:.5rem 0 .35rem;font-size:.68rem;font-weight:700;color:#9ca3af;}
+.ko-extras-summary-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.25rem;}
+.ko-extra-readonly-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .55rem;border-radius:10px;border:1px solid #334155;background:#111827;font-size:.68rem;font-weight:700;color:#e5e7eb;}
+.ko-extra-readonly-flag{display:inline-flex;align-items:center;}
+.ko-matches-section{margin-top:.5rem;}
 #koExtrasGrid{display:flex;flex-direction:column;gap:1.25rem;}
 .ko-r32-picker-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem .85rem;margin-bottom:.25rem;font-size:.62rem;color:#9ca3af;font-weight:600;}
 .ko-legend-dot{display:inline-block;width:.55rem;height:.55rem;border-radius:999px;margin-right:.2rem;vertical-align:middle;}
@@ -362,6 +389,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 .match-team-away{justify-content:flex-end;grid-column:3;}
 .match-team-name{font-size:.78rem;color:#d1d5db;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .match-picks{display:flex;align-items:center;justify-content:center;gap:.35rem;grid-column:2;grid-row:1;}
+.match-picks--ko .pick-btn{width:2.35rem;}
 .pick-btn{width:2rem;height:2rem;border-radius:.4rem;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 .groups-grid{display:grid;grid-template-columns:1fr;gap:1rem;padding-bottom:2rem;}
 .card-pad{padding:1rem;}
@@ -520,7 +548,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         </p>
         <p class="text-sm text-gray-400 leading-relaxed mb-3">
           Escribe tu nombre, marca tus pronósticos de la fase de grupos (1 · X · 2) y exporta el PDF.
-          La fase final (semis, final y campeón) se abrirá el <strong class="text-gray-300">12 de julio a las 7:00</strong>.
+          Las eliminatorias (especiales + quiniela por ronda) se abren el <strong class="text-gray-300">12 de julio a las 7:00</strong>.
         </p>
         <p class="text-xs text-gray-500">Esperamos que os guste. ¡A por el mundial! 🏆</p>
       </div>
@@ -531,13 +559,13 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 <!-- Nombre del participante -->
 <div class="max-w-6xl mx-auto px-4 pt-5 pb-2">
   <div class="name-card px-4 py-4 sm:px-5 sm:py-5">
-    <label for="playerName" class="block text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">Tu nombre en la porra</label>
+    <label for="playerName" class="block text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">Tu nombre en la porra (solo fase de grupos)</label>
     <div class="flex items-center gap-3">
       <span class="text-2xl">👤</span>
       <input id="playerName" type="text" placeholder="Ej: María García"
         class="flex-1 bg-transparent text-white placeholder-gray-500 text-lg font-semibold outline-none border-b border-indigo-500/40 focus:border-indigo-400 pb-1" maxlength="40" required/>
     </div>
-    <p class="text-xs text-gray-500 mt-2 ml-9 name-hint">Obligatorio para exportar el PDF. Aparecerá en la portada y en todas las páginas.</p>
+    <p class="text-xs text-gray-500 mt-2 ml-9 name-hint">Obligatorio para exportar. Se usa en grupos y eliminatorias. Tu porra se guarda en <strong class="text-gray-400">este dispositivo</strong>.</p>
   </div>
 </div>
 
@@ -554,9 +582,8 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <p class="font-semibold text-yellow-400 mb-1">Qué hay que pronosticar</p>
         <ul class="list-disc list-inside space-y-0.5 text-gray-400 leading-relaxed">
           <li>Resultado de cada partido: <strong class="text-gray-300">1</strong> (local), <strong class="text-gray-300">X</strong> (empate) o <strong class="text-gray-300">2</strong> (visitante)</li>
-          <li>Los <strong class="text-gray-300">4 semifinalistas</strong></li>
-          <li>Los <strong class="text-gray-300">2 finalistas</strong></li>
-          <li>El <strong class="text-gray-300">campeón del mundo</strong></li>
+          <li>En eliminatorias: <strong class="text-gray-300">4 semifinalistas, 2 finalistas y campeón</strong> (editables hasta que empiecen los dieciseisavos)</li>
+          <li>En eliminatorias: quiniela <strong class="text-gray-300">toca al ganador</strong> de cada partido (16avos, octavos, cuartos…)</li>
         </ul>
       </div>
       <div>
@@ -575,7 +602,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
     </div>
     <p class="text-xs text-gray-500 mt-4 border-t border-gray-700 pt-3">
       <strong class="text-gray-400">Plazos:</strong> fase de grupos cierra el <strong class="text-gray-300">11 de junio a las 21:00</strong> (primer partido).
-      Fase final abre el <strong class="text-gray-300">12 de julio a las 7:00</strong>. Horario peninsular español.
+      Eliminatorias abren el <strong class="text-gray-300">12 de julio a las 7:00</strong>; cada ronda se activa en su fecha. Horario peninsular español.
     </p>
   </div>
 </div>
@@ -625,7 +652,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
       Exportar mi porra en PDF
     </button>
-    <p id="exportPhaseNote" class="text-xs text-gray-500 mt-3">Las eliminatorias (cuadro + semifinalistas, finalistas y campeón) están en la pestaña 🏅 Eliminatorias, con su propio PDF.</p>
+    <p id="exportPhaseNote" class="text-xs text-gray-500 mt-3">Las eliminatorias (dieciseisavos + semifinalistas, finalistas y campeón) están en la pestaña 🏅 Eliminatorias, con su propio PDF.</p>
   </div>
 </div>
 </div><!-- /panelGrupos -->
@@ -639,20 +666,21 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       </div>
       <p id="koSubtitle" class="text-xs text-gray-500 mb-4">Se abrirá el 12 de julio a las 7:00 (hora peninsular).</p>
 
-      <div class="ko-user-bar">
+      <div id="koPlayerBar" class="ko-user-bar hidden">
         <label for="koUserSelect">👤 Participante</label>
         <select id="koUserSelect" class="ko-user-select" onchange="setActiveKoUser(this.value)"></select>
+        <p class="ko-user-hint">Cada uno tiene su porra en este dispositivo · el PDF lleva el nombre seleccionado</p>
       </div>
 
       <div id="koExtrasSection" class="ko-extras-panel">
         <h3 class="text-sm font-bold text-white mb-1">⭐ Pronósticos especiales</h3>
-        <p class="text-xs text-gray-500 mb-4">Paso a paso: <strong class="text-gray-400">32 equipos</strong> → 4 semifinalistas → 2 finalistas → campeón. Toca el equipo en cada bloque.</p>
+        <p class="text-xs text-gray-500 mb-4">Elige 4 semifinalistas → 2 finalistas → campeón entre los 32 equipos de dieciseisavos. Puedes <strong class="text-gray-400">cambiarlos hasta que empiecen los dieciseisavos</strong> (28 jun, 12:00).</p>
         <div id="koExtrasGrid"></div>
       </div>
 
-      <div class="ko-bracket-section">
-        <h3 class="text-sm font-bold text-white mb-1">🏟️ Cuadro eliminatorio</h3>
-        <p class="text-xs text-gray-500 mb-3">Desliza horizontalmente. ✦ semifinalista · ★ finalista · ⭐ campeón</p>
+      <div class="ko-matches-section">
+        <h3 class="text-sm font-bold text-white mb-1">⚽ Quiniela por rondas</h3>
+        <p class="text-xs text-gray-500 mb-3">Toca al <strong class="text-gray-400">ganador</strong> de cada partido (verde ✓) · el otro queda en rojo.</p>
         <div id="koBracket"></div>
       </div>
 
@@ -670,7 +698,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 <div id="koPasswordModal" class="ko-modal hidden" role="dialog" aria-labelledby="koModalTitle">
   <div class="ko-modal-box">
     <h3 id="koModalTitle">🔒 Eliminatorias — modo prueba</h3>
-    <p>Introduce la contraseña para probar el cuadro antes del 12 de julio.</p>
+    <p>Introduce la contraseña para probar las eliminatorias antes del 12 de julio.</p>
     <input type="password" id="koPasswordInput" class="ko-modal-input" placeholder="Contraseña" autocomplete="off"
       onkeydown="if(event.key==='Enter')submitKoPassword()"/>
     <p id="koPasswordError" class="ko-modal-error"></p>
@@ -859,7 +887,6 @@ const groups = [
 ];
 
 const MATCH_TOTAL = 72;
-const EXTRAS_TOTAL = 7; // 4 semis + 2 finalistas + 1 campeón
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 
 // Horarios peninsulares (CEST, UTC+2)
@@ -876,7 +903,6 @@ function progressTotal() { return MATCH_TOTAL; }
 
 let picks = {};
 let results = {};
-let extras = { semis: ['', '', '', ''], finalists: ['', ''], champion: '' };
 let leaderboardData = { entries: [] };
 const flagCache = {};
 let trophyCache = null;
@@ -892,30 +918,11 @@ function teamByCode(code) {
   return getAllTeams().find(t => t.code === code);
 }
 
-function normalizeExtras(e) {
-  const def = { semis: ['', '', '', ''], finalists: ['', ''], champion: '' };
-  if (!e || typeof e !== 'object') return def;
-  const semis = Array.isArray(e.semis) ? e.semis.map(String) : [];
-  const finalists = Array.isArray(e.finalists) ? e.finalists.map(String) : [];
-  return {
-    semis: [semis[0] || '', semis[1] || '', semis[2] || '', semis[3] || ''],
-    finalists: [finalists[0] || '', finalists[1] || ''],
-    champion: e.champion ? String(e.champion) : ''
-  };
-}
-
-function extrasDoneCount() {
-  extras = normalizeExtras(extras);
-  let n = extras.semis.filter(Boolean).length + extras.finalists.filter(Boolean).length;
-  if (extras.champion) n++;
-  return n;
-}
+function matchPicksDone() { return Object.keys(picks).length; }
 
 function totalDoneCount() {
   return Object.keys(picks).length;
 }
-
-function matchPicksDone() { return Object.keys(picks).length; }
 
 function isPorraComplete() {
   const name = document.getElementById('playerName')?.value.trim();
@@ -932,19 +939,6 @@ function getFirstIncompleteMatch() {
   return null;
 }
 
-function getFirstIncompleteExtra() {
-  if (!isExtrasOpen()) return null;
-  extras = normalizeExtras(extras);
-  for (let i = 0; i < extras.semis.length; i++) {
-    if (!extras.semis[i]) return { type: 'semi', index: i };
-  }
-  for (let i = 0; i < extras.finalists.length; i++) {
-    if (!extras.finalists[i]) return { type: 'final', index: i };
-  }
-  if (!extras.champion) return { type: 'champion' };
-  return null;
-}
-
 function scrollToFirstIncomplete() {
   const nameEl = document.getElementById('playerName');
   if (!nameEl.value.trim()) {
@@ -952,22 +946,6 @@ function scrollToFirstIncomplete() {
     nameEl.focus();
     nameEl.classList.add('ring-2', 'ring-yellow-400');
     setTimeout(() => nameEl.classList.remove('ring-2', 'ring-yellow-400'), 2500);
-    return;
-  }
-
-  const extraInc = getFirstIncompleteExtra();
-  if (extraInc && typeof switchPhaseTab === 'function') {
-    switchPhaseTab('extras');
-    setTimeout(() => {
-      const id = extraInc.type === 'semi' ? 'ko-semi-' + extraInc.index
-        : extraInc.type === 'final' ? 'ko-final-' + extraInc.index : 'ko-champion';
-      const sel = document.getElementById(id);
-      if (sel) {
-        sel.focus();
-        sel.classList.add('ring-2', 'ring-yellow-400');
-        setTimeout(() => sel.classList.remove('ring-2', 'ring-yellow-400'), 2500);
-      }
-    }, 400);
     return;
   }
 
@@ -1005,15 +983,6 @@ function updateFabHint() {
     fab.setAttribute('aria-label', `Ir al primer partido sin marcar. Faltan ${matchLeft}`);
     return;
   }
-  if (isExtrasOpen()) {
-    const extraLeft = EXTRAS_TOTAL - extrasDoneCount();
-    if (extraLeft > 0) {
-      if (icon) icon.textContent = '🏆';
-      main.textContent = extraLeft === 1 ? 'Te falta 1 de la final' : `Te faltan ${extraLeft} de la final`;
-      sub.textContent = 'Semis, final o campeón';
-      fab.setAttribute('aria-label', 'Ir al pronóstico pendiente de la fase final');
-    }
-  }
 }
 
 function updateExportButton() {
@@ -1047,22 +1016,19 @@ function updateExportButton() {
   } else if (matchPicksDone() < MATCH_TOTAL) {
     const left = MATCH_TOTAL - matchPicksDone();
     hint.innerHTML = 'Te faltan <strong>' + left + ' partido' + (left === 1 ? '' : 's') + '</strong> por marcar en la fase de grupos.';
-  } else if (isExtrasOpen() && extrasDoneCount() < EXTRAS_TOTAL) {
-    const left = EXTRAS_TOTAL - extrasDoneCount();
-    hint.innerHTML = 'Fase de grupos completa. Te faltan <strong>' + left + '</strong> pronósticos de la fase final.';
   } else if (complete) {
-    hint.innerHTML = '¡Quiniela completa! Pulsa el botón para descargar tu PDF.';
+    hint.innerHTML = '¡Quiniela de grupos completa! Pulsa el botón para descargar tu PDF.';
   }
 
   if (dockHint) {
     if (complete && nameOk) dockHint.innerHTML = '¡Listo! Pulsa <strong>Exportar PDF</strong> o usa el bloque de abajo.';
     else if (!nameOk) dockHint.innerHTML = 'Escribe tu <strong>nombre</strong> y marca los 72 partidos.';
     else if (matchPicksDone() < MATCH_TOTAL) dockHint.innerHTML = `Faltan <strong>${MATCH_TOTAL - matchPicksDone()}</strong> partidos por marcar.`;
-    else dockHint.innerHTML = 'Casi listo — revisa los pronósticos pendientes.';
+    else dockHint.innerHTML = 'Casi listo — revisa los partidos pendientes.';
   }
 
   if (note) {
-    note.style.display = isExtrasOpen() ? 'none' : '';
+    note.style.display = '';
   }
 
   maybeCelebrate(canExport);
@@ -1606,13 +1572,10 @@ function loadState() {
     picks = saved ? JSON.parse(saved) : {};
     const nameEl = document.getElementById('playerName');
     if (nameEl) nameEl.value = localStorage.getItem('porra2026_name5') || '';
-    const savedExtras = localStorage.getItem('porra2026_extras5');
-    if (savedExtras) extras = normalizeExtras(JSON.parse(savedExtras));
     results = {};
   } catch (e) {
     picks = {};
     results = {};
-    extras = normalizeExtras({});
   }
 }
 
@@ -1643,7 +1606,6 @@ function saveState() {
   try {
     localStorage.setItem('porra2026v5', JSON.stringify(picks));
     localStorage.setItem('porra2026_name5', document.getElementById('playerName').value);
-    localStorage.setItem('porra2026_extras5', JSON.stringify(extras));
   } catch (e) {}
 }
 
@@ -1660,84 +1622,12 @@ function setPick(matchId, choice) {
 }
 
 function clearAll() {
-  const canG = isGroupsOpen(), canE = isExtrasOpen();
-  if (!canG && !canE) { alert('Todo está cerrado; no hay nada que borrar.'); return; }
-  const parts = [];
-  if (canG) parts.push('partidos de grupos');
-  if (canE) parts.push('fase final');
-  if (!confirm('¿Borrar tus selecciones de ' + parts.join(' y ') + '?')) return;
-  if (canG) picks = {};
-  if (canE) extras = { semis: ['', '', '', ''], finalists: ['', ''], champion: '' };
+  if (!isGroupsOpen()) { alert('La fase de grupos está cerrada; no hay nada que borrar.'); return; }
+  if (!confirm('¿Borrar tus selecciones de partidos de grupos?')) return;
+  picks = {};
   _wasExportReady = false;
   saveState();
   renderGroups();
-  renderExtras();
-}
-
-function setExtra(field, index, code) {
-  if (!isExtrasOpen()) return;
-  if (field === 'champion') {
-    extras.champion = code;
-  } else if (field === 'semis') {
-    extras.semis[index] = code;
-  } else if (field === 'finalists') {
-    extras.finalists[index] = code;
-  }
-  saveState();
-  updateExtrasStatus();
-  updateProgress();
-}
-
-function teamSelectHTML(id, field, index, selected) {
-  const opts = ['<option value="">— Elegir equipo —</option>']
-    .concat(getAllTeams().map(t => `<option value="${t.code}"${selected === t.code ? ' selected' : ''}>${t.name}</option>`));
-  const onchange = field === 'champion'
-    ? `setExtra('champion',0,this.value)`
-    : `setExtra('${field}',${index},this.value)`;
-  return `<select id="${id}" class="team-select" onchange="${onchange}">${opts.join('')}</select>`;
-}
-
-function renderExtras() {
-  const section = document.getElementById('extrasSection');
-  const grid = document.getElementById('extras-grid');
-  const subtitle = document.getElementById('extrasSubtitle');
-  const status = document.getElementById('extrasStatus');
-  if (!grid) return;
-
-  if (!isExtrasOpen()) {
-    if (section) section.classList.add('hidden');
-    return;
-  }
-
-  if (section) section.classList.remove('hidden');
-
-  if (subtitle) subtitle.textContent = 'Elige equipos distintos en cada casilla (1 punto por acierto).';
-  grid.innerHTML = `
-    <div class="sm:col-span-2 lg:col-span-3">
-      <p class="text-xs font-bold text-blue-300 mb-2">4 SEMIFINALISTAS</p>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        ${extras.semis.map((s, i) => `<div>${teamSelectHTML('semi-' + i, 'semis', i, s)}</div>`).join('')}
-      </div>
-    </div>
-    <div class="sm:col-span-2 lg:col-span-3">
-      <p class="text-xs font-bold text-blue-300 mb-2">2 FINALISTAS</p>
-      <div class="grid grid-cols-2 gap-2">
-        ${extras.finalists.map((s, i) => `<div>${teamSelectHTML('final-' + i, 'finalists', i, s)}</div>`).join('')}
-      </div>
-    </div>
-    <div>
-      <p class="text-xs font-bold text-yellow-400 mb-2 flex items-center gap-1"><img src="/assets/wc-trophy.svg" class="wc-trophy-icon wc-trophy-icon--xs" alt="" aria-hidden="true"/> CAMPEÓN DEL MUNDO</p>
-      ${teamSelectHTML('champion', 'champion', 0, extras.champion)}
-    </div>`;
-  updateExtrasStatus();
-}
-
-function updateExtrasStatus() {
-  const el = document.getElementById('extrasStatus');
-  if (!el || !isExtrasOpen()) return;
-  const done = extrasDoneCount();
-  el.textContent = done === EXTRAS_TOTAL ? '✓ Fase final completa' : `Fase final: ${done}/${EXTRAS_TOTAL}`;
-  el.className = done === EXTRAS_TOTAL ? 'text-xs text-green-400 font-medium mt-3' : 'text-xs text-yellow-500 font-medium mt-3';
 }
 
 function setResult(matchId, side, value) {
@@ -1905,7 +1795,6 @@ function updateProgress() {
   prog.style.width = pct + '%';
   prog.classList.toggle('complete', pct >= 100);
   groups.forEach(g => updateGroupCount(g.id, g.matches));
-  updateExtrasStatus();
   updateExportButton();
 }
 
@@ -2052,8 +1941,7 @@ async function exportPDFInner() {
   const logoW = 20, logoH = 20, pieSize = 13, legW = 36, vizGap = 5;
   const vizRowH = Math.max(logoH, pieSize);
   const vizBlockH = vizRowH + 3;
-  const extrasBlockH = isExtrasOpen() ? 19 : 0;
-  const introH = headerH + 5 + nameBlockH + vizBlockH + 7 + extrasBlockH;
+  const introH = headerH + 5 + nameBlockH + vizBlockH + 7;
 
   pdf.setFillColor(12, 18, 32);
   pdf.roundedRect(cardX, y, cardW, introH, 3, 3, 'F');
@@ -2089,7 +1977,6 @@ async function exportPDFInner() {
   pdf.setFontSize(6.2);
   pdf.setTextColor(...C.mut);
   let progLine = `${matchDone}/${MATCH_TOTAL} partidos  ·  ${today}`;
-  if (isExtrasOpen()) progLine += `  ·  Final ${extrasDoneCount()}/${EXTRAS_TOTAL}`;
   pdf.text(progLine, PW / 2, nameEndY + 5, { align: 'center' });
 
   const vizY = nameEndY + 10;
@@ -2126,20 +2013,6 @@ async function exportPDFInner() {
   const rulesY = vizY + vizRowH + 5;
   pdf.text('10 € por persona  ·  1 punto por acierto  ·  Premios 60 / 30 / 10 %', PW / 2, rulesY, { align: 'center' });
 
-  if (isExtrasOpen()) {
-    pdf.setDrawColor(...C.brd);
-    pdf.setLineWidth(0.15);
-    pdf.line(cardX + pad, rulesY + 2, cardX + cardW - pad, rulesY + 2);
-    pdf.setFontSize(6); pdf.setTextColor(...C.txt); pdf.setFont('helvetica', 'bold');
-    pdf.text('Fase final', cardX + pad, rulesY + 6);
-    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(5.5); pdf.setTextColor(...C.mut);
-    const semiLine = extras.semis.map(c => teamByCode(c)?.name || '—').join(' · ');
-    const finalLine = extras.finalists.map(c => teamByCode(c)?.name || '—').join(' · ');
-    pdf.text('Semis: ' + semiLine, cardX + pad, rulesY + 10);
-    pdf.text('Final: ' + finalLine, cardX + pad, rulesY + 13.5);
-    pdf.setTextColor(250, 204, 21); pdf.setFont('helvetica', 'bold');
-    pdf.text('Campeón: ' + (teamByCode(extras.champion)?.name || '—'), cardX + pad, rulesY + 17);
-  }
   y += introH + 4;
 
   let colY = [y, y], col = 0;
@@ -2292,8 +2165,7 @@ function exportResultsJson() {
 // INIT
 // ============================================================
 function bootApp() {
-  try { loadState(); } catch (e) { console.warn('loadState', e); picks = {}; extras = normalizeExtras({}); }
-  extras = normalizeExtras(extras);
+  try { loadState(); } catch (e) { console.warn('loadState', e); picks = {}; }
   window._schedGroups = isGroupsOpen();
   window._schedExtras = isExtrasOpen();
   window._schedLeaderboard = isLeaderboardOpen();
@@ -2308,7 +2180,11 @@ function bootApp() {
 
   try { renderAdminEditor(); } catch (e) { console.warn(e); }
   const nameEl = document.getElementById('playerName');
-  if (nameEl) nameEl.addEventListener('input', () => { saveState(); updateExportButton(); });
+  if (nameEl) nameEl.addEventListener('input', () => {
+    saveState();
+    updateExportButton();
+    if (typeof renderKnockout === 'function') renderKnockout();
+  });
   const scorePts = document.getElementById('scorePoints');
   if (scorePts) scorePts.addEventListener('input', () => { scorePts.dataset.auto = '0'; });
   updateExportButton();
@@ -2325,7 +2201,7 @@ if (document.readyState === 'loading') {
   bootApp();
 }
 </script>
-<script src="knockout.js?v=8"></script>
+<script src="knockout.js?v=23"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
