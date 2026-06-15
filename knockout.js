@@ -389,6 +389,38 @@
     return out;
   }
 
+  function showKoExtraOnMatch(matchId) {
+    return getRoundKeyForMatch(matchId) === 'r32';
+  }
+
+  const KO_ROLE_META = {
+    semi: { label: 'SEMI', labelPdf: 'SEMI', title: 'Semifinalista', color: '#e9d5ff', bg: 'rgba(147,51,234,.35)', border: '#c084fc' },
+    finalist: { label: 'FINAL', labelPdf: 'FINAL', title: 'Finalista', color: '#ffedd5', bg: 'rgba(249,115,22,.35)', border: '#fb923c' },
+    champion: { label: 'CAMPEÓN', labelPdf: 'CAMPEON', title: 'Campeón', color: '#fef08a', bg: 'rgba(250,204,21,.35)', border: '#fde047' }
+  };
+
+  function koRoleLabel(role, compact) {
+    const m = KO_ROLE_META[role];
+    if (!m) return '';
+    if (role === 'champion' && compact) return 'CAM';
+    return m.label;
+  }
+
+  function koRoleBadgeHTML(role, size) {
+    if (!role || !KO_ROLE_META[role]) return '';
+    const m = KO_ROLE_META[role];
+    const text = size === 'sm' && role === 'champion' ? 'CAM' : m.label;
+    const sz = size || 'md';
+    return `<span class="ko-role-badge ko-role-badge--${role} ko-role-badge--${sz}" title="${m.title}">${text}</span>`;
+  }
+
+  function koFieldToRole(field) {
+    if (field === 'champion') return 'champion';
+    if (field === 'finalists') return 'finalist';
+    if (field === 'semis') return 'semi';
+    return '';
+  }
+
   function getKoExtraRole(code, ex) {
     if (!code || code === 'tbd') return '';
     if (ex.champion === code) return 'champion';
@@ -397,12 +429,11 @@
     return '';
   }
 
-  function getKoExtraStar(code, ex) {
+  function getKoExtraBadge(code) {
+    if (!showKoExtraBadges() || !code || code === 'tbd') return { badge: '' };
+    const ex = getActiveKoData().extras;
     const role = getKoExtraRole(code, ex);
-    if (role === 'champion') return '⭐';
-    if (role === 'finalist') return '★';
-    if (role === 'semi') return '✦';
-    return '';
+    return { badge: koRoleBadgeHTML(role, 'sm') };
   }
 
   function getKoSpecialsAlive(picks) {
@@ -422,15 +453,6 @@
     return alive;
   }
 
-  function getKoExtraBadge(code) {
-    if (!showKoExtraBadges() || !code || code === 'tbd') return { star: '' };
-    const ex = getActiveKoData().extras;
-    if (ex.champion === code) return { star: '<span class="ko-special-star" title="Tu campeón">⭐</span>' };
-    if (ex.finalists.includes(code)) return { star: '<span class="ko-special-star" title="Tu finalista">★</span>' };
-    if (ex.semis.includes(code)) return { star: '<span class="ko-special-star" title="Tu semifinalista">✦</span>' };
-    return { star: '' };
-  }
-
   function getKoExtraRoleInPicker(code, ex) {
     if (ex.champion === code) return 'champion';
     if (ex.finalists.includes(code)) return 'finalist';
@@ -447,20 +469,39 @@
     }
     const data = getActiveKoData();
     const ex = data.extras;
-    const alive = getKoSpecialsAlive(data.picks);
-    const role = getKoExtraRole(code, ex);
+    const showSpecial = showKoExtraOnMatch(m.id);
+    const role = showSpecial ? getKoExtraRole(code, ex) : '';
     const cls = ['ko-team-pick'];
     if (pick === side) cls.push('winner');
     else if (pick) cls.push('eliminated');
-    if (role === 'champion') cls.push('ko-team-pick--echamp');
-    else if (role === 'finalist') cls.push('ko-team-pick--efinal');
-    else if (role === 'semi') cls.push('ko-team-pick--esemi');
-    if (pick === side && role && alive.has(code)) cls.push('ko-team-pick--alive');
+    if (showSpecial && role === 'champion') cls.push('ko-team-pick--echamp');
+    else if (showSpecial && role === 'finalist') cls.push('ko-team-pick--efinal');
+    else if (showSpecial && role === 'semi') cls.push('ko-team-pick--esemi');
     const flag = typeof flagHTML === 'function' ? flagHTML(code, 20) : '';
-    const extra = getKoExtraBadge(code).star;
+    const extra = showSpecial ? getKoExtraBadge(code).badge : '';
     return `<button type="button" class="${cls.join(' ')}" data-ko-pick-match="${m.id}" data-ko-pick-side="${side}" aria-label="Gana ${teamNameKo(code)}">
       ${flag}<span class="ko-team-name">${teamNameKoShort(code, 15)}</span>${extra}
     </button>`;
+  }
+
+  function koChunkMatches(matches) {
+    if (matches.length <= 3) return [matches];
+    const half = Math.ceil(matches.length / 2);
+    return [matches.slice(0, half), matches.slice(half)];
+  }
+
+  function koRoundMatchesHTML(matches) {
+    const chunks = koChunkMatches(matches);
+    if (chunks.length === 1) {
+      return `<div class="ko-round-matches">${matches.map(koMatchRowHTML).join('')}</div>`;
+    }
+    const labels = ['A', 'B'];
+    return `<div class="ko-round-matches-grid">${chunks.map((chunk, i) =>
+      `<div class="ko-round-col">
+        <p class="ko-round-col-label">${labels[i] || i + 1}</p>
+        ${chunk.map(koMatchRowHTML).join('')}
+      </div>`
+    ).join('')}</div>`;
   }
 
   function koMatchRowHTML(m) {
@@ -473,6 +514,7 @@
       </div>
       <div class="ko-list-pair${pick ? ' has-pick' : ''}">
         ${koTeamPickBtnHTML(m, 'home')}
+        <span class="ko-vs" aria-hidden="true">vs</span>
         ${koTeamPickBtnHTML(m, 'away')}
       </div>
     </div>`;
@@ -493,7 +535,7 @@
         </div>
         <span class="ko-round-status text-xs text-gray-500">${round.matches.length} partido${round.matches.length === 1 ? '' : 's'} · toca al ganador</span>
       </div>
-      <div>${round.matches.map(koMatchRowHTML).join('')}</div>
+      <div>${koRoundMatchesHTML(round.matches)}</div>
       <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap">
         <span class="text-xs text-gray-600">${pendingTeams ? 'Equipos pendientes de clasificación' : 'Quiniela ' + round.label.toLowerCase()}</span>
         <span id="koMatchCount-${round.key}" class="text-yellow-500 font-semibold text-xs">${total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—'}</span>
@@ -567,6 +609,41 @@
       el.className = complete ? 'text-green-400 font-semibold text-xs' : 'text-yellow-500 font-semibold text-xs';
       if (card) card.classList.toggle('group-complete', complete);
     });
+  }
+
+  function clearKnockoutMatches() {
+    const user = getActiveKoUser();
+    if (!user) {
+      alert('Elige un participante antes de limpiar.');
+      return;
+    }
+    if (!confirm(`¿Borrar todos los partidos marcados de ${user}?\n\nLos pronósticos especiales (SEMI, FINAL, CAMPEÓN) no se tocan.`)) {
+      return;
+    }
+    koStore.users[user].picks = {};
+    saveKnockoutStore();
+    renderKnockoutMatches();
+    updateKnockoutStatus();
+  }
+
+  function clearKnockoutAll() {
+    const user = getActiveKoUser();
+    if (!user) {
+      alert('Elige un participante antes de limpiar.');
+      return;
+    }
+    if (!confirm(`¿Borrar TODO de ${user}?\n\nSe quitan los partidos Y los especiales (semis, finalistas y campeón).`)) {
+      return;
+    }
+    koActiveExtraSlot = null;
+    koExtraWarn = '';
+    koStore.users[user] = emptyUserData();
+    saveKnockoutStore();
+    renderKnockout();
+  }
+
+  function clearKnockoutPicks() {
+    clearKnockoutAll();
   }
 
   function renderKnockoutUserBar() {
@@ -713,46 +790,29 @@
     updateKnockoutStatus();
   }
 
-  function koExtrasReadOnlyChip(code, star, alive) {
+  function koExtrasReadOnlyChip(code, role) {
     const flag = typeof flagHTML === 'function' ? flagHTML(code, 28) : '';
-    return `<div class="ko-extra-readonly-chip${alive ? ' ko-extras-summary-chip--alive' : ''}">
-      <span class="ko-extra-role-star">${star}</span>
+    return `<div class="ko-extra-readonly-chip ko-extra-readonly-chip--${role}">
+      ${koRoleBadgeHTML(role, 'md')}
       <span class="ko-extra-readonly-flag">${flag}</span>
       <span class="ko-extra-readonly-name">${teamNameKo(code)}</span>
     </div>`;
   }
 
-  function koExtrasAliveRowHTML(picks, ex) {
-    const alive = getKoSpecialsAlive(picks);
-    if (!alive.size) return '';
-    const chips = [...alive].map(code => {
-      const star = getKoExtraStar(code, ex);
-      const flag = typeof flagHTML === 'function' ? flagHTML(code, 22) : '';
-      return `<span class="ko-extras-alive-chip">${star}${flag}${teamNameKoShort(code, 14)}</span>`;
-    }).join('');
-    return `<div class="ko-extras-alive-row">
-      <p class="ko-extras-summary-label">Siguen en tu cuadro</p>
-      <div class="ko-extras-summary-row">${chips}</div>
-    </div>`;
-  }
-
   function koExtrasSummaryHTML(ex) {
     const complete = koExtrasDone() >= KO_EXTRAS_TOTAL;
-    const picks = getActiveKoData().picks;
-    const alive = getKoSpecialsAlive(picks);
     const msg = complete
       ? '🔒 Pronósticos especiales cerrados — ya empezaron los dieciseisavos.'
       : '🔒 Plazo cerrado — faltan pronósticos especiales y ya no se pueden marcar.';
     return `
       <p class="ko-extras-done-msg">${msg}</p>
       <div class="ko-extras-summary">
-        <p class="ko-extras-summary-label">Semifinalistas ✦</p>
-        <div class="ko-extras-summary-row">${ex.semis.filter(Boolean).map(c => koExtrasReadOnlyChip(c, '✦', alive.has(c))).join('')}</div>
-        <p class="ko-extras-summary-label">Finalistas ★</p>
-        <div class="ko-extras-summary-row">${ex.finalists.filter(Boolean).map(c => koExtrasReadOnlyChip(c, '★', alive.has(c))).join('')}</div>
-        <p class="ko-extras-summary-label">Campeón ⭐</p>
-        <div class="ko-extras-summary-row">${ex.champion ? koExtrasReadOnlyChip(ex.champion, '⭐', alive.has(ex.champion)) : ''}</div>
-        ${koExtrasAliveRowHTML(picks, ex)}
+        <p class="ko-extras-summary-label">Semifinalistas</p>
+        <div class="ko-extras-summary-row">${ex.semis.filter(Boolean).map(c => koExtrasReadOnlyChip(c, 'semi')).join('')}</div>
+        <p class="ko-extras-summary-label">Finalistas</p>
+        <div class="ko-extras-summary-row">${ex.finalists.filter(Boolean).map(c => koExtrasReadOnlyChip(c, 'finalist')).join('')}</div>
+        <p class="ko-extras-summary-label">Campeón</p>
+        <div class="ko-extras-summary-row">${ex.champion ? koExtrasReadOnlyChip(ex.champion, 'champion') : ''}</div>
       </div>`;
   }
 
@@ -768,22 +828,27 @@
         <div class="ko-extras-progress"><div class="ko-extras-progress-fill" style="width:${pct}%"></div></div>
         <span class="ko-extras-progress-label">${done}/${KO_EXTRAS_TOTAL} completados</span>
       </div>
-      <div class="ko-r32-picker-legend">
-        <span><span class="ko-legend-dot ko-legend-dot--semi"></span> Semifinalista ✦</span>
-        <span><span class="ko-legend-dot ko-legend-dot--final"></span> Finalista ★</span>
-        <span><span class="ko-legend-dot ko-legend-dot--champ"></span> Campeón ⭐</span>
+      <div class="ko-color-key" aria-label="Colores de pronósticos especiales">
+        <div class="ko-color-key-item ko-color-key-item--semi">${koRoleBadgeHTML('semi', 'md')} Semifinalista</div>
+        <div class="ko-color-key-item ko-color-key-item--final">${koRoleBadgeHTML('finalist', 'md')} Finalista</div>
+        <div class="ko-color-key-item ko-color-key-item--champ">${koRoleBadgeHTML('champion', 'md')} Campeón</div>
       </div>
-      <section class="ko-extras-step">
-        <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge">1</span>4 semifinalistas</h4>
-        <p class="ko-extras-step-hint">Elige entre los <strong>32 equipos de dieciseisavos</strong> · distintos entre sí</p>
+      <div class="ko-r32-picker-legend">
+        <span class="ko-legend-item">${koRoleBadgeHTML('semi', 'md')} Semifinalista</span>
+        <span class="ko-legend-item">${koRoleBadgeHTML('finalist', 'md')} Finalista</span>
+        <span class="ko-legend-item">${koRoleBadgeHTML('champion', 'md')} Campeón</span>
+      </div>
+      <section class="ko-extras-step ko-extras-step--semi">
+        <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--semi">1</span>4 semifinalistas</h4>
+        <p class="ko-extras-step-hint">Elige 4 equipos distintos de dieciseisavos</p>
         <div class="ko-extras-row ko-extras-row--4">
           ${ex.semis.map((s, i) => koExtraSlotHTML('semis', i, s, 'SF ' + (i + 1))).join('')}
         </div>
         ${koSectionPickerHTML('semis')}
       </section>
-      <section class="ko-extras-step${semisFull ? '' : ' ko-extras-step--locked'}">
-        <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge">2</span>2 finalistas</h4>
-        <p class="ko-extras-step-hint">Solo entre tus <strong>4 semifinalistas</strong></p>
+      <section class="ko-extras-step ko-extras-step--final${semisFull ? '' : ' ko-extras-step--locked'}">
+        <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--final">2</span>2 finalistas</h4>
+        <p class="ko-extras-step-hint">Solo de tus 4 semifinalistas</p>
         <div class="ko-extras-row ko-extras-row--2">
           ${ex.finalists.map((s, i) => koExtraSlotHTML('finalists', i, s, 'Final ' + (i + 1))).join('')}
         </div>
@@ -791,7 +856,7 @@
       </section>
       <section class="ko-extras-step ko-extras-step--champion${finalsFull ? '' : ' ko-extras-step--locked'}">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--gold">3</span>Campeón del mundo</h4>
-        <p class="ko-extras-step-hint">Solo entre tus <strong>2 finalistas</strong></p>
+        <p class="ko-extras-step-hint">Solo de tus 2 finalistas</p>
         <div class="ko-champion-stage">
           <div class="ko-final-podium">
             <img src="/assets/wc2026-logo.png" class="ko-final-trophy" alt="" onerror="this.src='/assets/wc-trophy.svg'"/>
@@ -800,8 +865,7 @@
           </div>
         </div>
         ${koSectionPickerHTML('champion')}
-      </section>
-      ${koExtrasAliveRowHTML(getActiveKoData().picks, ex)}`;
+      </section>`;
   }
 
   function koExtraSlotHTML(field, index, selected, label) {
@@ -811,16 +875,12 @@
       ? flagHTML(selected, 32)
       : '<span class="ko-extra-plus" aria-hidden="true">+</span>';
     const name = filled ? teamNameKo(selected) : 'Vacío';
-    let roleStar = '';
-    if (filled) {
-      if (field === 'champion') roleStar = '<span class="ko-extra-role-star">⭐</span>';
-      else if (field === 'finalists') roleStar = '<span class="ko-extra-role-star">★</span>';
-      else roleStar = '<span class="ko-extra-role-star">✦</span>';
-    }
+    let roleBadge = '';
+    if (filled) roleBadge = koRoleBadgeHTML(koFieldToRole(field), 'md');
     return `<div class="ko-extra-slot${filled ? ' ko-extra-slot--filled' : ''}${isActive ? ' ko-extra-slot--active' : ''} ko-extra-slot--${field}">
       <span class="ko-extra-slot-num">${label}</span>
       <button type="button" class="ko-extra-slot-card" data-ko-extra-slot data-ko-extra-field="${field}" data-ko-extra-index="${index}" aria-pressed="${isActive}">
-        ${roleStar}
+        ${roleBadge ? `<span class="ko-extra-slot-badge">${roleBadge}</span>` : ''}
         <span class="ko-extra-slot-flag">${flag}</span>
         <span class="ko-extra-slot-name">${name}</span>
         ${filled ? `<span class="ko-extra-clear" data-ko-extra-clear data-ko-extra-field="${field}" data-ko-extra-index="${index}" role="button" aria-label="Quitar equipo">×</span>` : ''}
@@ -836,10 +896,10 @@
     if (role === 'finalist') cls.push('ko-r32-pick--final');
     if (role === 'champion') cls.push('ko-r32-pick--champ');
     if (taken) cls.push('ko-r32-pick--taken');
-    const star = role === 'champion' ? '⭐' : role === 'finalist' ? '★' : role === 'semi' ? '✦' : '';
+    const badge = koRoleBadgeHTML(role, 'sm');
     const flag = typeof flagHTML === 'function' ? flagHTML(code, field === 'semis' ? 24 : 32) : '';
     return `<button type="button" class="${cls.join(' ')}" data-ko-pick-code="${code}" data-ko-picker-field="${field}"${taken ? ' disabled' : ''} aria-label="${teamNameKo(code)}">
-      ${star ? `<span class="ko-r32-pick-star">${star}</span>` : ''}
+      ${badge ? `<span class="ko-r32-pick-badge">${badge}</span>` : ''}
       ${flag}
       <span class="ko-r32-pick-name">${teamNameKoShort(code, field === 'semis' ? 11 : 14)}</span>
     </button>`;
@@ -878,7 +938,7 @@
       teams = finals.map(code => ({ code, name: teamNameKo(code) }));
       hint = koActiveExtraSlot && koActiveExtraSlot.field === 'champion'
         ? 'Elige campeón entre tus 2 finalistas'
-        : 'Toca uno de tus finalistas para ser campeón ⭐';
+        : 'Toca uno de tus finalistas para ser <strong>campeón</strong>';
     }
     return `<div class="ko-section-picker" data-ko-picker-field="${field}">
       <p class="ko-section-picker-hint">${hint}</p>
@@ -968,6 +1028,15 @@
       btn.classList.toggle('is-locked', !complete);
       btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
     }
+    const clearBtn = document.getElementById('btnClearKo');
+    const clearMatchesBtn = document.getElementById('btnClearKoMatches');
+    const canClear = !!getActiveKoUser();
+    [clearBtn, clearMatchesBtn].forEach(btn => {
+      if (!btn) return;
+      btn.disabled = !canClear;
+      btn.style.opacity = canClear ? '1' : '.45';
+      btn.style.pointerEvents = canClear ? '' : 'none';
+    });
     const champEl = document.getElementById('koChampionDisplay');
     if (champEl) {
       champEl.textContent = getActiveKoData().extras.champion ? teamNameKo(getActiveKoData().extras.champion) : '—';
@@ -999,14 +1068,13 @@
   const KO_PDF = {
     M: 10, GAP: 3, PAGE_TOP: 10, PAGE_BOTTOM: 287,
     MATCH_H: 6.8, HEAD_H: 7, FOOT_H: 4,
-    FLAG_W: 2.8, FLAG_H: 2.1, RADIUS: 2
+    FLAG_W: 2.8, FLAG_H: 2.1, RADIUS: 2,
+    MATCH_H_MIN: 8, MATCH_H_MAX: 23
   };
 
   function koPdfRoleLabel(role) {
-    if (role === 'champion') return 'CAM';
-    if (role === 'finalist') return 'F';
-    if (role === 'semi') return 'SF';
-    return '';
+    const m = KO_ROLE_META[role];
+    return m ? m.labelPdf : '';
   }
 
   function koPdfSpecialsAlive(picks, ex) {
@@ -1026,9 +1094,7 @@
   }
 
   function koPdfChunkMatches(matches) {
-    if (matches.length <= 3) return [matches];
-    const half = Math.ceil(matches.length / 2);
-    return [matches.slice(0, half), matches.slice(half)];
+    return koChunkMatches(matches);
   }
 
   function koPdfSyncColumns(colY) {
@@ -1063,15 +1129,15 @@
   }
 
   const KO_PDF_TAG = {
-    semi: { bg: [76, 29, 149], bgHi: [139, 92, 246], fg: [255, 255, 255], border: [167, 139, 250] },
-    finalist: { bg: [146, 98, 12], bgHi: [245, 158, 11], fg: [30, 22, 4], border: [251, 191, 36] },
-    champion: { bg: [161, 98, 7], bgHi: [250, 204, 21], fg: [28, 20, 2], border: [253, 224, 71] }
+    semi: { bg: [109, 40, 217], bgHi: [147, 51, 234], fg: [255, 255, 255], border: [192, 132, 252], fill: [46, 16, 101] },
+    finalist: { bg: [234, 88, 12], bgHi: [249, 115, 22], fg: [255, 255, 255], border: [251, 146, 60], fill: [67, 20, 7] },
+    champion: { bg: [202, 138, 4], bgHi: [250, 204, 21], fg: [28, 20, 2], border: [253, 224, 71], fill: [66, 48, 6] }
   };
 
   function koPdfTagWidth(role) {
-    if (role === 'champion') return 7;
-    if (role === 'finalist') return 4.8;
-    return 5;
+    if (role === 'champion') return 13;
+    if (role === 'finalist') return 8.5;
+    return 7;
   }
 
   function koPdfDrawRoleTag(pdf, role, x, y, highlight) {
@@ -1086,15 +1152,65 @@
     pdf.setLineWidth(highlight ? 0.28 : 0.15);
     pdf.roundedRect(x, y, w, h, 0.6, 0.6, 'FD');
 
-    pdf.setFontSize(3.5);
+    pdf.setFontSize(role === 'champion' ? 2.8 : 3.5);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(...style.fg);
     pdf.text(lbl, x + w / 2, y + 2.35, { align: 'center' });
     return w;
   }
 
-  function koPdfFinalistsForDisplay(ex) {
-    return ex.finalists.filter(code => code && code !== ex.champion);
+  function koPdfMatchRowHeight(startY, chunkLen) {
+    const avail = KO_PDF.PAGE_BOTTOM - startY - 2;
+    const rows = Math.max(chunkLen, 1);
+    const raw = (avail - KO_PDF.HEAD_H - KO_PDF.FOOT_H) / rows;
+    return Math.min(KO_PDF.MATCH_H_MAX, Math.max(KO_PDF.MATCH_H_MIN, raw));
+  }
+
+  function koPdfDrawSectionTitle(pdf, x, y, w, title) {
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(5.5);
+    pdf.setTextColor(...KO_PDF_C.mut);
+    pdf.text(title, x, y);
+    pdf.setDrawColor(45, 55, 75);
+    pdf.setLineWidth(0.15);
+    pdf.line(x, y + 1.2, x + w, y + 1.2);
+    return y + 4;
+  }
+
+  function koPdfDrawIntroLegend(pdf, PW, nameEndY) {
+    const C = KO_PDF_C;
+    let y = nameEndY + 5;
+    pdf.setFontSize(4.6);
+    pdf.setFont('helvetica', 'bold');
+
+    const basic = [
+      { lbl: 'Ganador', col: C.g },
+      { lbl: 'Eliminado', col: C.r }
+    ];
+    let bx = (PW - 42) / 2;
+    basic.forEach(row => {
+      pdf.setFillColor(...row.col);
+      pdf.rect(bx, y - 1.6, 2, 2, 'F');
+      pdf.setTextColor(...C.txt);
+      pdf.text(row.lbl, bx + 2.6, y);
+      bx += 21;
+    });
+
+    y += 4.5;
+    const roles = ['semi', 'finalist', 'champion'];
+    const tagW = roles.map(r => koPdfTagWidth(r));
+    const gap = 2;
+    const totalW = tagW.reduce((a, b) => a + b, 0) + gap * (roles.length - 1);
+    let tx = (PW - totalW) / 2;
+    roles.forEach((role, i) => {
+      koPdfDrawRoleTag(pdf, role, tx, y - 2.4, true);
+      tx += tagW[i] + gap;
+    });
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(4.2);
+    pdf.setTextColor(...C.mut);
+    pdf.text('Tus especiales', PW / 2, y + 2.8, { align: 'center' });
+    return y + 5;
   }
 
   function koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, startY) {
@@ -1102,7 +1218,7 @@
     const pad = 5;
     const headerH = 12;
     const nameLines = pdf.splitTextToSize(displayName, cardW - pad * 2);
-    const introH = headerH + nameLines.length * 4.5 + 11;
+    const introH = headerH + nameLines.length * 4.5 + 18;
     const y = startY;
 
     pdf.setFillColor(12, 18, 32);
@@ -1139,42 +1255,29 @@
     pdf.setFontSize(5.5);
     pdf.setTextColor(...C.mut);
     pdf.text(`${done}/${req} partidos  ·  ${today}`, PW / 2, nameEndY + 3.5, { align: 'center' });
-
-    const legItems = [
-      { lbl: 'Ganador', col: C.g },
-      { lbl: 'Eliminado', col: C.r },
-      { lbl: 'Especial vivo', col: C.gold }
-    ];
-    const legW = 30;
-    let legX = (PW - legItems.length * legW) / 2;
-    const legY = nameEndY + 7.5;
-    pdf.setFontSize(4.8);
-    pdf.setFont('helvetica', 'bold');
-    legItems.forEach(row => {
-      pdf.setFillColor(...row.col);
-      pdf.rect(legX, legY - 1.8, 2, 2, 'F');
-      pdf.setTextColor(...C.txt);
-      pdf.text(row.lbl, legX + 2.8, legY);
-      legX += legW;
-    });
+    koPdfDrawIntroLegend(pdf, PW, nameEndY);
 
     return y + introH + 2;
   }
 
-  function koPdfDrawPickRow(pdf, code, role, x, y, w, h, cache, alive) {
+  function koPdfDrawPickRow(pdf, code, role, x, y, w, h, cache) {
     const C = KO_PDF_C;
     const { FLAG_W, FLAG_H } = KO_PDF;
     const style = role ? KO_PDF_TAG[role] : null;
     const tagW = role ? koPdfTagWidth(role) : 0;
     const pad = 1.5;
 
-    pdf.setFillColor(...(alive ? [24, 32, 52] : [20, 28, 44]));
-    pdf.setDrawColor(...(alive && style ? style.border : [60, 70, 90]));
-    pdf.setLineWidth(alive ? 0.32 : 0.18);
+    pdf.setFillColor(...(style ? style.fill : [20, 28, 44]));
+    pdf.setDrawColor(...(style ? style.border : [60, 70, 90]));
+    pdf.setLineWidth(style ? 0.28 : 0.18);
     pdf.roundedRect(x, y, w, h, 0.8, 0.8, 'FD');
+    if (style) {
+      pdf.setFillColor(...style.bgHi);
+      pdf.rect(x, y + 0.4, 1.2, h - 0.8, 'F');
+    }
 
     const img = cache[code];
-    let tx = x + pad;
+    let tx = x + pad + (style ? 1.4 : 0);
     if (img) {
       pdf.addImage(img, 'PNG', tx, y + (h - FLAG_H) / 2, FLAG_W, FLAG_H);
       tx += FLAG_W + 1;
@@ -1182,26 +1285,26 @@
 
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(4.8);
-    pdf.setTextColor(...(alive && style ? style.border : C.txt));
+    pdf.setTextColor(...(style ? style.border : C.txt));
     const name = koPdfTrimName(pdf, teamNameKo(code), w - (tx - x) - tagW - pad - 0.5);
     pdf.text(name, tx, y + h / 2 + 0.55);
 
-    if (role) {
-      koPdfDrawRoleTag(pdf, role, x + w - pad - tagW, y + (h - 3.4) / 2, alive);
-    }
+    if (role) koPdfDrawRoleTag(pdf, role, x + w - pad - tagW, y + (h - 3.4) / 2, true);
   }
 
-  function koPdfDrawChampionRow(pdf, code, cache, trophy, x, y, w, h, alive) {
+  function koPdfDrawChampionRow(pdf, code, cache, trophy, x, y, w, h) {
     const C = KO_PDF_C;
     const style = KO_PDF_TAG.champion;
     const { FLAG_W, FLAG_H } = KO_PDF;
     const pad = 1.5;
     const trophyW = Math.min(9, h - 1);
 
-    pdf.setFillColor(22, 30, 50);
-    pdf.setDrawColor(...(alive ? style.border : [55, 65, 85]));
-    pdf.setLineWidth(alive ? 0.35 : 0.2);
+    pdf.setFillColor(...style.fill);
+    pdf.setDrawColor(...style.border);
+    pdf.setLineWidth(0.35);
     pdf.roundedRect(x, y, w, h, 1, 1, 'FD');
+    pdf.setFillColor(...style.bgHi);
+    pdf.rect(x, y + 0.4, 1.4, h - 0.8, 'F');
 
     let cx = x + pad;
     if (trophy) {
@@ -1216,20 +1319,20 @@
 
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(5.8);
-    pdf.setTextColor(...(alive ? style.bgHi : C.txt));
+    pdf.setTextColor(...style.border);
     const tagW = koPdfTagWidth('champion');
     pdf.text(koPdfTrimName(pdf, teamNameKo(code), w - (cx - x) - tagW - pad), cx, y + h / 2 + 0.6);
-    koPdfDrawRoleTag(pdf, 'champion', x + w - pad - tagW, y + (h - 3.4) / 2, alive);
+    koPdfDrawRoleTag(pdf, 'champion', x + w - pad - tagW, y + (h - 3.4) / 2, true);
   }
 
-  function koPdfDrawExtrasCard(pdf, data, cache, x, y, w, aliveSet, trophy) {
+  function koPdfDrawExtrasCard(pdf, data, cache, x, y, w, trophy) {
     const C = KO_PDF_C;
     const pad = 3.5;
     const GAP = 2;
     const innerW = w - pad * 2;
     const semiW = (innerW - GAP) / 2;
-    const semiH = 5.5;
-    const bottomH = 11;
+    const semiH = 6.5;
+    const bottomH = 10;
     const cardH = 6 + 2 + semiH + GAP + semiH + 2.5 + 2 + bottomH + 3;
 
     pdf.setFillColor(...C.card);
@@ -1242,14 +1345,14 @@
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(6.5);
     pdf.setTextColor(251, 191, 36);
-    pdf.text('PRONOSTICOS ESPECIALES', x + pad, y + 4.2);
+    pdf.text('TUS ESPECIALES', x + pad, y + 4.2);
     if (trophy) pdf.addImage(trophy, 'PNG', x + w - pad - 5.5, y + 0.5, 5.5, 5.5);
 
     let cy = y + 8;
     pdf.setFontSize(4.2);
-    pdf.setTextColor(...C.mut);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('SEMIFINALISTAS', x + pad, cy);
+    pdf.setTextColor(...KO_PDF_TAG.semi.border);
+    pdf.text('4 SEMIFINALISTAS', x + pad, cy);
     cy += 2;
     data.extras.semis.forEach((code, i) => {
       if (!code) return;
@@ -1258,7 +1361,7 @@
       koPdfDrawPickRow(
         pdf, code, 'semi',
         x + pad + col * (semiW + GAP), cy + row * (semiH + GAP),
-        semiW, semiH, cache, aliveSet.has(code)
+        semiW, semiH, cache
       );
     });
     cy += semiH + GAP + semiH + 2.5;
@@ -1269,20 +1372,21 @@
     cy += 2;
 
     const colGap = 2.5;
-    const champW = innerW * 0.42;
-    const finColW = innerW - champW - colGap;
+    const champW = (innerW - colGap) / 2;
+    const finColW = champW;
     const displayFinalists = koPdfFinalistsForDisplay(data.extras);
     const finW = displayFinalists.length > 1 ? (finColW - GAP) / 2 : finColW;
 
     pdf.setFontSize(4.2);
-    pdf.setTextColor(...C.mut);
+    pdf.setTextColor(...KO_PDF_TAG.champion.border);
     pdf.text('CAMPEON', x + pad, cy);
+    pdf.setTextColor(...KO_PDF_TAG.finalist.border);
     pdf.text('FINALISTA', x + pad + champW + colGap, cy);
     cy += 2;
 
     const champ = data.extras.champion;
     if (champ) {
-      koPdfDrawChampionRow(pdf, champ, cache, trophy, x + pad, cy, champW, bottomH, aliveSet.has(champ));
+      koPdfDrawChampionRow(pdf, champ, cache, trophy, x + pad, cy, champW, bottomH);
     } else {
       pdf.setFillColor(20, 28, 44);
       pdf.setDrawColor(60, 70, 90);
@@ -1295,7 +1399,7 @@
     const finX = x + pad + champW + colGap;
     if (displayFinalists.length) {
       displayFinalists.forEach((code, i) => {
-        koPdfDrawPickRow(pdf, code, 'finalist', finX + i * (finW + (displayFinalists.length > 1 ? GAP : 0)), cy, finW, bottomH, cache, aliveSet.has(code));
+        koPdfDrawPickRow(pdf, code, 'finalist', finX + i * (finW + (displayFinalists.length > 1 ? GAP : 0)), cy, finW, bottomH, cache);
       });
     } else {
       pdf.setFillColor(20, 28, 44);
@@ -1309,90 +1413,85 @@
     return y + cardH + 2;
   }
 
-  function koPdfDrawTeamSide(pdf, code, isWin, isLose, isAlive, role, x, midY, alignRight, maxW, cache, FLAG_W, FLAG_H) {
+  function koPdfDrawTeamSide(pdf, code, isWin, isLose, role, x, midY, alignRight, maxW, cache, FLAG_W, FLAG_H, matchH) {
     const C = KO_PDF_C;
     const style = role ? KO_PDF_TAG[role] : null;
-    const tagSlot = role ? koPdfTagWidth(role) + 1.5 : 0;
-    const name = koPdfTrimName(pdf, teamNameKo(code), maxW - FLAG_W - tagSlot - (isWin ? 2 : 0) - 1);
+    const roleLbl = role ? ' ' + koRoleLabel(role, true) : '';
+    const name = koPdfTrimName(pdf, teamNameKo(code) + roleLbl, maxW - FLAG_W - (isWin ? 2.2 : 0) - 1.2);
+    const fontSize = matchH >= 12 ? 6.2 : matchH >= 10 ? 5.6 : 5;
 
-    pdf.setFontSize(5);
+    pdf.setFontSize(fontSize);
     pdf.setFont('helvetica', isWin ? 'bold' : 'normal');
-    if (isAlive && style) pdf.setTextColor(...style.border);
+    if (isWin && style) pdf.setTextColor(...style.border);
     else if (isWin) pdf.setTextColor(...C.g);
     else if (isLose) pdf.setTextColor(180, 110, 110);
+    else if (role && style) pdf.setTextColor(...style.border);
     else pdf.setTextColor(...C.txt);
 
     const img = cache[code];
     if (alignRight) {
       let rx = x;
-      if (role) {
-        const tw = koPdfTagWidth(role);
-        koPdfDrawRoleTag(pdf, role, rx - tw, midY - 1.7, isAlive);
-        rx -= tw + 1;
-      }
       if (isWin) {
-        pdf.setFillColor(...(isAlive && style ? style.border : C.g));
-        pdf.circle(rx - 0.8, midY - 0.4, 0.65, 'F');
-        rx -= 2;
+        pdf.setFillColor(...(style ? style.bgHi : C.g));
+        pdf.circle(rx - 0.9, midY - 0.35, 0.7, 'F');
+        rx -= 2.2;
       }
       if (img) {
         rx -= FLAG_W;
-        pdf.addImage(img, 'PNG', rx, midY - 1.7, FLAG_W, FLAG_H);
-        rx -= 0.5;
+        pdf.addImage(img, 'PNG', rx, midY - FLAG_H / 2, FLAG_W, FLAG_H);
+        rx -= 0.6;
       }
       pdf.text(name, rx, midY, { align: 'right' });
     } else {
-      if (img) pdf.addImage(img, 'PNG', x, midY - 1.7, FLAG_W, FLAG_H);
-      let nx = x + FLAG_W + 0.6;
+      if (img) pdf.addImage(img, 'PNG', x, midY - FLAG_H / 2, FLAG_W, FLAG_H);
+      let nx = x + FLAG_W + 0.7;
       pdf.text(name, nx, midY);
-      nx += pdf.getTextWidth(name) + 0.8;
       if (isWin) {
-        pdf.setFillColor(...(isAlive && style ? style.border : C.g));
-        pdf.circle(nx, midY - 0.4, 0.65, 'F');
-        nx += 2;
+        pdf.setFillColor(...(style ? style.bgHi : C.g));
+        pdf.circle(nx + pdf.getTextWidth(name) + 1, midY - 0.35, 0.7, 'F');
       }
-      if (role) koPdfDrawRoleTag(pdf, role, nx, midY - 1.7, isAlive);
     }
   }
 
-  function koPdfDrawMatchRow(pdf, m, pick, xOff, my, CW, cache, stripe, ex) {
+  function koPdfDrawMatchRow(pdf, m, pick, xOff, my, CW, cache, stripe, ex, matchH, showSpecials) {
     const C = KO_PDF_C;
-    const { MATCH_H, FLAG_W, FLAG_H } = KO_PDF;
-    const halfW = (CW - 6) / 2;
+    const { FLAG_W, FLAG_H } = KO_PDF;
+    const halfW = (CW - 8) / 2;
+    const dateSize = matchH >= 12 ? 4.2 : 3.6;
+    const teamY = my + matchH * 0.62;
 
     if (stripe) {
       pdf.setFillColor(25, 35, 50);
-      pdf.rect(xOff + 0.5, my, CW - 1, MATCH_H - 0.2, 'F');
+      pdf.rect(xOff + 0.5, my, CW - 1, matchH - 0.2, 'F');
     }
 
-    const homeRole = getKoExtraRole(m.home, ex);
-    const awayRole = getKoExtraRole(m.away, ex);
-    const homeAlive = pick === 'home' && !!homeRole;
-    const awayAlive = pick === 'away' && !!awayRole;
+    const homeRole = showSpecials ? getKoExtraRole(m.home, ex) : '';
+    const awayRole = showSpecials ? getKoExtraRole(m.away, ex) : '';
+    const homeStyle = homeRole ? KO_PDF_TAG[homeRole] : null;
+    const awayStyle = awayRole ? KO_PDF_TAG[awayRole] : null;
     if (pick === 'home') {
-      pdf.setFillColor(...(homeAlive ? C.gold : C.g));
-      pdf.rect(xOff + 0.5, my, 1, MATCH_H - 0.2, 'F');
+      pdf.setFillColor(...(homeStyle ? homeStyle.bgHi : C.g));
+      pdf.rect(xOff + 0.5, my, 1, matchH - 0.2, 'F');
     } else if (pick === 'away') {
-      pdf.setFillColor(...(awayAlive ? C.gold : C.g));
-      pdf.rect(xOff + CW - 1.5, my, 1, MATCH_H - 0.2, 'F');
+      pdf.setFillColor(...(awayStyle ? awayStyle.bgHi : C.g));
+      pdf.rect(xOff + CW - 1.5, my, 1, matchH - 0.2, 'F');
     }
 
-    pdf.setFontSize(3.6);
+    pdf.setFontSize(dateSize);
     pdf.setTextColor(...C.mut);
     pdf.setFont('helvetica', 'normal');
     const city = koPdfVenueShort(m.venue);
-    pdf.text(`${m.date} ${m.hour}${city ? ' · ' + city : ''}`, xOff + 2, my + 2.5);
+    pdf.text(`${m.date} ${m.hour}${city ? ' · ' + city : ''}`, xOff + 2, my + matchH * 0.28);
 
-    const midY = my + 5;
-    koPdfDrawTeamSide(pdf, m.home, pick === 'home', pick === 'away', homeAlive,
-      homeRole, xOff + 2, midY, false, halfW, cache, FLAG_W, FLAG_H);
-    koPdfDrawTeamSide(pdf, m.away, pick === 'away', pick === 'home', awayAlive,
-      awayRole, xOff + CW - 2, midY, true, halfW, cache, FLAG_W, FLAG_H);
+    koPdfDrawTeamSide(pdf, m.home, pick === 'home', pick === 'away',
+      homeRole, xOff + 2, teamY, false, halfW, cache, FLAG_W, FLAG_H, matchH);
+    koPdfDrawTeamSide(pdf, m.away, pick === 'away', pick === 'home',
+      awayRole, xOff + CW - 2, teamY, true, halfW, cache, FLAG_W, FLAG_H, matchH);
   }
 
-  function koPdfDrawMatchColumn(pdf, matches, xOff, y, CW, picks, cache, label, ex) {
-    const { MATCH_H, HEAD_H, FOOT_H, RADIUS } = KO_PDF;
-    const groupH = HEAD_H + matches.length * MATCH_H + FOOT_H;
+  function koPdfDrawMatchColumn(pdf, matches, xOff, y, CW, picks, cache, label, ex, matchH, showSpecials) {
+    const { HEAD_H, FOOT_H, RADIUS } = KO_PDF;
+    const groupH = HEAD_H + matches.length * matchH + FOOT_H;
 
     pdf.setFillColor(...KO_PDF_C.card);
     pdf.setDrawColor(...KO_PDF_C.brd);
@@ -1413,7 +1512,7 @@
 
     let gy = y + HEAD_H;
     matches.forEach((m, idx) => {
-      koPdfDrawMatchRow(pdf, m, picks[m.id], xOff, gy + idx * MATCH_H, CW, cache, idx % 2 === 1, ex);
+      koPdfDrawMatchRow(pdf, m, picks[m.id], xOff, gy + idx * matchH, CW, cache, idx % 2 === 1, ex, matchH, showSpecials);
     });
 
     return y + groupH;
@@ -1443,14 +1542,22 @@
     const cache = typeof flagCache !== 'undefined' ? flagCache : {};
 
     koPdfBg(pdf, PW, PH);
-    const aliveSet = koPdfSpecialsAlive(data.picks, data.extras);
     let y = koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, M);
-    y = koPdfDrawExtrasCard(pdf, data, cache, M, y, cardW, aliveSet, typeof trophyCache !== 'undefined' ? trophyCache : null);
+    y = koPdfDrawExtrasCard(pdf, data, cache, M, y, cardW, typeof trophyCache !== 'undefined' ? trophyCache : null);
+    y = koPdfDrawSectionTitle(pdf, M, y + 1, cardW, 'TUS PARTIDOS');
 
     const openPlayable = getOpenRounds().map(r => ({
       round: r,
       matches: r.matches.filter(isMatchReady)
     })).filter(x => x.matches.length);
+
+    let maxChunkLen = 1;
+    openPlayable.forEach(({ matches }) => {
+      koPdfChunkMatches(matches).forEach(chunk => {
+        if (chunk.length > maxChunkLen) maxChunkLen = chunk.length;
+      });
+    });
+    const matchH = koPdfMatchRowHeight(y + GAP, maxChunkLen);
 
     let col = 0;
     let colY = [y + GAP, y + GAP];
@@ -1475,11 +1582,11 @@
         if (!chunk.length) return;
         const fullWidth = chunks.length === 1;
         const colW = fullWidth ? cardW : CW;
-        const groupH = KO_PDF.HEAD_H + chunk.length * KO_PDF.MATCH_H + KO_PDF.FOOT_H;
+        const groupH = KO_PDF.HEAD_H + chunk.length * matchH + KO_PDF.FOOT_H;
         placeGroup(groupH, fullWidth);
         const xOff = fullWidth ? M : M + col * (CW + GAP);
         const label = round.label + (chunks.length > 1 ? (ci ? ' B' : ' A') : '');
-        colY[col] = koPdfDrawMatchColumn(pdf, chunk, xOff, colY[col], colW, data.picks, cache, label, data.extras) + 2;
+        colY[col] = koPdfDrawMatchColumn(pdf, chunk, xOff, colY[col], colW, data.picks, cache, label, data.extras, matchH, round.key === 'r32') + 2;
         if (fullWidth) {
           colY = koPdfSyncColumns(colY);
           col = 0;
@@ -1545,6 +1652,9 @@
   window.setKoExtra = setKoExtra;
   window.submitKoPassword = submitKoPassword;
   window.hideKoPasswordModal = hideKoPasswordModal;
+  window.clearKnockoutMatches = clearKnockoutMatches;
+  window.clearKnockoutAll = clearKnockoutAll;
+  window.clearKnockoutPicks = clearKnockoutPicks;
   window.exportKnockoutPDF = exportKnockoutPDF;
   window.requestKnockoutAccess = requestKnockoutAccess;
   window.KO_ROUNDS = KO_ROUNDS;
