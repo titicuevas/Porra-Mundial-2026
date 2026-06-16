@@ -5,12 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0e1a"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="description" content="Porra del Mundial 2026 entre colegas. Marca tus pronósticos y exporta el PDF."/>
+<meta name="description" content="Porra Mundial 2026 entre colegas. La quiniela que cuenta es eliminatorias — especiales + ganadores. Exporta PDF."/>
 <meta property="og:title" content="Porra Mundial 2026"/>
-<meta property="og:description" content="Quiniela express del Mundial 2026 — plan de Manolin. Marca 1/X/2 y exporta tu PDF."/>
+<meta property="og:description" content="Quiniela del Mundial 2026 — eliminatorias, PDF y clasificación. Plan de Manolin."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://porra-mundial-2026-rust.vercel.app/"/>
 <meta property="og:image" content="https://porra-mundial-2026-rust.vercel.app/assets/banner.gif"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/assets/wc2026-logo.png"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%86</text></svg>"/>
 <title>Porra Mundial 2026 🏆</title>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -77,9 +79,22 @@ input,select,textarea{color:#fff;}
 .group-card{background:linear-gradient(135deg,#111827 0%,#1f2937 100%);border:1px solid #374151;border-radius:16px;transition:border-color .25s,box-shadow .25s;}
 .group-card.group-complete{border-color:rgba(34,197,94,.5);box-shadow:0 0 0 1px rgba(34,197,94,.12),0 8px 24px rgba(0,0,0,.2);}
 .group-card.group-complete .group-header{background:linear-gradient(135deg,#14532d 0%,#1a3352 100%);}
-.group-header{background:linear-gradient(135deg,#1e3a5f 0%,#1a3352 100%);border-radius:12px 12px 0 0;}
+.group-header{background:linear-gradient(135deg,#1e3a5f 0%,#1a3352 100%);border-radius:12px 12px 0 0;padding:.85rem 1rem!important;}
+.group-id-label{font-size:.8rem;font-weight:900;letter-spacing:.12em;color:#93c5fd;text-transform:uppercase;}
+.group-id-letter{font-size:2.5rem;font-weight:900;line-height:1;color:#fff;}
+.phase-note{border-radius:12px;padding:.75rem 1rem;margin-bottom:.85rem;font-size:.82rem;line-height:1.5;border:1px solid;}
+.phase-note--groups{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.35);color:#cbd5e1;}
+.phase-note--ko{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#d1fae5;}
+.phase-note strong{color:#fff;}
+.ko-backup-hint{margin:.75rem 0 0;padding:.55rem .75rem;border-radius:10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);font-size:.72rem;color:#93c5fd;line-height:1.45;text-align:center;}
+.share-row{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-top:.75rem;}
+.btn-share{display:inline-flex;align-items:center;gap:.35rem;padding:.5rem .85rem;border-radius:999px;border:1px solid #374151;background:#1f2937;color:#e5e7eb;font-size:.75rem;font-weight:600;text-decoration:none;min-height:40px;}
+.btn-share:hover{background:#374151;color:#fff;}
+.btn-share--wa{border-color:rgba(37,211,102,.4);color:#86efac;}
+.ko-main-banner-title{margin:0 0 .35rem;font-size:1rem;font-weight:800;color:#4ade80;}
+.ko-main-banner-text{margin:0;font-size:.82rem;color:#d1d5db;line-height:1.5;}
 .group-nav{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;padding:.25rem 0 .75rem;}
-.group-nav-btn{min-width:2.25rem;height:2.25rem;padding:0 .45rem;border-radius:999px;border:1px solid #374151;background:#1f2937;color:#9ca3af;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.group-nav-btn{min-width:2.85rem;height:2.85rem;padding:0 .55rem;border-radius:999px;border:1px solid #374151;background:#1f2937;color:#e5e7eb;font-size:.95rem;font-weight:800;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;}
 .group-nav-btn:hover{border-color:#60a5fa;color:#fff;}
 .group-nav-btn.active{border-color:#3b82f6;background:rgba(59,130,246,.2);color:#93c5fd;}
 .group-nav-btn.done{border-color:rgba(34,197,94,.45);color:#86efac;}
@@ -219,35 +234,22 @@ input,select,textarea{color:#fff;}
 .ko-team-pick:active:not(:disabled){transform:scale(.98);}
 .ko-team-pick:disabled{opacity:.35;cursor:not-allowed;}
 .ko-team-pick.tbd{color:#6b7280;font-style:italic;font-weight:500;font-size:.65rem;}
-.ko-team-pick.winner:not(.ko-team-pick--esemi):not(.ko-team-pick--efinal):not(.ko-team-pick--echamp){background:rgba(34,197,94,.35)!important;border-color:#22c55e!important;color:#ecfdf5!important;box-shadow:0 0 0 2px rgba(34,197,94,.4);}
-.ko-team-pick.winner::after{content:'✓';margin-left:auto;font-size:.75rem;color:#4ade80;font-weight:800;flex-shrink:0;}
-.ko-team-pick.winner.ko-team-pick--esemi::after,.ko-team-pick.winner.ko-team-pick--efinal::after,.ko-team-pick.winner.ko-team-pick--echamp::after{color:inherit;}
-.ko-team-pick.eliminated{background:rgba(127,29,29,.45)!important;border-color:#dc2626!important;color:#fecaca!important;opacity:.55;text-decoration:line-through;}
+.ko-team-pick.winner{background:rgba(34,197,94,.42)!important;border-color:#22c55e!important;color:#ecfdf5!important;box-shadow:0 0 0 2px rgba(34,197,94,.45)!important;}
+.ko-team-pick.winner::after{content:'✓';margin-left:auto;font-size:.8rem;color:#bbf7d0;font-weight:900;flex-shrink:0;}
+.ko-team-pick.eliminated{background:rgba(239,68,68,.32)!important;border-color:#ef4444!important;color:#fecaca!important;opacity:.75;text-decoration:line-through;}
 .ko-team-pick .ko-team-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;pointer-events:none;}
-.ko-team-pick.winner.ko-team-pick--esemi{background:rgba(147,51,234,.5)!important;border-color:#c084fc!important;border-left:5px solid #e879f9!important;color:#fae8ff!important;box-shadow:0 0 0 2px rgba(192,132,252,.45)!important;}
-.ko-team-pick.winner.ko-team-pick--efinal{background:rgba(249,115,22,.5)!important;border-color:#fb923c!important;border-left:5px solid #fdba74!important;color:#fff7ed!important;box-shadow:0 0 0 2px rgba(251,146,60,.45)!important;}
-.ko-team-pick.winner.ko-team-pick--echamp{background:rgba(250,204,21,.5)!important;border-color:#fde047!important;border-left:5px solid #fef08a!important;color:#fefce8!important;box-shadow:0 0 0 2px rgba(253,224,71,.5)!important;}
-.ko-team-pick--esemi:not(.winner){border-color:#c084fc!important;border-left:5px solid #e879f9!important;background:rgba(147,51,234,.22)!important;}
-.ko-team-pick--efinal:not(.winner){border-color:#fb923c!important;border-left:5px solid #fdba74!important;background:rgba(249,115,22,.2)!important;}
-.ko-team-pick--echamp:not(.winner){border-color:#fde047!important;border-left:5px solid #fef08a!important;background:rgba(250,204,21,.2)!important;}
-.ko-extra-readonly-chip--semi{border-color:#c084fc;background:rgba(147,51,234,.25);}
-.ko-extra-readonly-chip--finalist{border-color:#fb923c;background:rgba(249,115,22,.25);}
-.ko-extra-readonly-chip--champion{border-color:#fde047;background:rgba(250,204,21,.25);}
-.ko-extras-step--semi{border-color:rgba(192,132,252,.5);border-width:2px;}
-.ko-extras-step--final{border-color:rgba(251,146,60,.5);border-width:2px;}
-.ko-extras-step-badge--semi{background:#9333ea;}
-.ko-extras-step-badge--final{background:#f97316;}
-.ko-role-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-weight:900;letter-spacing:.05em;line-height:1;white-space:nowrap;flex-shrink:0;border:2px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.35);}
-.ko-role-badge--sm{font-size:.55rem;padding:.2rem .38rem;}
-.ko-role-badge--md{font-size:.62rem;padding:.24rem .45rem;}
-.ko-role-badge--semi{background:#9333ea;color:#fff;border-color:#e9d5ff;}
-.ko-role-badge--finalist{background:#f97316;color:#fff;border-color:#ffedd5;}
-.ko-role-badge--champion{background:#facc15;color:#1c1917;border-color:#fef9c3;}
-.ko-color-key{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin:.5rem 0 .75rem;}
-.ko-color-key-item{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.45rem .3rem;border-radius:10px;font-size:.58rem;font-weight:700;text-align:center;line-height:1.2;}
-.ko-color-key-item--semi{background:rgba(147,51,234,.2);border:2px solid #c084fc;color:#e9d5ff;}
-.ko-color-key-item--final{background:rgba(249,115,22,.2);border:2px solid #fb923c;color:#ffedd5;}
-.ko-color-key-item--champ{background:rgba(250,204,21,.2);border:2px solid #fde047;color:#fef08a;}
+.ko-extra-readonly-chip--semi,.ko-extra-readonly-chip--finalist,.ko-extra-readonly-chip--champion{border-color:#4b5563;background:#1f2937;}
+.ko-extras-step--semi,.ko-extras-step--final{border-color:#334155;border-width:1px;}
+.ko-extras-step-badge--semi,.ko-extras-step-badge--final{background:#374151;}
+.ko-role-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:5px;font-weight:900;letter-spacing:.04em;line-height:1;white-space:nowrap;flex-shrink:0;border:1.5px solid #6b7280;background:#374151;color:#f3f4f6;box-shadow:0 1px 2px rgba(0,0,0,.3);}
+.ko-role-badge--sm{font-size:.55rem;padding:.18rem .36rem;}
+.ko-role-badge--md{font-size:.6rem;padding:.22rem .4rem;}
+.ko-role-badge--champion{color:#facc15;border-color:#facc15;}
+.ko-simple-legend{display:flex;flex-direction:column;gap:.35rem;margin:.5rem 0 .75rem;padding:.65rem .75rem;border-radius:10px;background:rgba(15,23,42,.55);border:1px solid #334155;font-size:.72rem;color:#d1d5db;line-height:1.45;}
+.ko-simple-legend-row{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:0;}
+.ko-legend-swatch{display:inline-flex;align-items:center;justify-content:center;width:1.35rem;height:1.35rem;border-radius:5px;font-size:.7rem;font-weight:900;flex-shrink:0;}
+.ko-legend-swatch--win{background:rgba(34,197,94,.35);border:2px solid #22c55e;color:#bbf7d0;}
+.ko-legend-swatch--lose{background:rgba(239,68,68,.3);border:2px solid #ef4444;color:#fecaca;}
 .ko-list-match{border-bottom:1px solid #1f2937;padding:.35rem .5rem;}
 .ko-list-match:last-child{border-bottom:none;}
 .ko-list-match .match-meta{flex-wrap:wrap;gap:.2rem .35rem;}
@@ -348,9 +350,6 @@ input,select,textarea{color:#fff;}
 .ko-r32-picker-legend{display:flex;flex-direction:column;gap:.45rem;margin-bottom:.5rem;padding:.55rem .65rem;border-radius:10px;background:rgba(15,23,42,.45);border:1px solid #334155;font-size:.64rem;color:#9ca3af;font-weight:600;}
 .ko-legend-item{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;line-height:1.35;}
 .ko-legend-item strong{color:#e5e7eb;font-weight:700;}
-.ko-role-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-weight:900;letter-spacing:.05em;line-height:1;white-space:nowrap;flex-shrink:0;border:2px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.35);}
-.ko-role-badge--sm{font-size:.55rem;padding:.2rem .38rem;}
-.ko-role-badge--md{font-size:.62rem;padding:.24rem .45rem;}
 .ko-r32-pick-badge{position:absolute;top:2px;left:2px;z-index:1;}
 .ko-extra-slot-badge{position:absolute;top:.35rem;left:.35rem;z-index:1;}
 .ko-team-pick .ko-role-badge{margin-left:.15rem;}
@@ -367,9 +366,7 @@ input,select,textarea{color:#fff;}
 .ko-section-picker-grid--finalists .ko-r32-pick,.ko-section-picker-grid--champion .ko-r32-pick{min-height:5rem;padding:.65rem .5rem;}
 .ko-r32-pick:active:not(:disabled){transform:scale(.97);}
 .ko-r32-pick:disabled{opacity:.35;cursor:not-allowed;}
-.ko-r32-pick--semi{border-color:#c084fc;background:rgba(147,51,234,.28);}
-.ko-r32-pick--final{border-color:#fb923c;background:rgba(249,115,22,.26);}
-.ko-r32-pick--champ{border-color:#fde047;background:rgba(250,204,21,.26);box-shadow:0 0 0 2px rgba(253,224,71,.35);}
+.ko-r32-pick--semi,.ko-r32-pick--final,.ko-r32-pick--champ{border-color:#374151;background:#111827;}
 .ko-r32-pick--taken:not(.ko-r32-pick--semi):not(.ko-r32-pick--final):not(.ko-r32-pick--champ){opacity:.3;}
 .ko-r32-pick-name{font-size:.58rem;font-weight:700;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ko-extras-progress-wrap{display:flex;align-items:center;gap:.75rem;margin-bottom:.25rem;}
@@ -385,6 +382,24 @@ input,select,textarea{color:#fff;}
 .ko-extras-row--4{grid-template-columns:repeat(2,1fr);}
 .ko-extras-row--2{grid-template-columns:repeat(2,1fr);}
 @media(min-width:640px){.ko-extras-row--4{grid-template-columns:repeat(4,1fr);}}
+.ko-semis-sides-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;}
+.ko-semi-side{border:1px solid #334155;border-radius:12px;padding:.55rem;background:rgba(15,23,42,.35);}
+.ko-semi-side--a{border-color:rgba(147,51,234,.45);}
+.ko-semi-side--b{border-color:rgba(250,204,21,.35);}
+.ko-semi-side-label{margin:0 0 .45rem;font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;}
+.ko-semi-side--a .ko-semi-side-label{color:#c4b5fd;}
+.ko-semi-side--b .ko-semi-side-label{color:#fde047;}
+.ko-semi-picker-sides{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.15rem;}
+.ko-semi-picker-side{border:1px solid #334155;border-radius:10px;padding:.45rem .35rem;background:rgba(15,23,42,.25);}
+.ko-semi-picker-side--a{border-color:rgba(147,51,234,.35);}
+.ko-semi-picker-side--b{border-color:rgba(250,204,21,.3);}
+.ko-semi-picker-side.is-highlighted{box-shadow:0 0 0 2px rgba(96,165,250,.4);border-color:#60a5fa;background:rgba(37,99,235,.08);}
+.ko-semi-picker-side.is-dimmed{opacity:.42;pointer-events:none;}
+.ko-section-picker-grid--semis-a,.ko-section-picker-grid--semis-b{grid-template-columns:repeat(2,minmax(0,1fr));max-height:11rem;overflow-y:auto;padding:.15rem;-webkit-overflow-scrolling:touch;}
+@media(min-width:640px){.ko-section-picker-grid--semis-a,.ko-section-picker-grid--semis-b{grid-template-columns:repeat(4,minmax(0,1fr));max-height:9rem;}}
+.ko-extras-summary-side{margin-bottom:.4rem;}
+.ko-extras-summary-side-label{display:block;font-size:.62rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;}
+@media(max-width:767px){.ko-semis-sides-grid,.ko-semi-picker-sides{grid-template-columns:1fr;}}
 .ko-extra-slot{display:flex;flex-direction:column;gap:.3rem;}
 .ko-extra-slot-num{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b;}
 .ko-extra-slot-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;min-height:5.5rem;padding:.65rem .5rem;border-radius:12px;border:2px dashed #374151;background:#111827;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;touch-action:manipulation;width:100%;font:inherit;color:inherit;}
@@ -422,6 +437,7 @@ input,select,textarea{color:#fff;}
 .btn-clear-ko:hover{background:rgba(248,113,113,.1);}
 .btn-clear-ko:active{transform:scale(.98);}
 .btn-export:disabled,.btn-export-lg:disabled,.btn-export-lg.is-locked{background:#374151!important;color:#6b7280!important;cursor:pointer!important;opacity:.75;transform:none!important;}
+.btn-export-ko-ready,.btn-export-ko-ready.is-locked{background:#16a34a!important;color:#fff!important;opacity:1!important;cursor:pointer!important;}
 
 /* ===== RESPONSIVE — móvil, tablet, desktop ===== */
 html{-webkit-text-size-adjust:100%;overflow-x:hidden;}
@@ -450,10 +466,10 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 .match-teams-line{display:contents;}
 .match-team{display:flex;align-items:center;gap:.4rem;min-width:0;grid-column:1;}
 .match-team-away{justify-content:flex-end;grid-column:3;}
-.match-team-name{font-size:.78rem;color:#d1d5db;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.match-team-name{font-size:.9rem;color:#e5e7eb;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .match-picks{display:flex;align-items:center;justify-content:center;gap:.35rem;grid-column:2;grid-row:1;}
-.match-picks--ko .pick-btn{width:2.35rem;}
-.pick-btn{width:2rem;height:2rem;border-radius:.4rem;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.match-picks--ko .pick-btn{width:2.5rem;height:2.5rem;}
+.pick-btn{width:2.45rem;height:2.45rem;border-radius:.45rem;font-size:.85rem;font-weight:800;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 .groups-grid{display:grid;grid-template-columns:1fr;gap:1rem;padding-bottom:2rem;}
 .card-pad{padding:1rem;}
 @media(min-width:480px){
@@ -610,10 +626,14 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
           <span class="text-gray-400">(gracias, Manolin… 🙄)</span>
         </p>
         <p class="text-sm text-gray-400 leading-relaxed mb-3">
-          Escribe tu nombre, marca tus pronósticos de la fase de grupos (1 · X · 2) y exporta el PDF.
-          Las eliminatorias (especiales + quiniela por ronda) se abren el <strong class="text-gray-300">12 de julio a las 7:00</strong>.
+          La <strong class="text-green-400">quiniela que cuenta</strong> es la de <strong class="text-gray-300">eliminatorias</strong> (pestaña 🏅).
+          Los grupos son opcionales — por diversión y PDF. Rellena eliminatorias cuando se abran el <strong class="text-gray-300">12 de julio a las 7:00</strong>.
         </p>
         <p class="text-xs text-gray-500">Esperamos que os guste. ¡A por el mundial! 🏆</p>
+        <div class="share-row">
+          <a class="btn-share btn-share--wa" href="https://wa.me/?text=https%3A%2F%2Fporra-mundial-2026-rust.vercel.app%20%E2%9A%BD%20Porra%20Mundial%202026%20%E2%80%94%20la%20quiniela%20que%20cuenta%20son%20las%20eliminatorias" target="_blank" rel="noopener">📲 Compartir enlace por WhatsApp</a>
+          <a class="btn-share" href="https://porra-mundial-2026-rust.vercel.app/" target="_blank" rel="noopener">🌐 Abrir web oficial</a>
+        </div>
       </div>
     </div>
   </div>
@@ -642,16 +662,19 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <p class="leading-relaxed">Cuota de <strong class="text-white">10 €</strong> por persona. El bote se reparte entre los tres primeros clasificados.</p>
       </div>
       <div>
+        <p class="font-semibold text-yellow-400 mb-1">Qué cuenta para ganar</p>
+        <p class="leading-relaxed"><strong class="text-green-400">Solo las eliminatorias</strong> (según Manolin): semifinalistas, finalistas, campeón y ganadores de cada partido. La fase de grupos <strong class="text-gray-400">no puntúa</strong> para el bote.</p>
+      </div>
+      <div>
         <p class="font-semibold text-yellow-400 mb-1">Qué hay que pronosticar</p>
         <ul class="list-disc list-inside space-y-0.5 text-gray-400 leading-relaxed">
-          <li>Resultado de cada partido: <strong class="text-gray-300">1</strong> (local), <strong class="text-gray-300">X</strong> (empate) o <strong class="text-gray-300">2</strong> (visitante)</li>
-          <li>En eliminatorias: <strong class="text-gray-300">4 semifinalistas, 2 finalistas y campeón</strong> (editables hasta que empiecen los dieciseisavos)</li>
-          <li>En eliminatorias: quiniela <strong class="text-gray-300">toca al ganador</strong> de cada partido (16avos, octavos, cuartos…)</li>
+          <li><strong class="text-gray-300">Eliminatorias (importante):</strong> 2 semifinalistas lado A + 2 lado B, 2 finalistas, campeón y ganador de cada partido</li>
+          <li><strong class="text-gray-300">Grupos (opcional):</strong> 1 · X · 2 en cada partido — no cuenta para el premio</li>
         </ul>
       </div>
       <div>
-        <p class="font-semibold text-yellow-400 mb-1">Puntuación</p>
-        <p class="leading-relaxed"><strong class="text-white">1 punto</strong> por cada acierto. <strong class="text-white">0 puntos</strong> si fallas. Cada partido y cada equipo elegido en semifinales, final y campeón cuenta por separado.</p>
+        <p class="font-semibold text-yellow-400 mb-1">Puntuación (eliminatorias)</p>
+        <p class="leading-relaxed"><strong class="text-white">1 punto</strong> por cada acierto. Cada partido y cada equipo en semifinales, final y campeón cuenta por separado.</p>
       </div>
       <div>
         <p class="font-semibold text-yellow-400 mb-1">Premios (reparto del bote)</p>
@@ -702,6 +725,9 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 </div>
 
 <div class="max-w-6xl mx-auto px-4">
+  <div class="phase-note phase-note--groups">
+    <strong>Fase de grupos (opcional)</strong> — por diversión y PDF. <strong>Lo que cuenta para el bote es la pestaña 🏅 Eliminatorias.</strong> Limpiar partidos en eliminatorias <em>no borra</em> tus grupos.
+  </div>
   <nav id="groupNav" class="group-nav" aria-label="Saltar a un grupo"></nav>
   <div id="groups-grid" class="groups-grid"></div>
 </div>
@@ -715,7 +741,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
       Exportar mi porra en PDF
     </button>
-    <p id="exportPhaseNote" class="text-xs text-gray-500 mt-3">Las eliminatorias (dieciseisavos + semifinalistas, finalistas y campeón) están en la pestaña 🏅 Eliminatorias, con su propio PDF.</p>
+    <p id="exportPhaseNote" class="text-xs text-gray-500 mt-3">Las eliminatorias tienen su propio PDF en la pestaña 🏅. <strong class="text-gray-400">Guarda ambos PDFs</strong> por si cambias de móvil.</p>
   </div>
 </div>
 </div><!-- /panelGrupos -->
@@ -727,7 +753,12 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <h2 class="text-lg font-bold text-white mb-0">🏅 Fase final — Eliminatorias</h2>
         <span id="koPreviewBadge" class="ko-preview-badge hidden">Modo prueba</span>
       </div>
-      <p id="koSubtitle" class="text-xs text-gray-500 mb-4">Se abrirá el 12 de julio a las 7:00 (hora peninsular).</p>
+      <p id="koSubtitle" class="text-xs text-gray-500 mb-3">Se abrirá el 12 de julio a las 7:00 (hora peninsular).</p>
+
+      <div class="phase-note phase-note--ko ko-main-banner mb-4">
+        <p class="ko-main-banner-title">🏆 Esta es la quiniela que cuenta</p>
+        <p class="ko-main-banner-text">Según Manolin, <strong>solo puntúan las eliminatorias</strong>. La fase de grupos queda guardada aparte: si pulsas «Limpiar partidos» aquí, <strong>no se toca la quiniela de grupos</strong>.</p>
+      </div>
 
       <div id="koPlayerBar" class="ko-user-bar hidden">
         <label for="koUserSelect">👤 Participante</label>
@@ -737,13 +768,13 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 
       <div id="koExtrasSection" class="ko-extras-panel">
         <h3 class="text-sm font-bold text-white mb-1">⭐ Pronósticos especiales</h3>
-        <p class="text-xs text-gray-500 mb-4">Elige 4 semifinalistas → 2 finalistas → campeón entre los 32 equipos de dieciseisavos. Puedes <strong class="text-gray-400">cambiarlos hasta que empiecen los dieciseisavos</strong> (28 jun, 12:00).</p>
+        <p class="text-xs text-gray-500 mb-4">Elige <strong class="text-gray-400">2 semifinalistas del lado A</strong> y <strong class="text-gray-400">2 del lado B</strong> → luego 2 finalistas → campeón. Puedes <strong class="text-gray-400">cambiarlos hasta que empiecen los dieciseisavos</strong> (28 jun, 12:00).</p>
         <div id="koExtrasGrid"></div>
       </div>
 
       <div class="ko-matches-section">
         <h3 class="text-sm font-bold text-white mb-1">⚽ Quiniela por rondas</h3>
-        <p class="text-xs text-gray-500 mb-3"><strong class="text-green-400">Verde ✓</strong> = ganador del partido · <strong style="color:#c084fc">Morado SEMI</strong> · <strong style="color:#fb923c">Naranja FINAL</strong> · <strong style="color:#fde047">Dorado CAMPEÓN</strong> (etiquetas solo en dieciseisavos).</p>
+        <p class="text-xs text-gray-500 mb-3"><strong class="text-green-400">Verde ✓</strong> = ganador · <strong class="text-red-400">Rojo</strong> = eliminado · Etiquetas <strong>SEMI / FINAL / CAMPEÓN</strong> = tus especiales (solo en dieciseisavos).</p>
         <div id="koBracket"></div>
       </div>
 
@@ -762,6 +793,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
           </button>
         </div>
       </div>
+      <p class="ko-backup-hint">💡 La porra se guarda solo en <strong>este navegador</strong>. Cuando termines, <strong>exporta el PDF</strong> y guárdalo o envíalo por WhatsApp por si cambias de móvil.</p>
     </div>
   </div>
 </div>
@@ -1752,10 +1784,10 @@ function renderGroups() {
     card.className = 'group-card overflow-hidden';
     card.id = 'group-card-' + g.id;
     card.innerHTML = `
-      <div class="group-header px-4 py-3 flex items-center justify-between gap-2">
+      <div class="group-header flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 flex-shrink-0">
-          <span class="text-xs font-black text-blue-300 tracking-widest">GRUPO</span>
-          <span class="text-2xl font-black text-white">${g.id}</span>
+          <span class="group-id-label">GRUPO</span>
+          <span class="group-id-letter">${g.id}</span>
         </div>
         <div class="flex gap-1 flex-wrap justify-end items-center">${g.teams.map(t => flagHTML(t.code, 20)).join('')}</div>
       </div>
@@ -2272,7 +2304,7 @@ if (document.readyState === 'loading') {
   bootApp();
 }
 </script>
-<script src="knockout.js?v=29"></script>
+<script src="knockout.js?v=34"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();

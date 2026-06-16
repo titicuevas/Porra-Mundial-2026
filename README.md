@@ -7,7 +7,15 @@
 [![Web en vivo](https://img.shields.io/badge/🌐_Jugar_ahora-porra--mundial--2026--rust.vercel.app-2563eb?style=for-the-badge)](https://porra-mundial-2026-rust.vercel.app/)
 [![GitHub](https://img.shields.io/badge/GitHub-Porra--Mundial--2026-111827?style=for-the-badge&logo=github)](https://github.com/titicuevas/Porra-Mundial-2026)
 
-*Marca tus pronósticos · Exporta tu PDF · A por el mundial*
+*La quiniela que cuenta es la de eliminatorias · Exporta PDF · A por el mundial*
+
+<br/>
+
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://porra-mundial-2026-rust.vercel.app" alt="QR porra mundial 2026" width="140" height="140"/>
+
+<br/>
+
+**Escanea para abrir en el móvil** · [porra-mundial-2026-rust.vercel.app](https://porra-mundial-2026-rust.vercel.app)
 
 </div>
 
@@ -17,99 +25,145 @@
 
 ### 👉 [https://porra-mundial-2026-rust.vercel.app](https://porra-mundial-2026-rust.vercel.app)
 
-Pásalo por WhatsApp al grupo. Cada persona rellena la suya en el móvil o el PC.
+Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 
 ---
 
-## ✨ Qué incluye
+## ⭐ Lo importante (léelo primero)
 
-| | |
-|---|---|
-| ⚽ | **72 partidos** de fase de grupos con banderas |
-| 🏅 | Fase final: 4 semis, 2 finalistas y campeón *(abre 12 jul)* |
-| 📋 | Normas, cuota **10 €** y reparto del bote **60 / 30 / 10 %** |
-| 📄 | Exportación a **PDF** con tu nombre |
-| 📊 | Resultados oficiales vía `results.json` |
+| Qué | Detalle |
+|-----|---------|
+| **Lo que puntúa** | Solo la pestaña **🏅 Eliminatorias** (según Manolin) |
+| **Fase de grupos** | Opcional — diversión y PDF; **no cuenta** para el bote |
+| **Cuota** | **10 €** por persona |
+| **Puntos** | **1 punto** por acierto (partido + cada especial) |
+| **Premios** | 🥇 60 % · 🥈 30 % · 🥉 10 % del bote |
+| **Copia de seguridad** | Exporta el PDF — la porra vive en el navegador |
 
 ---
 
-## 🚀 Cómo jugar (3 pasos)
+## ✨ Qué incluye la app
+
+### ⚽ Grupos (opcional)
+- 72 partidos con banderas · **1 · X · 2**
+- PDF de fase de grupos · guardado en `porra2026v5`
+
+### 🏅 Eliminatorias (la que cuenta)
+- **Especiales:** 2 semifinalistas **lado A** + 2 **lado B**, 2 finalistas, campeón  
+  *(editables hasta 28 jun 12:00)*
+- **Quiniela:** ganador de cada partido (16avos → final)
+- **Verde** = ganador · **Rojo** = eliminado · etiquetas SEMI / FINAL / CAMPEÓN
+- **Limpiar partidos** no borra la quiniela de grupos
+- PDF: `porra-knockout-2026-nombre.pdf` · datos en `porra2026_knockout`
+
+### 🏆 Clasificación
+- Tabla provisional · `leaderboard.json`
+
+### 📋 Extra
+- Resultados oficiales · `results.json` · modo `?admin=1`
+- PWA: «Añadir a pantalla de inicio» en móvil (`manifest.json`)
+- Modo prueba eliminatorias (contraseña antes del 12 jul)
+
+---
+
+## 🚀 Cómo jugar
+
+### Eliminatorias (lo principal)
 
 ```
-1. Abre el enlace de Vercel
-2. Escribe tu nombre y marca 1 · X · 2 en cada partido
-3. Baja al final y pulsa «Exportar mi porra en PDF»
+1. Abre el enlace (o escanea el QR)
+2. Pestaña 🏅 Eliminatorias → elige participante
+3. Especiales (A/B) + ganador en cada partido
+4. «Exportar PDF eliminatorias» (verde cuando esté completo)
+5. Guarda o envía el PDF por WhatsApp
 ```
 
-> 💾 Tus picks se guardan solos en el navegador. No hace falta cuenta.
+### Grupos (opcional)
+
+```
+1. Tu nombre → 72 partidos 1/X/2 → Exportar PDF al final
+```
 
 ---
 
-## 💻 Probar en local
+## 📅 Plazos (CEST, peninsular)
 
-**Windows:** doble clic en `iniciar.bat` → [http://localhost:8765](http://localhost:8765)
+| Hito | Fecha |
+|------|--------|
+| 🔒 Cierre pronósticos **grupos** | 11 jun 2026, 21:00 |
+| 🔒 Cierre **especiales** KO | 28 jun 2026, 12:00 |
+| 🏅 Apertura **eliminatorias** | 12 jul 2026, 7:00 |
+| 📊 Clasificación provisional | Tras grupos (27 jun+) |
+
+---
+
+## 💻 Local y despliegue
+
+| Script | Qué hace |
+|--------|----------|
+| `iniciar.bat` | Servidor [localhost:8765](http://localhost:8765) |
+| `sync-html.bat` | Copia `porra-mundial-2026.html` → `index.html` |
+| `preparar-deploy.bat` | Sync + verificación antes de subir a Vercel |
+| `node scripts/verify.js` | Comprueba HTML, knockout y JSON |
 
 ```bash
-python -m http.server 8765
+python -m http.server 8765          # alternativa manual
+./sync-html.sh                      # Linux/Mac
 ```
 
-> ⚠️ No abras el `.html` con doble clic (`file://`). Usa servidor local o Vercel.
+> ⚠️ No uses `file://`. Tras editar HTML, **siempre** `sync-html.bat`.  
+> Al cambiar `knockout.js`, sube `?v=34` (o siguiente) en ambos HTML.
+
+### Modo prueba eliminatorias
+Pestaña 🏅 → contraseña `Españita` (solo esa sesión del navegador).
 
 ---
 
-## 📅 Plazos (hora peninsular)
-
-| Fase | Cuándo |
-|------|--------|
-| 🔒 **Cierre grupos** | 11 jun 2026, 21:00 |
-| 🏅 **Apertura fase final** | 12 jul 2026, 7:00 |
-
----
-
-## 🛠️ Para quien mantenga la porra
+## 🛠️ Mantenimiento
 
 <details>
-<summary><strong>Subir cambios a GitHub</strong></summary>
+<summary><strong>Flujo recomendado antes de cada push</strong></summary>
 
 ```bash
-cd "C:\Users\betic\Desktop\Mundial App"
+preparar-deploy.bat    # Windows
 git add .
-git commit -m "Tu mensaje"
+git commit -m "Descripción"
 git push
 ```
 
-Repo: [github.com/titicuevas/Porra-Mundial-2026](https://github.com/titicuevas/Porra-Mundial-2026)
+Vercel despliega solo. Repo: [github.com/titicuevas/Porra-Mundial-2026](https://github.com/titicuevas/Porra-Mundial-2026)
 
 </details>
 
 <details>
-<summary><strong>Sincronizar index.html (importante)</strong></summary>
+<summary><strong>Editar HTML</strong></summary>
 
-Vercel sirve **`index.html`**, no `porra-mundial-2026.html`. Tras editar:
-
-```bash
-cp porra-mundial-2026.html index.html
-```
+1. Cambia **`porra-mundial-2026.html`** (copia de trabajo)
+2. Ejecuta **`sync-html.bat`**
+3. Vercel sirve **`index.html`**
 
 </details>
 
 <details>
-<summary><strong>Actualizar resultados del mundial</strong></summary>
+<summary><strong>Participantes (eliminatorias)</strong></summary>
 
-Edita `results.json`:
+Array `PARTICIPANTS` en `knockout.js` → sync → push.
 
-```json
-{
-  "A1": { "home": 2, "away": 1 },
-  "A2": { "home": 0, "away": 0 }
-}
-```
+</details>
 
-```bash
-git add results.json && git commit -m "Resultados jornada X" && git push
-```
+<details>
+<summary><strong>Resultados del mundial</strong></summary>
 
-**Modo admin:** `?admin=1` en la URL → editor de marcadores → copiar JSON.
+- Vacío listo: `results.json` → `{}`
+- Ejemplo con partidos: `results.example.json`
+- Admin: `?admin=1` → copiar JSON → pegar en `results.json` → push
+
+</details>
+
+<details>
+<summary><strong>Clasificación</strong></summary>
+
+`leaderboard.json` o admin → «Copiar JSON → leaderboard.json».
 
 </details>
 
@@ -118,22 +172,42 @@ git add results.json && git commit -m "Resultados jornada X" && git push
 ## 📁 Estructura
 
 ```
-├── index.html              ← Lo que sirve Vercel
-├── porra-mundial-2026.html ← Copia de trabajo
+├── porra-mundial-2026.html    ← Editar aquí
+├── index.html                 ← Sync antes de deploy (Vercel)
+├── knockout.js                ← Eliminatorias + PDF KO
+├── manifest.json              ← PWA / añadir a inicio
+├── results.json               ← Marcadores ({})
+├── results.example.json       ← Plantilla de ejemplo
+├── leaderboard.json           ← Clasificación
+├── scripts/verify.js          ← Comprobaciones pre-deploy
+├── sync-html.bat / .sh
+├── preparar-deploy.bat
 ├── assets/
-│   ├── banner.gif          ← Banner animado
-│   ├── banner.svg          ← Respaldo si falla el gif
-│   └── flags/              ← Banderas mascotas
-├── results.json            ← Marcadores oficiales
 ├── vercel.json
 └── iniciar.bat
 ```
+
+**CDN:** Tailwind, jsPDF, flagcdn.com — sin `npm install`.
+
+---
+
+## 💡 Mejoras futuras (opcional)
+
+| Idea | Estado |
+|------|--------|
+| Sync HTML automático | ✅ `sync-html.bat` + `verify.js` |
+| `results.json` en repo | ✅ `{}` + `results.example.json` |
+| PWA / añadir a inicio | ✅ `manifest.json` |
+| QR + WhatsApp | ✅ En README y botón en web |
+| Aviso backup PDF | ✅ En pestaña eliminatorias |
+| Porra en la nube | 🔜 Requeriría backend (Supabase, etc.) |
+| Participantes sin tocar código | 🔜 Panel admin |
 
 ---
 
 <div align="center">
 
-**10 €** · **1 pt / acierto** · **60 % / 30 % / 10 %**
+**10 €** · **1 pt / acierto (eliminatorias)** · **60 % / 30 % / 10 %**
 
 🍻 *Porra entre colegas — que gane el más listo (o el más cabrón)*
 

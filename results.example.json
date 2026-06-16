@@ -1,0 +1,6 @@
+{
+  "_comentario": "Copia este archivo como results.json o pega entradas en el editor ?admin=1",
+  "A1": { "home": 2, "away": 1 },
+  "A2": { "home": 0, "away": 0 },
+  "B1": { "home": 1, "away": 1 }
+}
