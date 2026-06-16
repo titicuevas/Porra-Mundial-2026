@@ -1434,9 +1434,9 @@
 
   const KO_PDF = {
     M: 10, GAP: 3, PAGE_TOP: 10, PAGE_BOTTOM: 287,
-    MATCH_H: 9, HEAD_H: 7, FOOT_H: 3,
+    MATCH_H: 8.5, HEAD_H: 6.5, FOOT_H: 2,
     FLAG_W: 3.2, FLAG_H: 2.4, RADIUS: 2,
-    MATCH_H_MIN: 9.4, MATCH_H_MAX: 11.4
+    MATCH_H_MIN: 8.2, MATCH_H_MAX: 9.8
   };
 
   function koPdfRoleLabel(role) {
@@ -1568,7 +1568,7 @@
     return Math.min(KO_PDF.MATCH_H_MAX, Math.max(KO_PDF.MATCH_H_MIN, raw));
   }
 
-  function koPdfDrawSectionTitle(pdf, x, y, w, title) {
+  function koPdfDrawSectionTitle(pdf, x, y, w, title, subtitle) {
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(5.5);
     pdf.setTextColor(...KO_PDF_C.mut);
@@ -1576,6 +1576,13 @@
     pdf.setDrawColor(45, 55, 75);
     pdf.setLineWidth(0.15);
     pdf.line(x, y + 1.2, x + w, y + 1.2);
+    if (subtitle) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(3.8);
+      pdf.setTextColor(...KO_PDF_C.mut);
+      pdf.text(subtitle, x, y + 3.4);
+      return y + 6.2;
+    }
     return y + 4;
   }
 
@@ -1640,6 +1647,7 @@
     const labelW = opts && opts.labelW ? opts.labelW : 12;
     const bg = opts && opts.bg;
     const border = opts && opts.border;
+    const nameX = x + labelW;
 
     if (bg) {
       pdf.setFillColor(...bg);
@@ -1657,17 +1665,16 @@
     pdf.setTextColor(...((opts && opts.labelColor) || C.mut));
     pdf.text(leftLabel, x + pad, y + h / 2 + 0.35);
 
-    const tx0 = x + labelW;
     if (!code) {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(4.8);
       pdf.setTextColor(...C.mut);
-      pdf.text('—', tx0, y + h / 2 + 0.35);
+      pdf.text('—', nameX, y + h / 2 + 0.35);
       return;
     }
 
     const img = cache[code];
-    let tx = tx0;
+    let tx = nameX;
     if (img) {
       pdf.addImage(img, 'PNG', tx, y + (h - FLAG_H) / 2, FLAG_W, FLAG_H);
       tx += FLAG_W + 0.8;
@@ -1682,12 +1689,16 @@
     const C = KO_PDF_C;
     const pad = 3;
     const headerH = 5;
-    const rowH = 5;
-    const gap = 1.2;
+    const rowH = 4.8;
+    const gap = 1.1;
     const innerW = w - pad * 2;
-    const colW = (innerW - gap) / 2;
+    const colGap = 2.5;
+    const leftW = innerW * 0.57;
+    const rightW = innerW - leftW - colGap;
+    const semiColW = (leftW - gap) / 2;
     const semiBlockH = rowH * 2 + gap;
-    const cardH = headerH + pad + 2.8 + semiBlockH + 2.2 + rowH * 2 + gap + pad;
+    const bodyH = 2.6 + Math.max(semiBlockH, rowH * 2 + gap);
+    const cardH = headerH + pad + bodyH + 2 + pad;
 
     pdf.setFillColor(...C.card);
     pdf.setDrawColor(...C.brd);
@@ -1701,41 +1712,47 @@
     pdf.setTextColor(251, 191, 36);
     pdf.text('TUS ESPECIALES', x + pad, y + 3.5);
 
-    let cy = y + headerH + 2.6;
+    const bodyY = y + headerH + 2.4;
+    const lx = x + pad;
+
     pdf.setFontSize(3.6);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(...C.mut);
-    pdf.text('SEMIFINALISTAS', x + pad, cy);
-    cy += 2;
+    pdf.text('SEMIFINALISTAS', lx, bodyY);
 
+    const semiY = bodyY + 2;
     [[0, 1], [2, 3]].forEach((pair, ri) => {
       pair.forEach((idx, ci) => {
         const code = data.extras.semis[idx];
-        const rx = x + pad + ci * (colW + gap);
-        const ry = cy + ri * (rowH + gap);
-        koPdfDrawExtraListRow(pdf, KO_SEMI_CORNER_KEYS[idx], code, cache, rx, ry, colW, rowH, { labelW: 7 });
+        const rx = lx + ci * (semiColW + gap);
+        const ry = semiY + ri * (rowH + gap);
+        koPdfDrawExtraListRow(pdf, KO_SEMI_CORNER_KEYS[idx], code, cache, rx, ry, semiColW, rowH, {
+          labelW: 6.5,
+          bg: [26, 20, 38],
+          border: [88, 48, 150]
+        });
       });
     });
-    cy += semiBlockH + 1.6;
 
-    pdf.setDrawColor(55, 65, 81);
-    pdf.setLineWidth(0.12);
-    pdf.line(x + pad, cy, x + w - pad, cy);
-    cy += 1.8;
+    const rx0 = lx + leftW + colGap;
+    pdf.setFontSize(3.6);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...C.mut);
+    pdf.text('PODIO', rx0, bodyY);
 
     const champ = data.extras.champion;
     const finalist = koPdfFinalistsForDisplay(data.extras)[0] || '';
-    koPdfDrawExtraListRow(pdf, 'CAMPEON', champ, cache, x + pad, cy, innerW, rowH, {
-      labelW: 16,
-      labelSize: 4.5,
+    const podiumY = semiY;
+    koPdfDrawExtraListRow(pdf, 'CAMPEON', champ, cache, rx0, podiumY, rightW, rowH, {
+      labelW: 14,
+      labelSize: 4.2,
       labelColor: KO_PDF_TAG.champion.border,
-      bg: [28, 38, 24],
+      bg: [32, 40, 22],
       border: KO_PDF_TAG.champion.border
     });
-    cy += rowH + 0.4;
-    koPdfDrawExtraListRow(pdf, 'FINALISTA', finalist, cache, x + pad, cy, innerW, rowH, {
-      labelW: 16,
-      labelSize: 4.5,
+    koPdfDrawExtraListRow(pdf, 'FINALISTA', finalist, cache, rx0, podiumY + rowH + gap, rightW, rowH, {
+      labelW: 14,
+      labelSize: 4.2,
       labelColor: KO_PDF_TAG.finalist.border,
       bg: [42, 28, 16],
       border: KO_PDF_TAG.finalist.border
@@ -1744,79 +1761,83 @@
     pdf.setFontSize(3.4);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(...C.mut);
-    pdf.text('Morado = semi  ·  Naranja = final  ·  Dorado = campeon', x + w / 2, y + cardH - 1.6, { align: 'center' });
+    pdf.text('Morado = semi  ·  Naranja = final  ·  Dorado = campeon', x + w / 2, y + cardH - 1.5, { align: 'center' });
 
-    return y + cardH + 3;
+    return y + cardH + 2.5;
   }
 
   function koPdfDrawTeamCell(pdf, code, isWin, isLose, role, x, y, w, h, cache, alignRight) {
     const C = KO_PDF_C;
     const { FLAG_W, FLAG_H } = KO_PDF;
-    const pad = 1;
+    const pad = 0.9;
 
     if (isWin) {
-      pdf.setFillColor(20, 55, 38);
-      pdf.setDrawColor(34, 197, 94);
-      pdf.setLineWidth(0.2);
-      pdf.roundedRect(x, y, w, h, 0.5, 0.5, 'FD');
+      pdf.setFillColor(18, 42, 32);
+      pdf.setDrawColor(52, 211, 153);
+      pdf.setLineWidth(0.32);
+      pdf.roundedRect(x, y, w, h, 0.45, 0.45, 'FD');
     } else if (isLose) {
-      pdf.setFillColor(45, 22, 22);
-      pdf.setDrawColor(120, 50, 50);
-      pdf.setLineWidth(0.12);
-      pdf.roundedRect(x, y, w, h, 0.5, 0.5, 'FD');
+      pdf.setFillColor(32, 20, 20);
+      pdf.setDrawColor(248, 113, 113);
+      pdf.setLineWidth(0.22);
+      pdf.roundedRect(x, y, w, h, 0.45, 0.45, 'FD');
+    } else {
+      pdf.setFillColor(20, 26, 38);
+      pdf.setDrawColor(55, 65, 81);
+      pdf.setLineWidth(0.1);
+      pdf.roundedRect(x, y, w, h, 0.45, 0.45, 'FD');
     }
 
     const img = cache[code];
-    const leftPad = pad + (img ? FLAG_W + 0.6 : 0);
-    const rightPad = pad;
-    const textY = y + h / 2 + 0.5;
+    const textY = y + h / 2 + 0.45;
+    const nameColor = isWin ? [220, 252, 231] : isLose ? [254, 205, 211] : C.txt;
 
     if (alignRight) {
-      const nameMax = Math.max(6, w - leftPad - rightPad);
+      let tx = x + w - pad;
+      if (img) {
+        tx -= FLAG_W;
+        pdf.addImage(img, 'PNG', tx, y + (h - FLAG_H) / 2, FLAG_W, FLAG_H);
+        tx -= 0.55;
+      }
+      const nameMax = Math.max(6, tx - x - pad);
       pdf.setFont('helvetica', isWin ? 'bold' : 'normal');
-      if (isWin) pdf.setTextColor(180, 255, 200);
-      else if (isLose) pdf.setTextColor(220, 120, 120);
-      else pdf.setTextColor(...C.txt);
-      koPdfDrawFittedText(pdf, teamNameKo(code), x + w - rightPad, textY, nameMax, { size: 5, align: 'right' });
-      if (img) pdf.addImage(img, 'PNG', x + pad, y + (h - FLAG_H) / 2, FLAG_W, FLAG_H);
+      pdf.setTextColor(...nameColor);
+      koPdfDrawFittedText(pdf, teamNameKo(code), tx, textY, nameMax, { size: 4.8, align: 'right' });
     } else {
       let tx = x + pad;
       if (img) {
         pdf.addImage(img, 'PNG', tx, y + (h - FLAG_H) / 2, FLAG_W, FLAG_H);
-        tx += FLAG_W + 0.6;
+        tx += FLAG_W + 0.55;
       }
-      const nameMax = Math.max(6, x + w - rightPad - tx);
+      const nameMax = Math.max(6, x + w - pad - tx);
       pdf.setFont('helvetica', isWin ? 'bold' : 'normal');
-      if (isWin) pdf.setTextColor(180, 255, 200);
-      else if (isLose) pdf.setTextColor(220, 120, 120);
-      else pdf.setTextColor(...C.txt);
-      koPdfDrawFittedText(pdf, teamNameKo(code), tx, textY, nameMax, { size: 5, align: 'left' });
+      pdf.setTextColor(...nameColor);
+      koPdfDrawFittedText(pdf, teamNameKo(code), tx, textY, nameMax, { size: 4.8, align: 'left' });
     }
   }
 
   function koPdfDrawMatchRow(pdf, m, pick, xOff, my, CW, cache, stripe, ex, matchH, showSpecials) {
-    const C = KO_PDF_C;
-    const pad = 2;
+    const pad = 1.8;
     const centerX = xOff + CW / 2;
-    const vsW = 7;
+    const vsW = 5.5;
     const cellW = (CW - vsW - pad * 2) / 2;
     const cellX1 = xOff + pad;
     const cellX2 = xOff + CW - pad - cellW;
-    const metaY = my + 1.9;
-    const teamY = my + 3.45;
-    const cellH = matchH - 4.05;
+    const metaY = my + 1.5;
+    const teamY = my + 2.85;
+    const cellH = matchH - 3.35;
 
     if (stripe) {
       pdf.setFillColor(20, 28, 42);
-      pdf.rect(xOff + 0.5, my, CW - 1, matchH - 0.15, 'F');
+      pdf.rect(xOff + 0.5, my, CW - 1, matchH - 0.12, 'F');
     }
 
     koPdfDrawMatchMeta(pdf, m, centerX, metaY, CW - pad * 2);
 
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(3.8);
+    pdf.setFontSize(3.5);
     pdf.setTextColor(100, 116, 139);
-    pdf.text('vs', centerX, my + matchH - 1.7, { align: 'center' });
+    pdf.text('vs', centerX, teamY + cellH / 2 + 0.15, { align: 'center' });
 
     const homeRole = showSpecials ? getKoExtraRole(m.home, ex) : '';
     const awayRole = showSpecials ? getKoExtraRole(m.away, ex) : '';
@@ -1833,17 +1854,19 @@
     pdf.roundedRect(xOff, y, CW, groupH, RADIUS, RADIUS, 'FD');
     pdf.setFillColor(...KO_PDF_C.hdr);
     pdf.roundedRect(xOff, y, CW, HEAD_H, RADIUS, RADIUS, 'F');
+    pdf.setFillColor(96, 165, 250);
+    pdf.rect(xOff, y + HEAD_H - 0.6, CW, 0.6, 'F');
 
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7.5);
+    pdf.setFontSize(6.8);
     pdf.setTextColor(...KO_PDF_C.txt);
-    pdf.text(label, xOff + 2.5, y + 4.8);
+    pdf.text(label, xOff + 2.2, y + 4.2);
 
     const done = matches.filter(m => isValidKoPick(picks[m.id])).length;
-    pdf.setFontSize(5);
+    pdf.setFontSize(4.8);
     pdf.setTextColor(...KO_PDF_C.mut);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`${done}/${matches.length}`, xOff + CW - 2.5, y + 4.8, { align: 'right' });
+    pdf.text(`${done}/${matches.length}`, xOff + CW - 2.2, y + 4.2, { align: 'right' });
 
     let gy = y + HEAD_H;
     matches.forEach((m, idx) => {
@@ -1879,7 +1902,7 @@
     koPdfBg(pdf, PW, PH);
     let y = koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, M);
     y = koPdfDrawExtrasCard(pdf, data, cache, M, y, cardW);
-    y = koPdfDrawSectionTitle(pdf, M, y + 1, cardW, 'TUS PARTIDOS');
+    y = koPdfDrawSectionTitle(pdf, M, y + 1, cardW, 'TUS PARTIDOS', 'Verde = ganador  ·  Rojo = eliminado');
 
     const openPlayable = getOpenRounds().map(r => ({
       round: r,
