@@ -119,24 +119,39 @@
   KO_ROUND_ORDER.forEach(k => KO_ROUNDS[k].matches.forEach(m => koMatchMap.set(m.id, m)));
 
   const KO_R32_CODES = new Set();
-  const KO_R32_SIDE_A = new Set();
-  const KO_R32_SIDE_B = new Set();
+  const KO_R32_CORNER_1 = new Set(); // superior izquierda
+  const KO_R32_CORNER_2 = new Set(); // superior derecha
+  const KO_R32_CORNER_3 = new Set(); // inferior izquierda
+  const KO_R32_CORNER_4 = new Set(); // inferior derecha
   KO_R32_SEEDS.forEach((pair, i) => {
-    const sideSet = i < 8 ? KO_R32_SIDE_A : KO_R32_SIDE_B;
+    let cornerSet = KO_R32_CORNER_1;
+    if (i >= 4 && i < 8) cornerSet = KO_R32_CORNER_2;
+    else if (i >= 8 && i < 12) cornerSet = KO_R32_CORNER_3;
+    else if (i >= 12) cornerSet = KO_R32_CORNER_4;
     pair.forEach(code => {
       KO_R32_CODES.add(code);
-      sideSet.add(code);
+      cornerSet.add(code);
     });
   });
 
-  const KO_SEMI_SLOT_LABELS = ['SF A1', 'SF A2', 'SF B1', 'SF B2'];
-  const KO_SEMI_SIDE_INDICES = { A: [0, 1], B: [2, 3] };
+  const KO_SEMI_SLOT_LABELS = ['SF G1', 'SF G2', 'SF G3', 'SF G4'];
+  const KO_SEMI_CORNER_LABELS = ['Grupo 1 (sup-izq)', 'Grupo 2 (sup-der)', 'Grupo 3 (inf-izq)', 'Grupo 4 (inf-der)'];
+  const KO_SEMI_CORNER_KEYS = ['G1', 'G2', 'G3', 'G4'];
+  const KO_FINAL_SLOT_LABELS = ['Finalista Lado Arriba', 'Finalista Lado Abajo'];
+  const KO_CORNER_HINTS = {
+    G1: 'G1 (superior izquierda)',
+    G2: 'G2 (superior derecha)',
+    G3: 'G3 (inferior izquierda)',
+    G4: 'G4 (inferior derecha)'
+  };
 
   let koStore = { activeUser: '', users: {} };
   let koMatchClickBound = false;
   let koExtrasClickBound = false;
   let koExtraWarn = '';
   let koActiveExtraSlot = null;
+  let koPasswordFails = 0;
+  let koWasComplete = false;
 
   function emptyUserData() {
     return { picks: {}, extras: normalizeKoExtras({}) };
@@ -207,6 +222,11 @@
     if (modal) modal.classList.remove('hidden');
     const inp = document.getElementById('koPasswordInput');
     if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 100); }
+    const err = document.getElementById('koPasswordError');
+    if (err) {
+      err.classList.remove('ko-modal-error--big');
+      err.textContent = '';
+    }
   }
 
   function hideKoPasswordModal() {
@@ -219,12 +239,20 @@
     const err = document.getElementById('koPasswordError');
     if (!inp) return;
     if (tryUnlockKnockout(inp.value.trim())) {
+      koPasswordFails = 0;
       hideKoPasswordModal();
       if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
       renderKnockout();
       if (typeof switchPhaseTab === 'function') switchPhaseTab('extras');
     } else if (err) {
-      err.textContent = 'Contraseña incorrecta. Pista: la selección favorita…';
+      koPasswordFails++;
+      if (koPasswordFails >= 3) {
+        err.classList.add('ko-modal-error--big');
+        err.textContent = '😅 Ten un poco más de paciencia, ¡que queda poco! (pista: la selección favorita)';
+      } else {
+        err.classList.remove('ko-modal-error--big');
+        err.textContent = 'Contraseña incorrecta. Pista: la selección favorita…';
+      }
     }
   }
 
@@ -383,7 +411,7 @@
     const ex = getActiveKoData().extras;
     const extrasDone = koExtrasDone();
     if (extrasDone < KO_EXTRAS_TOTAL) {
-      blockers.push(`Especiales: ${extrasDone}/${KO_EXTRAS_TOTAL} (semis A/B, finalistas y campeón).`);
+      blockers.push(`Especiales: ${extrasDone}/${KO_EXTRAS_TOTAL} (semis por esquinas, finalistas y campeón).`);
     }
     const req = koMatchesRequired();
     const md = koMatchesDone();
@@ -443,20 +471,35 @@
 
   function getKoBracketSide(code) {
     if (!code) return '';
-    if (KO_R32_SIDE_A.has(code)) return 'A';
-    if (KO_R32_SIDE_B.has(code)) return 'B';
+    if (KO_R32_CORNER_1.has(code) || KO_R32_CORNER_2.has(code)) return 'ARRIBA';
+    if (KO_R32_CORNER_3.has(code) || KO_R32_CORNER_4.has(code)) return 'ABAJO';
     return '';
   }
 
-  function getSemiSlotSide(index) {
-    return index < 2 ? 'A' : 'B';
+  function getKoCorner(code) {
+    if (!code) return '';
+    if (KO_R32_CORNER_1.has(code)) return 'G1';
+    if (KO_R32_CORNER_2.has(code)) return 'G2';
+    if (KO_R32_CORNER_3.has(code)) return 'G3';
+    if (KO_R32_CORNER_4.has(code)) return 'G4';
+    return '';
   }
 
-  function getKoR32TeamsBySide(side) {
+  function getSemiSlotCorner(index) {
+    return KO_SEMI_CORNER_KEYS[index] || '';
+  }
+
+  function getCornerHint(corner) {
+    return KO_CORNER_HINTS[corner] || corner;
+  }
+
+  function getKoR32TeamsByCorner(corner) {
     const seen = new Set();
     const teams = [];
-    const start = side === 'A' ? 0 : 8;
-    const end = side === 'A' ? 8 : 16;
+    const map = { G1: [0, 4], G2: [4, 8], G3: [8, 12], G4: [12, 16] };
+    const range = map[corner];
+    if (!range) return teams;
+    const [start, end] = range;
     for (let i = start; i < end; i++) {
       KO_R32_SEEDS[i].forEach(code => {
         if (seen.has(code)) return;
@@ -467,12 +510,14 @@
     return teams.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   }
 
-  function koSemisSideCount(ex, side) {
-    return KO_SEMI_SIDE_INDICES[side].filter(i => ex.semis[i]).length;
+  function getFinalSlotSide(index) {
+    return index === 0 ? 'ARRIBA' : 'ABAJO';
   }
 
-  function findNextSemiSlotIndex(ex, side) {
-    return KO_SEMI_SIDE_INDICES[side].find(i => !ex.semis[i]) ?? -1;
+  function findSemiSlotIndexByCorner(ex, corner) {
+    const idx = KO_SEMI_CORNER_KEYS.indexOf(corner);
+    if (idx < 0) return -1;
+    return ex.semis[idx] ? -1 : idx;
   }
 
   function getKoR32TeamsSorted() {
@@ -496,11 +541,15 @@
     const out = normalizeKoExtras(ex);
     out.semis = out.semis.map((c, i) => {
       if (!c || !isKoR32Team(c)) return '';
-      if (getKoBracketSide(c) !== getSemiSlotSide(i)) return '';
+      if (getKoCorner(c) !== getSemiSlotCorner(i)) return '';
       return c;
     });
     const semiSet = new Set(out.semis.filter(Boolean));
-    out.finalists = out.finalists.map(c => (c && semiSet.has(c) ? c : ''));
+    out.finalists = out.finalists.map((c, i) => {
+      if (!c || !semiSet.has(c)) return '';
+      if (getKoBracketSide(c) !== getFinalSlotSide(i)) return '';
+      return c;
+    });
     const finalSet = new Set(out.finalists.filter(Boolean));
     out.champion = out.champion && finalSet.has(out.champion) ? out.champion : '';
     return out;
@@ -841,15 +890,28 @@
     } else if (field === 'champion') {
       index = 0;
     } else if (field === 'semis') {
-      const teamSide = getKoBracketSide(code);
-      if (!teamSide) {
+      const corner = getKoCorner(code);
+      if (!corner) {
         koExtraWarn = 'Los semifinalistas deben ser uno de los 32 equipos de dieciseisavos.';
         renderKnockoutExtras();
         return;
       }
-      index = findNextSemiSlotIndex(ex, teamSide);
+      index = findSemiSlotIndexByCorner(ex, corner);
       if (index < 0) {
-        koExtraWarn = `Ya tienes los 2 del lado ${teamSide}. Toca una casilla del lado ${teamSide} para cambiarla.`;
+        koExtraWarn = `Ya tienes elegido ${getCornerHint(corner)}. Toca esa casilla para cambiarlo.`;
+        renderKnockoutExtras();
+        return;
+      }
+    } else if (field === 'finalists') {
+      const side = getKoBracketSide(code);
+      if (!side) {
+        koExtraWarn = 'El finalista debe salir de tus semifinalistas.';
+        renderKnockoutExtras();
+        return;
+      }
+      index = side === 'ARRIBA' ? 0 : 1;
+      if (ex.finalists[index]) {
+        koExtraWarn = `Ya tienes finalista del lado ${side.toLowerCase()}. Toca esa casilla para cambiarlo.`;
         renderKnockoutExtras();
         return;
       }
@@ -874,9 +936,10 @@
         renderKnockoutExtras();
         return;
       }
-      if (field === 'semis' && getKoBracketSide(code) !== getSemiSlotSide(index)) {
-        const slotSide = getSemiSlotSide(index);
-        koExtraWarn = `Este equipo es del lado ${getKoBracketSide(code)}. La casilla ${KO_SEMI_SLOT_LABELS[index]} es del lado ${slotSide}.`;
+      if (field === 'semis' && getKoCorner(code) !== getSemiSlotCorner(index)) {
+        const teamCorner = getKoCorner(code);
+        const slotCorner = getSemiSlotCorner(index);
+        koExtraWarn = `Este equipo pertenece a ${getCornerHint(teamCorner)}. La casilla ${KO_SEMI_SLOT_LABELS[index]} es de ${getCornerHint(slotCorner)}.`;
         renderKnockoutExtras();
         return;
       }
@@ -889,6 +952,12 @@
         }
         if (!semis.includes(code)) {
           koExtraWarn = 'Los finalistas solo pueden ser de tus 4 semifinalistas.';
+          renderKnockoutExtras();
+          return;
+        }
+        if (getKoBracketSide(code) !== getFinalSlotSide(index)) {
+          const side = getFinalSlotSide(index) === 'ARRIBA' ? 'arriba (G1/G2)' : 'abajo (G3/G4)';
+          koExtraWarn = `Esta casilla pide un equipo del lado ${side}.`;
           renderKnockoutExtras();
           return;
         }
@@ -933,15 +1002,12 @@
   }
 
   function koExtrasSemiSummaryHTML(ex) {
-    return ['A', 'B'].map(side => {
-      const chips = KO_SEMI_SIDE_INDICES[side]
-        .map(i => ex.semis[i])
-        .filter(Boolean)
-        .map(c => koExtrasReadOnlyChip(c, 'semi'))
-        .join('');
+    return KO_SEMI_CORNER_KEYS.map((corner, i) => {
+      const code = ex.semis[i];
+      const chips = code ? koExtrasReadOnlyChip(code, 'semi') : '';
       if (!chips) return '';
       return `<div class="ko-extras-summary-side">
-        <span class="ko-extras-summary-side-label">Lado ${side}</span>
+        <span class="ko-extras-summary-side-label">${KO_SEMI_CORNER_LABELS[i]}</span>
         <div class="ko-extras-summary-row">${chips}</div>
       </div>`;
     }).join('');
@@ -977,7 +1043,7 @@
         <span class="ko-extras-progress-label">${done}/${KO_EXTRAS_TOTAL} completados</span>
       </div>
       <div class="ko-simple-legend" aria-label="Cómo leer los colores">
-        <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--win">✓</span> <strong>Verde</strong> = ganador que marcaste</p>
+        <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--win">✓</span> <strong>Verde</strong> = ganador</p>
         <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--lose">✗</span> <strong>Rojo</strong> = eliminado</p>
         <p class="ko-simple-legend-row">Etiquetas <strong>SEMI</strong> · <strong>FINAL</strong> · <strong>CAMPEÓN</strong> = tus pronósticos especiales</p>
       </div>
@@ -988,28 +1054,24 @@
       </div>
       <section class="ko-extras-step ko-extras-step--semi">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--semi">1</span>4 semifinalistas</h4>
-        <p class="ko-extras-step-hint">2 del <strong>lado A</strong> + 2 del <strong>lado B</strong> (como en el cuadro de dieciseisavos)</p>
+        <p class="ko-extras-step-hint">1 por cada esquina del cuadro: G1 sup-izq, G2 sup-der, G3 inf-izq, G4 inf-der</p>
         <div class="ko-semis-sides-grid">
-          <div class="ko-semi-side ko-semi-side--a">
-            <p class="ko-semi-side-label">Lado A</p>
-            <div class="ko-extras-row ko-extras-row--2">
-              ${KO_SEMI_SIDE_INDICES.A.map(i => koExtraSlotHTML('semis', i, ex.semis[i], KO_SEMI_SLOT_LABELS[i])).join('')}
+          ${KO_SEMI_CORNER_KEYS.map((corner, i) => `
+            <div class="ko-semi-side ko-semi-side--${corner.toLowerCase()}">
+              <p class="ko-semi-side-label">${KO_SEMI_CORNER_LABELS[i]}</p>
+              <div class="ko-extras-row ko-extras-row--1">
+                ${koExtraSlotHTML('semis', i, ex.semis[i], KO_SEMI_SLOT_LABELS[i])}
+              </div>
             </div>
-          </div>
-          <div class="ko-semi-side ko-semi-side--b">
-            <p class="ko-semi-side-label">Lado B</p>
-            <div class="ko-extras-row ko-extras-row--2">
-              ${KO_SEMI_SIDE_INDICES.B.map(i => koExtraSlotHTML('semis', i, ex.semis[i], KO_SEMI_SLOT_LABELS[i])).join('')}
-            </div>
-          </div>
+          `).join('')}
         </div>
         ${koSectionPickerHTML('semis')}
       </section>
       <section class="ko-extras-step ko-extras-step--final${semisFull ? '' : ' ko-extras-step--locked'}">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--final">2</span>2 finalistas</h4>
-        <p class="ko-extras-step-hint">Solo de tus 4 semifinalistas</p>
+        <p class="ko-extras-step-hint">1 del lado de arriba + 1 del lado de abajo</p>
         <div class="ko-extras-row ko-extras-row--2">
-          ${ex.finalists.map((s, i) => koExtraSlotHTML('finalists', i, s, 'Final ' + (i + 1))).join('')}
+          ${ex.finalists.map((s, i) => koExtraSlotHTML('finalists', i, s, KO_FINAL_SLOT_LABELS[i])).join('')}
         </div>
         ${koSectionPickerHTML('finalists')}
       </section>
@@ -1036,9 +1098,13 @@
     const name = filled ? teamNameKo(selected) : 'Vacío';
     let roleBadge = '';
     if (filled) roleBadge = koRoleBadgeHTML(koFieldToRole(field), 'md');
+    const cornerChip = field === 'semis'
+      ? `<span class="ko-corner-chip ko-corner-chip--${getSemiSlotCorner(index).toLowerCase()}">${getSemiSlotCorner(index)}</span>`
+      : '';
     return `<div class="ko-extra-slot${filled ? ' ko-extra-slot--filled' : ''}${isActive ? ' ko-extra-slot--active' : ''} ko-extra-slot--${field}">
       <span class="ko-extra-slot-num">${label}</span>
       <button type="button" class="ko-extra-slot-card" data-ko-extra-slot data-ko-extra-field="${field}" data-ko-extra-index="${index}" aria-pressed="${isActive}">
+        ${cornerChip}
         ${roleBadge ? `<span class="ko-extra-slot-badge">${roleBadge}</span>` : ''}
         <span class="ko-extra-slot-flag">${flag}</span>
         <span class="ko-extra-slot-name">${name}</span>
@@ -1064,14 +1130,15 @@
     </button>`;
   }
 
-  function koSemiPickerSideHTML(side, ex, used, activeSide) {
-    const teams = getKoR32TeamsBySide(side);
-    const cls = ['ko-semi-picker-side', `ko-semi-picker-side--${side.toLowerCase()}`];
-    if (activeSide === side) cls.push('is-highlighted');
-    else if (activeSide && activeSide !== side) cls.push('is-dimmed');
+  function koSemiPickerSideHTML(corner, ex, used, activeCorner) {
+    const teams = getKoR32TeamsByCorner(corner);
+    const cls = ['ko-semi-picker-side', `ko-semi-picker-side--${corner.toLowerCase()}`];
+    if (activeCorner === corner) cls.push('is-highlighted');
+    else if (activeCorner && activeCorner !== corner) cls.push('is-dimmed');
+    const idx = KO_SEMI_CORNER_KEYS.indexOf(corner);
     return `<div class="${cls.join(' ')}">
-      <p class="ko-semi-side-label">Lado ${side}</p>
-      <div class="ko-section-picker-grid ko-section-picker-grid--semis-${side.toLowerCase()}" role="listbox">
+      <p class="ko-semi-side-label"><span class="ko-corner-chip ko-corner-chip--${corner.toLowerCase()}">${corner}</span> ${KO_SEMI_CORNER_LABELS[idx]}</p>
+      <div class="ko-section-picker-grid ko-section-picker-grid--semis-${corner.toLowerCase()}" role="listbox">
         ${teams.map(t => koPickerTeamBtn(t.code, 'semis', ex, used)).join('')}
       </div>
     </div>`;
@@ -1083,25 +1150,21 @@
     let teams = [];
     let hint = '';
     if (field === 'semis') {
-      const aDone = koSemisSideCount(ex, 'A');
-      const bDone = koSemisSideCount(ex, 'B');
-      const activeSide = koActiveExtraSlot && koActiveExtraSlot.field === 'semis'
-        ? getSemiSlotSide(koActiveExtraSlot.index)
+      const activeCorner = koActiveExtraSlot && koActiveExtraSlot.field === 'semis'
+        ? getSemiSlotCorner(koActiveExtraSlot.index)
         : null;
       if (koActiveExtraSlot && koActiveExtraSlot.field === 'semis') {
-        hint = `Elige un equipo del <strong>lado ${activeSide}</strong> para <strong>${KO_SEMI_SLOT_LABELS[koActiveExtraSlot.index]}</strong>`;
-      } else if (aDone < 2) {
-        hint = `Toca un equipo del <strong>lado A</strong> → ${KO_SEMI_SLOT_LABELS[aDone]}. O toca una casilla A/B para cambiarla.`;
-      } else if (bDone < 2) {
-        hint = `Toca un equipo del <strong>lado B</strong> → ${KO_SEMI_SLOT_LABELS[2 + bDone]}. O toca una casilla A/B para cambiarla.`;
+        hint = `Elige un equipo de <strong>${activeCorner}</strong> para <strong>${KO_SEMI_SLOT_LABELS[koActiveExtraSlot.index]}</strong>`;
       } else {
-        hint = 'Las 4 casillas están llenas. Toca una casilla del lado A o B para cambiarla.';
+        const next = KO_SEMI_CORNER_KEYS.find((k, i) => !ex.semis[i]);
+        hint = next
+          ? `Toca un equipo de <strong>${next}</strong> o toca esa casilla para cambiarla.`
+          : 'Las 4 casillas están llenas. Toca una casilla para cambiarla.';
       }
       return `<div class="ko-section-picker" data-ko-picker-field="${field}">
         <p class="ko-section-picker-hint">${hint}</p>
         <div class="ko-semi-picker-sides">
-          ${koSemiPickerSideHTML('A', ex, used, activeSide)}
-          ${koSemiPickerSideHTML('B', ex, used, activeSide)}
+          ${KO_SEMI_CORNER_KEYS.map(corner => koSemiPickerSideHTML(corner, ex, used, activeCorner)).join('')}
         </div>
       </div>`;
     } else if (field === 'finalists') {
@@ -1109,11 +1172,17 @@
       if (semis.length < 4) {
         return `<p class="ko-section-locked">🔒 Completa los <strong>4 semifinalistas</strong> para desbloquear los finalistas.</p>`;
       }
-      teams = semis.map(code => ({ code, name: teamNameKo(code) }));
+      const activeIdx = koActiveExtraSlot && koActiveExtraSlot.field === 'finalists'
+        ? koActiveExtraSlot.index
+        : (ex.finalists[0] ? 1 : 0);
+      const targetSide = getFinalSlotSide(activeIdx);
+      teams = semis
+        .filter(code => getKoBracketSide(code) === targetSide)
+        .map(code => ({ code, name: teamNameKo(code) }));
       const n = ex.finalists.filter(Boolean).length;
       hint = koActiveExtraSlot && koActiveExtraSlot.field === 'finalists'
-        ? `Elige uno de tus semifinalistas para <strong>Final ${koActiveExtraSlot.index + 1}</strong>`
-        : (n < 2 ? `Solo tus 4 semifinalistas · toca uno para Final ${n + 1}` : 'Toca una casilla de finalista para cambiarla.');
+        ? `Elige uno para <strong>${KO_FINAL_SLOT_LABELS[koActiveExtraSlot.index]}</strong>`
+        : (n < 2 ? `Elige ${n === 0 ? 'uno del lado de arriba' : 'uno del lado de abajo'}.` : 'Toca una casilla de finalista para cambiarla.');
     } else if (field === 'champion') {
       const finals = ex.finalists.filter(Boolean);
       if (finals.length < 2) {
@@ -1213,6 +1282,15 @@
       btn.classList.toggle('btn-export-ko-ready', complete);
       btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
     }
+    if (complete && !koWasComplete && typeof document !== 'undefined') {
+      if (typeof fireConfetti === 'function') fireConfetti();
+      const toast = document.getElementById('koCelebrationToast');
+      if (toast) {
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4200);
+      }
+    }
+    koWasComplete = complete;
     const clearBtn = document.getElementById('btnClearKo');
     const clearMatchesBtn = document.getElementById('btnClearKoMatches');
     const canClear = !!getActiveKoUser();
@@ -1235,7 +1313,7 @@
     const subtitle = document.getElementById('koSubtitle');
     if (subtitle) {
       subtitle.textContent = isKnockoutAccessible()
-        ? 'Esta es la quiniela que cuenta · elige participante · especiales + toca al ganador (verde).'
+        ? 'Elige participante · especiales + toca al ganador.'
         : 'Se abrirá el 12 de julio a las 7:00 (hora peninsular). Modo prueba con contraseña.';
     }
     renderKnockoutUserBar();
@@ -1254,7 +1332,7 @@
     M: 10, GAP: 3, PAGE_TOP: 10, PAGE_BOTTOM: 287,
     MATCH_H: 9, HEAD_H: 7, FOOT_H: 3,
     FLAG_W: 3.2, FLAG_H: 2.4, RADIUS: 2,
-    MATCH_H_MIN: 9, MATCH_H_MAX: 11
+    MATCH_H_MIN: 9.4, MATCH_H_MAX: 11.4
   };
 
   function koPdfRoleLabel(role) {
@@ -1307,6 +1385,7 @@
   }
 
   function koPdfTrimName(pdf, name, maxW) {
+    if (maxW <= 1) return '';
     if (pdf.getTextWidth(name) <= maxW) return name;
     let t = name;
     while (t.length > 3 && pdf.getTextWidth(t + '...') > maxW) t = t.slice(0, -1);
@@ -1438,8 +1517,9 @@
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(4.6);
     pdf.setTextColor(...C.txt);
-    const maxNameW = w - (tx - x) - pad - (tagW ? tagW + 0.8 : 0);
-    pdf.text(koPdfTrimName(pdf, teamNameKoShort(code, 14), maxNameW), tx, y + h / 2 + 0.5);
+    const maxNameW = Math.max(4, w - (tx - x) - pad - (tagW ? tagW + 0.8 : 0));
+    const name = koPdfTrimName(pdf, teamNameKoShort(code, 14), maxNameW);
+    if (name) pdf.text(name, tx, y + h / 2 + 0.5);
 
     if (role) koPdfDrawRoleTag(pdf, role, x + w - pad - tagW, y + (h - 3.2) / 2, true);
   }
@@ -1470,7 +1550,9 @@
     pdf.setFontSize(5.2);
     pdf.setTextColor(...C.txt);
     const tagW = koPdfTagWidth('champion');
-    pdf.text(koPdfTrimName(pdf, teamNameKoShort(code, 16), w - (cx - x) - tagW - pad), cx, y + h / 2 + 0.5);
+    const nameMax = Math.max(6, w - (cx - x) - tagW - pad);
+    const name = koPdfTrimName(pdf, teamNameKoShort(code, 16), nameMax);
+    if (name) pdf.text(name, cx, y + h / 2 + 0.5);
     koPdfDrawRoleTag(pdf, 'champion', x + w - pad - tagW, y + (h - 3.2) / 2, true);
   }
 
@@ -1574,8 +1656,8 @@
     }
 
     const img = cache[code];
-    const nameMax = w - FLAG_W - pad * 2 - (tagW ? tagW + 0.6 : 0) - (isWin ? 2.5 : 0);
-    const name = koPdfTrimName(pdf, teamNameKoShort(code, 13), nameMax);
+    const leftPad = pad + (img ? FLAG_W + 0.6 : 0);
+    const rightPad = pad;
     const textY = y + h / 2 + (role ? -0.6 : 0.5);
 
     pdf.setFontSize(5);
@@ -1588,20 +1670,23 @@
       let rx = x + w - pad;
       if (isWin) {
         pdf.setFillColor(...C.g);
-        pdf.setFontSize(4.5);
+        pdf.setFontSize(3.6);
+        pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(255, 255, 255);
-        pdf.text('✓', rx, textY, { align: 'right' });
-        rx -= 2.2;
+        pdf.text('OK', rx, textY, { align: 'right' });
+        rx -= 3.2;
       }
       if (role) {
         koPdfDrawRoleTag(pdf, role, rx - tagW, y + 0.4, true);
         rx -= tagW + 0.4;
       }
+      const nameMax = Math.max(4, rx - (x + leftPad));
+      const name = koPdfTrimName(pdf, teamNameKoShort(code, 13), nameMax);
       pdf.setFontSize(5);
       if (isWin) pdf.setTextColor(180, 255, 200);
       else if (isLose) pdf.setTextColor(220, 120, 120);
       else pdf.setTextColor(...C.txt);
-      pdf.text(name, rx, textY, { align: 'right' });
+      if (name) pdf.text(name, rx, textY, { align: 'right' });
       if (img) pdf.addImage(img, 'PNG', x + pad, y + (h - FLAG_H) / 2, FLAG_W, FLAG_H);
     } else {
       let tx = x + pad;
@@ -1609,17 +1694,24 @@
         pdf.addImage(img, 'PNG', tx, y + (h - FLAG_H) / 2, FLAG_W, FLAG_H);
         tx += FLAG_W + 0.6;
       }
-      pdf.text(name, tx, textY);
-      let bx = tx + pdf.getTextWidth(name) + 0.5;
+      const reserveRight = rightPad + (role ? tagW + 0.5 : 0) + (isWin ? 2.2 : 0);
+      const nameMax = Math.max(4, x + w - reserveRight - tx);
+      const name = koPdfTrimName(pdf, teamNameKoShort(code, 13), nameMax);
+      if (name) pdf.text(name, tx, textY);
+      let bx = tx + (name ? pdf.getTextWidth(name) : 0) + 0.5;
+      const maxTagX = x + w - rightPad - (isWin ? 2.2 : 0) - (role ? tagW : 0);
+      bx = Math.min(bx, maxTagX);
       if (role) {
         koPdfDrawRoleTag(pdf, role, bx, y + 0.4, true);
         bx += tagW + 0.3;
       }
       if (isWin) {
         pdf.setFillColor(...C.g);
-        pdf.setFontSize(4.5);
+        pdf.setFontSize(3.6);
+        pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(255, 255, 255);
-        pdf.text('✓', bx, textY);
+        const checkX = Math.min(bx, x + w - rightPad - 0.3);
+        pdf.text('OK', checkX, textY);
       }
     }
   }
@@ -1632,25 +1724,25 @@
     const cellW = (CW - vsW - pad * 2) / 2;
     const cellX1 = xOff + pad;
     const cellX2 = xOff + CW - pad - cellW;
-    const metaY = my + 2.2;
-    const teamY = my + 3.2;
-    const cellH = matchH - 3.5;
+    const metaY = my + 1.9;
+    const teamY = my + 3.45;
+    const cellH = matchH - 4.05;
 
     if (stripe) {
       pdf.setFillColor(20, 28, 42);
       pdf.rect(xOff + 0.5, my, CW - 1, matchH - 0.15, 'F');
     }
 
-    pdf.setFontSize(3.6);
+    pdf.setFontSize(3.25);
     pdf.setTextColor(...C.mut);
     pdf.setFont('helvetica', 'normal');
     const city = koPdfVenueShort(m.venue);
     pdf.text(`${m.date} ${m.hour}${city ? ' · ' + city : ''}`, centerX, metaY, { align: 'center' });
 
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(4.2);
+    pdf.setFontSize(3.8);
     pdf.setTextColor(100, 116, 139);
-    pdf.text('vs', centerX, my + matchH - 2.2, { align: 'center' });
+    pdf.text('vs', centerX, my + matchH - 1.7, { align: 'center' });
 
     const homeRole = showSpecials ? getKoExtraRole(m.home, ex) : '';
     const awayRole = showSpecials ? getKoExtraRole(m.away, ex) : '';
@@ -1755,7 +1847,7 @@
         placeGroup(groupH, fullWidth);
         const xOff = fullWidth ? M : M + col * (CW + GAP);
         const label = round.label + (chunks.length > 1 ? (ci ? ' B' : ' A') : '');
-        colY[col] = koPdfDrawMatchColumn(pdf, chunk, xOff, colY[col], colW, data.picks, cache, label, data.extras, matchH, round.key === 'r32') + 2;
+        colY[col] = koPdfDrawMatchColumn(pdf, chunk, xOff, colY[col], colW, data.picks, cache, label, data.extras, matchH, false) + 2;
         if (fullWidth) {
           colY = koPdfSyncColumns(colY);
           col = 0;

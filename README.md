@@ -49,7 +49,10 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 - PDF de fase de grupos · guardado en `porra2026v5`
 
 ### 🏅 Eliminatorias (la que cuenta)
-- **Especiales:** 2 semifinalistas **lado A** + 2 **lado B**, 2 finalistas, campeón  
+- **Especiales (modo simple):**
+  - Semifinalistas: **1 por esquina** → `G1 ↖`, `G2 ↗`, `G3 ↙`, `G4 ↘`
+  - Finalistas: **1 de arriba** + **1 de abajo**
+  - Campeón: entre tus 2 finalistas  
   *(editables hasta 28 jun 12:00)*
 - **Quiniela:** ganador de cada partido (16avos → final)
 - **Verde** = ganador · **Rojo** = eliminado · etiquetas SEMI / FINAL / CAMPEÓN
@@ -73,7 +76,7 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 ```
 1. Abre el enlace (o escanea el QR)
 2. Pestaña 🏅 Eliminatorias → elige participante
-3. Especiales (A/B) + ganador en cada partido
+3. Especiales por esquinas (G1/G2/G3/G4) + finalistas arriba/abajo
 4. «Exportar PDF eliminatorias» (verde cuando esté completo)
 5. Guarda o envía el PDF por WhatsApp
 ```
@@ -112,7 +115,7 @@ python -m http.server 8765          # alternativa manual
 ```
 
 > ⚠️ No uses `file://`. Tras editar HTML, **siempre** `sync-html.bat`.  
-> Al cambiar `knockout.js`, sube `?v=34` (o siguiente) en ambos HTML.
+> Al cambiar `knockout.js`, sube `?v=35` (o siguiente) en ambos HTML.
 
 ### Modo prueba eliminatorias
 Pestaña 🏅 → contraseña `Españita` (solo esa sesión del navegador).
@@ -172,9 +175,9 @@ Array `PARTICIPANTS` en `knockout.js` → sync → push.
 ## 📁 Estructura
 
 ```
-├── porra-mundial-2026.html    ← Editar aquí
-├── index.html                 ← Sync antes de deploy (Vercel)
-├── knockout.js                ← Eliminatorias + PDF KO
+├── porra-mundial-2026.html    ← Fuente principal (editar aquí)
+├── index.html                 ← Copia de despliegue (la sirve Vercel)
+├── knockout.js                ← Lógica eliminatorias + PDF KO
 ├── manifest.json              ← PWA / añadir a inicio
 ├── results.json               ← Marcadores ({})
 ├── results.example.json       ← Plantilla de ejemplo
@@ -188,6 +191,12 @@ Array `PARTICIPANTS` en `knockout.js` → sync → push.
 ```
 
 **CDN:** Tailwind, jsPDF, flagcdn.com — sin `npm install`.
+
+### Estructura mental rápida (KISS)
+
+- `porra-mundial-2026.html`: UI general (grupos, tabs, estilos globales).
+- `knockout.js`: todo lo de eliminatorias (reglas, validaciones, export PDF KO).
+- `index.html`: solo artefacto final para Vercel (se regenera con `sync-html.bat`).
 
 ---
 
