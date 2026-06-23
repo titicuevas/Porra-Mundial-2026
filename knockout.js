@@ -216,28 +216,28 @@
   const KO_SEMI_SIDES = [
     {
       key: 'left',
-      title: '◀ Lado izquierdo del cuadro',
-      short: 'Izquierda',
-      hint: 'Necesitas <strong>2 equipos</strong> aquí: <strong>1 de arriba</strong> y <strong>1 de abajo</strong> (separados por la barra amarilla).',
-      slotLabels: ['Semifinalista 1', 'Semifinalista 2'],
+      title: '◀ LADO IZQUIERDO DEL CUADRO',
+      short: 'izquierdo',
+      hint: 'Elige 2 semifinalistas de este lado del cuadro.',
+      slotsSummary: 'Estos son tus semifinalistas del lado izquierdo del cuadro',
       indices: [0, 2],
       corners: ['G1', 'G3'],
       zones: [
-        { corner: 'G1', index: 0, zoneLabel: 'Zona de arriba', slotLabel: 'Semifinalista 1 (arriba)' },
-        { corner: 'G3', index: 2, zoneLabel: 'Zona de abajo', slotLabel: 'Semifinalista 2 (abajo)' }
+        { corner: 'G1', index: 0, pickLabel: 'Elige tu semifinalista 1 de estos', slotLabel: 'SEMIFINALISTA 1' },
+        { corner: 'G3', index: 2, pickLabel: 'Elige tu semifinalista 2 de estos', slotLabel: 'SEMIFINALISTA 2' }
       ]
     },
     {
       key: 'right',
-      title: 'Lado derecho del cuadro ▶',
-      short: 'Derecha',
-      hint: 'Necesitas <strong>2 equipos</strong> aquí: <strong>1 de arriba</strong> y <strong>1 de abajo</strong> (separados por la barra amarilla).',
-      slotLabels: ['Semifinalista 1', 'Semifinalista 2'],
+      title: 'LADO DERECHO DEL CUADRO ▶',
+      short: 'derecho',
+      hint: 'Elige 2 semifinalistas de este lado del cuadro.',
+      slotsSummary: 'Estos son tus semifinalistas del lado derecho del cuadro',
       indices: [1, 3],
       corners: ['G2', 'G4'],
       zones: [
-        { corner: 'G2', index: 1, zoneLabel: 'Zona de arriba', slotLabel: 'Semifinalista 1 (arriba)' },
-        { corner: 'G4', index: 3, zoneLabel: 'Zona de abajo', slotLabel: 'Semifinalista 2 (abajo)' }
+        { corner: 'G2', index: 1, pickLabel: 'Elige tu semifinalista 1 de estos', slotLabel: 'SEMIFINALISTA 1' },
+        { corner: 'G4', index: 3, pickLabel: 'Elige tu semifinalista 2 de estos', slotLabel: 'SEMIFINALISTA 2' }
       ]
     }
   ];
@@ -640,9 +640,10 @@
     const other = side.zones.find(z => z.index !== zone.index);
     if (!ex.semis[zone.index]) return '';
     if (other && !ex.semis[other.index]) {
-      return `Ya elegiste un equipo de la <strong>${zone.zoneLabel.toLowerCase()}</strong>. Te falta elegir uno de la <strong>${other.zoneLabel.toLowerCase()}</strong> (la otra mitad).`;
+      const zoneNum = side.zones.findIndex(z => z.index === zone.index) + 1;
+      return `Ya elegiste tu semifinalista ${zoneNum}. Ahora elige el <strong>otro</strong> (la otra mitad).`;
     }
-    return `Ya tienes los 2 del lado ${side.short.toLowerCase()}. Toca una casilla de abajo para cambiar.`;
+    return `Ya tienes los 2 del lado ${side.short}. Toca una casilla de abajo para cambiar.`;
   }
 
   function getCornerHint(corner) {
@@ -1260,7 +1261,7 @@
       <div class="ko-simple-legend ko-simple-legend--top">
         <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--win">✓</span> <strong>Verde</strong> = el equipo que crees que <strong>gana</strong> el partido</p>
         <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--lose">✗</span> <strong>Rojo</strong> = el que <strong>pierde</strong></p>
-        <p class="ko-simple-legend-row">Etiquetas moradas/naranjas/doradas = tus pronósticos especiales (semi, final, campeón)</p>
+        <p class="ko-simple-legend-row">Tus pronósticos especiales se marcarán así:</p>
       </div>
       <div class="ko-r32-picker-legend ko-r32-picker-legend--top">
         <span class="ko-legend-item">${koRoleBadgeHTML('semi', 'md')} Semifinalista</span>
@@ -1285,21 +1286,21 @@
       </div>
       <section class="ko-extras-step ko-extras-step--semi">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--semi">1</span> 4 semifinalistas</h4>
-        <p class="ko-extras-step-hint"><strong>2 equipos del lado IZQUIERDO</strong> + <strong>2 del lado DERECHO</strong>.<br>👇 Primero toca la <strong>BANDERA</strong> del equipo · se guarda en la casilla de abajo.</p>
+        <p class="ko-extras-step-hint"><strong>2 equipos del lado IZQUIERDO</strong> + <strong>2 del lado DERECHO</strong>.</p>
         <div class="ko-semis-sides-stack">
           ${KO_SEMI_SIDES.map(side => koSemiSideBlockHTML(side.key, ex)).join('')}
         </div>
       </section>
       <section class="ko-extras-step ko-extras-step--final${semisFull ? '' : ' ko-extras-step--locked'}">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--final">2</span> 2 finalistas</h4>
-        <p class="ko-extras-step-hint"><strong>1 de ARRIBA</strong> + <strong>1 de ABAJO</strong> del cuadro (solo entre tus semifinalistas).</p>
+        <p class="ko-extras-step-hint">De entre tus semifinalistas: <strong>1 de cada lado del cuadro</strong> (arriba y abajo).</p>
         <div class="ko-finals-sides-stack">
           ${[0, 1].map(i => koFinalSideBlockHTML(i, ex)).join('')}
         </div>
       </section>
       <section class="ko-extras-step ko-extras-step--champion${finalsFull ? '' : ' ko-extras-step--locked'}">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--gold">3</span> Campeón del mundo</h4>
-        <p class="ko-extras-step-hint">Elige <strong>UN SOLO</strong> campeón entre tus 2 finalistas — toca su bandera o la casilla dorada.</p>
+        <p class="ko-extras-step-hint"><strong>1 entre tus 2 finalistas</strong> — toca su bandera o la casilla dorada.</p>
         ${koChampionBlockHTML(ex)}
       </section>`;
   }
@@ -1348,7 +1349,7 @@
       : '';
     const flag = typeof flagHTML === 'function' ? flagHTML(code, field === 'semis' ? 24 : 32) : '';
     if (roles.length > 1) cls.push('ko-r32-pick--multi-badge');
-    const qual = isKoR32Team(code) ? koQualificationHTML(code, 'ko-r32-pick-qual') : '';
+    const qual = field !== 'semis' && isKoR32Team(code) ? koQualificationHTML(code, 'ko-r32-pick-qual') : '';
     const disabled = taken;
     const zoneAttrs = zoneBlocked && opts.zoneBlockMsg
       ? ` data-ko-zone-blocked="1" data-ko-zone-msg="${opts.zoneBlockMsg.replace(/"/g, '&quot;')}"`
@@ -1446,13 +1447,9 @@
     const zoneCls = ['ko-semi-zone', `ko-semi-zone--${zone.corner.toLowerCase()}`];
     if (filled) zoneCls.push('is-zone-done');
     const pickerOpts = filled ? { zoneBlocked: true, zoneBlockMsg: blockMsgPlain } : {};
-    const status = filled
-      ? `<p class="ko-semi-zone-status ko-semi-zone-status--done">✓ <strong>Ya elegido.</strong> Elige el de la otra zona o toca la casilla de abajo.</p>`
-      : `<p class="ko-semi-zone-status">👇 Elige <strong>1 SOLO equipo</strong> de esta zona</p>`;
     return `<div class="${zoneCls.join(' ')}" data-ko-semi-zone="${zone.corner}">
-      <p class="ko-semi-zone-label">${zone.zoneLabel}</p>
-      ${status}
-      <div class="ko-section-picker-grid ko-section-picker-grid--semis-zone" role="listbox" aria-label="${zone.zoneLabel}">
+      <p class="ko-zone-pick-hint">👇 ${zone.pickLabel}</p>
+      <div class="ko-section-picker-grid ko-section-picker-grid--semis-zone" role="listbox" aria-label="${zone.pickLabel}">
         ${teams.map(t => koPickerTeamBtn(t.code, 'semis', ex, used, pickerOpts)).join('')}
       </div>
     </div>`;
@@ -1475,17 +1472,11 @@
     const slots = side.zones.map(zone =>
       koExtraSlotHTML('semis', zone.index, ex.semis[zone.index], zone.slotLabel)
     ).join('');
-    const filledCount = side.indices.filter(i => ex.semis[i]).length;
-    const progressHint = filledCount === 1
-      ? `<p class="ko-semi-side-progress">⏳ Llevas <strong>1 de 2</strong> — te falta elegir el de la otra zona.</p>`
-      : (filledCount === 2 ? `<p class="ko-semi-side-progress ko-semi-side-progress--done">✓ <strong>2 de 2</strong> del lado ${side.short.toLowerCase()} — perfecto.</p>` : '');
     return `<div class="${cls.join(' ')}" id="ko-semi-side-${sideKey}">
       <p class="ko-semi-side-title">${side.title}</p>
       <p class="ko-semi-side-hint">${side.hint}</p>
-      ${progressHint}
-      <p class="ko-semi-corner-picker-hint ko-picker-first-hint">👇 <strong>1.</strong> Toca una bandera (arriba o abajo de la barra)</p>
       <div class="ko-semi-zones-stack">${zoneBlocks}</div>
-      <p class="ko-semi-corner-picker-hint">👆 <strong>2.</strong> Queda guardado en la casilla de abajo</p>
+      <p class="ko-semi-slots-summary">${side.slotsSummary}</p>
       <div class="ko-extras-row ko-extras-row--2">${slots}</div>
     </div>`;
   }
