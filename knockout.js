@@ -34,6 +34,26 @@
     ['at', 'jo'], ['dz', 'uz'], ['sn', 'no'], ['gh', 'pa']
   ];
 
+  // Plantilla de cruces R32: 1A = 1º grupo A, 2B = 2º grupo B, 3P = tercero (pendiente)
+  const KO_R32_SLOT_TEMPLATES = [
+    { home: '1A', away: '3P' },
+    { home: '2A', away: '2B' },
+    { home: '1C', away: '2F' },
+    { home: '1E', away: '3P' },
+    { home: '1D', away: '3P' },
+    { home: '1B', away: '3P' },
+    { home: '1H', away: '2J' },
+    { home: '1I', away: '2I' },
+    { home: '1L', away: '3P' },
+    { home: '1K', away: '3P' },
+    { home: '2K', away: '2L' },
+    { home: '1G', away: '3P' },
+    { home: '1J', away: '2H' },
+    { home: '1F', away: '2C' },
+    { home: '2D', away: '2G' },
+    { home: '2E', away: '3P' }
+  ];
+
   const R32_META = [
     { date: 'Sáb 28 Jun', hour: '12:00', venue: 'SoFi Stadium, Los Ángeles' },
     { date: 'Dom 29 Jun', hour: '16:30', venue: 'Gillette Stadium, Boston' },
@@ -133,6 +153,53 @@
       cornerSet.add(code);
     });
   });
+
+  function rebuildKoR32CornerSets() {
+    KO_R32_CODES.clear();
+    KO_R32_CORNER_1.clear();
+    KO_R32_CORNER_2.clear();
+    KO_R32_CORNER_3.clear();
+    KO_R32_CORNER_4.clear();
+    KO_R32_SEEDS.forEach((pair, i) => {
+      let cornerSet = KO_R32_CORNER_1;
+      if (i >= 4 && i < 8) cornerSet = KO_R32_CORNER_2;
+      else if (i >= 8 && i < 12) cornerSet = KO_R32_CORNER_3;
+      else if (i >= 12) cornerSet = KO_R32_CORNER_4;
+      pair.forEach(code => {
+        if (!code || code === 'tbd') return;
+        KO_R32_CODES.add(code);
+        cornerSet.add(code);
+      });
+    });
+  }
+
+  function resolveKoR32Slot(slot, standings, fallback) {
+    if (!slot || slot === '3P') return 'tbd';
+    const m = String(slot).match(/^([12])([A-L])$/);
+    if (!m) return fallback || 'tbd';
+    const pos = m[1] === '1' ? 0 : 1;
+    const groupId = m[2];
+    const table = standings && standings[groupId];
+    if (!table || !table[pos] || !table[pos].code) return fallback || 'tbd';
+    return table[pos].code;
+  }
+
+  function syncKnockoutGroupSeeds(standings) {
+    if (!standings || typeof standings !== 'object') return;
+    KO_R32_SLOT_TEMPLATES.forEach((tpl, i) => {
+      const prev = KO_R32_SEEDS[i] || ['tbd', 'tbd'];
+      const home = resolveKoR32Slot(tpl.home, standings, prev[0]);
+      const away = resolveKoR32Slot(tpl.away, standings, prev[1]);
+      KO_R32_SEEDS[i][0] = home;
+      KO_R32_SEEDS[i][1] = away;
+      const match = KO_R32_MATCHES[i];
+      if (match) {
+        match.home = home;
+        match.away = away;
+      }
+    });
+    rebuildKoR32CornerSets();
+  }
 
   const KO_SEMI_SLOT_LABELS = ['SF G1', 'SF G2', 'SF G3', 'SF G4'];
   const KO_SEMI_CORNER_LABELS = ['Grupo 1 (sup-izq)', 'Grupo 2 (sup-der)', 'Grupo 3 (inf-izq)', 'Grupo 4 (inf-der)'];
@@ -642,6 +709,19 @@
     return koAllExtraRoles(code, ex);
   }
 
+  function koQualificationHTML(code, className) {
+    if (!code || code === 'tbd') return '';
+    if (typeof getTeamQualificationRecord !== 'function') return '';
+    const q = getTeamQualificationRecord(code);
+    if (!q) return '';
+    const cls = className || 'ko-team-qual';
+    const prov = q.provisional ? '<span class="ko-qual-prov">prov.</span>' : '';
+    return `<span class="${cls}" title="${q.detail}">
+      <span class="ko-qual-line ko-qual-line--pos">${q.line1}${prov}</span>
+      <span class="ko-qual-line ko-qual-line--stats"><span class="ko-qual-ved">${q.w}-${q.d}-${q.l}</span><span class="ko-qual-goals">${q.gf}:${q.ga}</span></span>
+    </span>`;
+  }
+
   function koTeamPickBtnHTML(m, side) {
     const code = side === 'home' ? m.home : m.away;
     const pick = getKoPick(m.id);
@@ -653,13 +733,17 @@
     const ex = data.extras;
     const showSpecial = showKoExtraOnMatch(m.id);
     const role = showSpecial ? getKoExtraRole(code, ex) : '';
+    const isR32 = getRoundKeyForMatch(m.id) === 'r32';
     const cls = ['ko-team-pick'];
+    if (isR32) cls.push('ko-team-pick--qual');
     if (pick === side) cls.push('winner');
     else if (pick) cls.push('eliminated');
     const flag = typeof flagHTML === 'function' ? flagHTML(code, 20) : '';
     const extra = showSpecial ? getKoExtraBadge(code).badge : '';
-    return `<button type="button" class="${cls.join(' ')}" data-ko-pick-match="${m.id}" data-ko-pick-side="${side}" aria-label="Gana ${teamNameKo(code)}">
-      ${flag}<span class="ko-team-name">${teamNameKoShort(code, 15)}</span>${extra}
+    const qual = isR32 ? koQualificationHTML(code) : '';
+    return `<button type="button" class="${cls.join(' ')}" data-ko-pick-match="${m.id}" data-ko-pick-side="${side}" aria-label="Gana ${teamNameKo(code)}${qual ? '. ' + (getTeamQualificationRecord(code)?.detail || '') : ''}">
+      <span class="ko-team-pick-main">${flag}<span class="ko-team-name">${teamNameKoShort(code, 15)}</span>${extra}</span>
+      ${qual}
     </button>`;
   }
 
@@ -691,7 +775,7 @@
         <span class="hora-badge">${m.hour}</span>
         <span class="sede-badge">${m.venue}</span>
       </div>
-      <div class="ko-list-pair${pick ? ' has-pick' : ''}">
+      <div class="ko-list-pair${pick ? ' has-pick' : ''}${getRoundKeyForMatch(m.id) === 'r32' ? ' ko-list-pair--qual' : ''}">
         ${koTeamPickBtnHTML(m, 'home')}
         <span class="ko-vs" aria-hidden="true">vs</span>
         ${koTeamPickBtnHTML(m, 'away')}
@@ -705,7 +789,10 @@
     const total = playable.length;
     const allDefined = round.matches.every(isMatchReady);
     const complete = total > 0 && done === total;
-  const pendingTeams = !allDefined;
+    const pendingTeams = !allDefined;
+    const qualBar = round.key === 'r32'
+      ? `<p class="ko-r32-qual-bar">Cada equipo muestra su <strong>récord en grupos</strong> (posición · puntos · V-E-D · goles). Con la última jornada puede cambiar.</p>`
+      : '';
     return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}" id="ko-round-${round.key}">
       <div class="group-header px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2 flex-shrink-0">
@@ -714,6 +801,7 @@
         </div>
         <span class="ko-round-status text-xs text-gray-500">${round.matches.length} partido${round.matches.length === 1 ? '' : 's'} · toca al ganador</span>
       </div>
+      ${qualBar}
       <div>${koRoundMatchesHTML(round.matches)}</div>
       <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap">
         <span class="text-xs text-gray-600">${pendingTeams ? 'Equipos pendientes de clasificación' : 'Quiniela ' + round.label.toLowerCase()}</span>
@@ -1010,10 +1098,14 @@
 
   function koExtrasReadOnlyChip(code, role) {
     const flag = typeof flagHTML === 'function' ? flagHTML(code, 28) : '';
+    const qual = isKoR32Team(code) ? koQualificationHTML(code, 'ko-extra-readonly-qual') : '';
     return `<div class="ko-extra-readonly-chip ko-extra-readonly-chip--${role}">
-      ${koRoleBadgeHTML(role, 'md')}
-      <span class="ko-extra-readonly-flag">${flag}</span>
-      <span class="ko-extra-readonly-name">${teamNameKo(code)}</span>
+      <div class="ko-extra-readonly-chip-row">
+        ${koRoleBadgeHTML(role, 'md')}
+        <span class="ko-extra-readonly-flag">${flag}</span>
+        <span class="ko-extra-readonly-name">${teamNameKo(code)}</span>
+      </div>
+      ${qual}
     </div>`;
   }
 
@@ -1105,6 +1197,7 @@
     const cornerChip = field === 'semis'
       ? `<span class="ko-corner-chip ko-corner-chip--${getSemiSlotCorner(index).toLowerCase()}">${getSemiSlotCorner(index)}</span>`
       : '';
+    const qual = filled && isKoR32Team(selected) ? koQualificationHTML(selected, 'ko-extra-slot-qual') : '';
     return `<div class="ko-extra-slot${filled ? ' ko-extra-slot--filled' : ''}${isActive ? ' ko-extra-slot--active' : ''} ko-extra-slot--${field}">
       <span class="ko-extra-slot-num">${label}</span>
       <button type="button" class="ko-extra-slot-card" data-ko-extra-slot data-ko-extra-field="${field}" data-ko-extra-index="${index}" aria-pressed="${isActive}">
@@ -1112,6 +1205,7 @@
         ${roleBadge ? `<span class="ko-extra-slot-badge">${roleBadge}</span>` : ''}
         <span class="ko-extra-slot-flag">${flag}</span>
         <span class="ko-extra-slot-name">${name}</span>
+        ${qual}
         ${filled ? `<span class="ko-extra-clear" data-ko-extra-clear data-ko-extra-field="${field}" data-ko-extra-index="${index}" role="button" aria-label="Quitar equipo">×</span>` : ''}
       </button>
     </div>`;
@@ -1130,10 +1224,12 @@
       : '';
     const flag = typeof flagHTML === 'function' ? flagHTML(code, field === 'semis' ? 24 : 32) : '';
     if (roles.length > 1) cls.push('ko-r32-pick--multi-badge');
+    const qual = isKoR32Team(code) ? koQualificationHTML(code, 'ko-r32-pick-qual') : '';
     return `<button type="button" class="${cls.join(' ')}" data-ko-pick-code="${code}" data-ko-picker-field="${field}"${taken ? ' disabled' : ''} aria-label="${teamNameKo(code)}">
       ${badge}
       ${flag}
       <span class="ko-r32-pick-name">${teamNameKoShort(code, field === 'semis' ? 11 : 14)}</span>
+      ${qual}
     </button>`;
   }
 
@@ -1436,7 +1532,7 @@
     M: 10, GAP: 3, PAGE_TOP: 10, PAGE_BOTTOM: 287,
     MATCH_H: 8.5, HEAD_H: 6.5, FOOT_H: 2,
     FLAG_W: 3.2, FLAG_H: 2.4, RADIUS: 2,
-    MATCH_H_MIN: 8.2, MATCH_H_MAX: 9.8
+    MATCH_H_MIN: 8.8, MATCH_H_MAX: 10.6
   };
 
   function koPdfRoleLabel(role) {
@@ -1766,7 +1862,13 @@
     return y + cardH + 2.5;
   }
 
-  function koPdfDrawTeamCell(pdf, code, isWin, isLose, role, x, y, w, h, cache, alignRight) {
+  function koPdfQualShort(code) {
+    if (typeof getTeamQualificationRecord !== 'function') return '';
+    const q = getTeamQualificationRecord(code);
+    return q ? q.short : '';
+  }
+
+  function koPdfDrawTeamCell(pdf, code, isWin, isLose, role, x, y, w, h, cache, alignRight, showQual) {
     const C = KO_PDF_C;
     const { FLAG_W, FLAG_H } = KO_PDF;
     const pad = 0.9;
@@ -1789,8 +1891,9 @@
     }
 
     const img = cache[code];
-    const textY = y + h / 2 + 0.45;
+    const nameY = showQual ? y + h / 2 - 0.15 : y + h / 2 + 0.45;
     const nameColor = isWin ? [220, 252, 231] : isLose ? [254, 205, 211] : C.txt;
+    const qualLine = showQual ? koPdfQualShort(code) : '';
 
     if (alignRight) {
       let tx = x + w - pad;
@@ -1802,7 +1905,7 @@
       const nameMax = Math.max(6, tx - x - pad);
       pdf.setFont('helvetica', isWin ? 'bold' : 'normal');
       pdf.setTextColor(...nameColor);
-      koPdfDrawFittedText(pdf, teamNameKo(code), tx, textY, nameMax, { size: 4.8, align: 'right' });
+      koPdfDrawFittedText(pdf, teamNameKo(code), tx, nameY, nameMax, { size: showQual ? 4.4 : 4.8, align: 'right' });
     } else {
       let tx = x + pad;
       if (img) {
@@ -1812,7 +1915,19 @@
       const nameMax = Math.max(6, x + w - pad - tx);
       pdf.setFont('helvetica', isWin ? 'bold' : 'normal');
       pdf.setTextColor(...nameColor);
-      koPdfDrawFittedText(pdf, teamNameKo(code), tx, textY, nameMax, { size: 4.8, align: 'left' });
+      koPdfDrawFittedText(pdf, teamNameKo(code), tx, nameY, nameMax, { size: showQual ? 4.4 : 4.8, align: 'left' });
+    }
+
+    if (qualLine) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(3);
+      pdf.setTextColor(...(isWin ? [134, 239, 172] : isLose ? [252, 165, 165] : KO_PDF_C.mut));
+      const qy = y + h - 0.55;
+      if (alignRight) {
+        koPdfDrawFittedText(pdf, qualLine, x + w - pad, qy, w - pad * 2, { size: 3, align: 'right' });
+      } else {
+        koPdfDrawFittedText(pdf, qualLine, x + pad, qy, w - pad * 2, { size: 3, align: 'left' });
+      }
     }
   }
 
@@ -1823,9 +1938,11 @@
     const cellW = (CW - vsW - pad * 2) / 2;
     const cellX1 = xOff + pad;
     const cellX2 = xOff + CW - pad - cellW;
+    const isR32 = getRoundKeyForMatch(m.id) === 'r32';
+    const showQual = isR32 && typeof getTeamQualificationRecord === 'function';
     const metaY = my + 1.5;
-    const teamY = my + 2.85;
-    const cellH = matchH - 3.35;
+    const teamY = my + (showQual ? 2.65 : 2.85);
+    const cellH = matchH - (showQual ? 3.55 : 3.35);
 
     if (stripe) {
       pdf.setFillColor(20, 28, 42);
@@ -1841,8 +1958,8 @@
 
     const homeRole = showSpecials ? getKoExtraRole(m.home, ex) : '';
     const awayRole = showSpecials ? getKoExtraRole(m.away, ex) : '';
-    koPdfDrawTeamCell(pdf, m.home, pick === 'home', pick === 'away', homeRole, cellX1, teamY, cellW, cellH, cache, false);
-    koPdfDrawTeamCell(pdf, m.away, pick === 'away', pick === 'home', awayRole, cellX2, teamY, cellW, cellH, cache, true);
+    koPdfDrawTeamCell(pdf, m.home, pick === 'home', pick === 'away', homeRole, cellX1, teamY, cellW, cellH, cache, false, showQual);
+    koPdfDrawTeamCell(pdf, m.away, pick === 'away', pick === 'home', awayRole, cellX2, teamY, cellW, cellH, cache, true, showQual);
   }
 
   function koPdfDrawMatchColumn(pdf, matches, xOff, y, CW, picks, cache, label, ex, matchH, showSpecials) {
@@ -1992,6 +2109,7 @@
   window.clearKnockoutAll = clearKnockoutAll;
   window.clearKnockoutPicks = clearKnockoutPicks;
   window.exportKnockoutPDF = exportKnockoutPDF;
+  window.syncKnockoutGroupSeeds = syncKnockoutGroupSeeds;
   window.requestKnockoutAccess = requestKnockoutAccess;
   window.KO_ROUNDS = KO_ROUNDS;
   window.KO_ROUND_OPENS = KO_ROUND_OPENS;
