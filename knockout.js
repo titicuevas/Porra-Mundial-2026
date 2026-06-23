@@ -9,14 +9,23 @@
   const KO_ROUND_ORDER = ['r32', 'r16', 'r8', 'r4', 'r2'];
 
   const PARTICIPANTS = [
-    'Enrique Cuevas Garcia',
-    'Felipe',
-    'Manolin',
-    'Jorge',
-    'David',
-    'Miguel',
-    'Carlos',
-    'Pablo'
+    'Enrique Cuevas García',
+    'Manolín',
+    'Juan Medina',
+    'Alicia Pérez',
+    'Daniel',
+    'Salomé Juanjo',
+    'Juani',
+    'Jenifer',
+    'Nolo',
+    'Manuel Montaño',
+    'Francisco Romero',
+    'Felipe Escobar Montaño',
+    'Belén Que',
+    'Chuck Norris Está Vivo',
+    'María y Javi',
+    'Carlos Mondragón',
+    'Lego'
   ];
 
   const KO_ROUND_OPENS = {
@@ -201,10 +210,38 @@
     rebuildKoR32CornerSets();
   }
 
-  const KO_SEMI_SLOT_LABELS = ['SF G1', 'SF G2', 'SF G3', 'SF G4'];
+  const KO_SEMI_SLOT_LABELS = ['SF izq. 1', 'SF der. 1', 'SF izq. 2', 'SF der. 2'];
   const KO_SEMI_CORNER_LABELS = ['Grupo 1 (sup-izq)', 'Grupo 2 (sup-der)', 'Grupo 3 (inf-izq)', 'Grupo 4 (inf-der)'];
   const KO_SEMI_CORNER_KEYS = ['G1', 'G2', 'G3', 'G4'];
-  const KO_FINAL_SLOT_LABELS = ['Finalista Lado Arriba', 'Finalista Lado Abajo'];
+  const KO_SEMI_SIDES = [
+    {
+      key: 'left',
+      title: '◀ Lado izquierdo del cuadro',
+      short: 'Izquierda',
+      hint: 'Necesitas <strong>2 equipos</strong> aquí: <strong>1 de arriba</strong> y <strong>1 de abajo</strong> (separados por la barra amarilla).',
+      slotLabels: ['Semifinalista 1', 'Semifinalista 2'],
+      indices: [0, 2],
+      corners: ['G1', 'G3'],
+      zones: [
+        { corner: 'G1', index: 0, zoneLabel: 'Zona de arriba', slotLabel: 'Semifinalista 1 (arriba)' },
+        { corner: 'G3', index: 2, zoneLabel: 'Zona de abajo', slotLabel: 'Semifinalista 2 (abajo)' }
+      ]
+    },
+    {
+      key: 'right',
+      title: 'Lado derecho del cuadro ▶',
+      short: 'Derecha',
+      hint: 'Necesitas <strong>2 equipos</strong> aquí: <strong>1 de arriba</strong> y <strong>1 de abajo</strong> (separados por la barra amarilla).',
+      slotLabels: ['Semifinalista 1', 'Semifinalista 2'],
+      indices: [1, 3],
+      corners: ['G2', 'G4'],
+      zones: [
+        { corner: 'G2', index: 1, zoneLabel: 'Zona de arriba', slotLabel: 'Semifinalista 1 (arriba)' },
+        { corner: 'G4', index: 3, zoneLabel: 'Zona de abajo', slotLabel: 'Semifinalista 2 (abajo)' }
+      ]
+    }
+  ];
+  const KO_FINAL_SLOT_LABELS = ['Finalista — mitad de arriba', 'Finalista — mitad de abajo'];
   const KO_CORNER_HINTS = {
     G1: 'G1 (superior izquierda)',
     G2: 'G2 (superior derecha)',
@@ -219,6 +256,9 @@
   let koActiveExtraSlot = null;
   let koPasswordFails = 0;
   let koWasComplete = false;
+  let koWasExtrasComplete = false;
+  let _koExtrasCelebrationInit = false;
+  let _koStatusCelebrationInit = false;
 
   function emptyUserData() {
     return { picks: {}, extras: normalizeKoExtras({}) };
@@ -243,12 +283,27 @@
     return koStore.users[user];
   }
 
+  function refreshKnockoutUI() {
+    renderKnockoutUserBar();
+    renderKnockoutExtras();
+    renderKnockoutMatches();
+    updateKnockoutStatus();
+  }
+
   function setActiveKoUser(name) {
-    if (!name || !PARTICIPANTS.includes(name)) return;
+    if (!name) {
+      koStore.activeUser = '';
+      koActiveExtraSlot = null;
+      koExtraWarn = '';
+      saveKnockoutStore();
+      refreshKnockoutUI();
+      return;
+    }
+    if (!PARTICIPANTS.includes(name)) return;
     koStore.activeUser = name;
     ensureUserData(name);
     saveKnockoutStore();
-    renderKnockout();
+    refreshKnockoutUI();
   }
 
   function isKnockoutPreviewUnlocked() {
@@ -386,16 +441,17 @@
   }
 
   function loadKnockoutStore() {
+    const sessionUser = koStore.activeUser;
     try {
       const raw = localStorage.getItem('porra2026_knockout');
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.users && typeof parsed.users === 'object') {
-          koStore = { activeUser: parsed.activeUser || '', users: parsed.users };
+          koStore = { activeUser: '', users: parsed.users };
         } else if (parsed && (parsed.picks || parsed.extras)) {
           const legacyName = PARTICIPANTS[0];
           koStore = {
-            activeUser: legacyName,
+            activeUser: '',
             users: {
               [legacyName]: {
                 picks: migrateKoPicks(parsed.picks),
@@ -408,13 +464,15 @@
     } catch (e) {
       koStore = { activeUser: '', users: {} };
     }
-    if (!koStore.activeUser && PARTICIPANTS.length) koStore.activeUser = PARTICIPANTS[0];
+    if (sessionUser && PARTICIPANTS.includes(sessionUser)) {
+      koStore.activeUser = sessionUser;
+    }
     PARTICIPANTS.forEach(ensureUserData);
   }
 
   function saveKnockoutStore() {
     try {
-      localStorage.setItem('porra2026_knockout', JSON.stringify(koStore));
+      localStorage.setItem('porra2026_knockout', JSON.stringify({ users: koStore.users }));
     } catch (e) { /* */ }
   }
 
@@ -552,14 +610,6 @@
     return '';
   }
 
-  function getSemiSlotCorner(index) {
-    return KO_SEMI_CORNER_KEYS[index] || '';
-  }
-
-  function getCornerHint(corner) {
-    return KO_CORNER_HINTS[corner] || corner;
-  }
-
   function getKoR32TeamsByCorner(corner) {
     const seen = new Set();
     const teams = [];
@@ -577,6 +627,45 @@
     return teams.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   }
 
+  function getSemiSlotCorner(index) {
+    return KO_SEMI_CORNER_KEYS[index] || '';
+  }
+
+  function getSemiSideKeyForIndex(index) {
+    const side = KO_SEMI_SIDES.find(s => s.indices.includes(index));
+    return side ? side.key : '';
+  }
+
+  function getSemiZoneRepeatMessage(side, zone, ex) {
+    const other = side.zones.find(z => z.index !== zone.index);
+    if (!ex.semis[zone.index]) return '';
+    if (other && !ex.semis[other.index]) {
+      return `Ya elegiste un equipo de la <strong>${zone.zoneLabel.toLowerCase()}</strong>. Te falta elegir uno de la <strong>${other.zoneLabel.toLowerCase()}</strong> (la otra mitad).`;
+    }
+    return `Ya tienes los 2 del lado ${side.short.toLowerCase()}. Toca una casilla de abajo para cambiar.`;
+  }
+
+  function getCornerHint(corner) {
+    const side = KO_SEMI_SIDES.find(s => s.corners.includes(corner));
+    if (side) return side.short;
+    return KO_CORNER_HINTS[corner] || corner;
+  }
+
+  function getKoR32TeamsBySide(sideKey) {
+    const side = KO_SEMI_SIDES.find(s => s.key === sideKey);
+    if (!side) return [];
+    const seen = new Set();
+    const teams = [];
+    side.corners.forEach(corner => {
+      getKoR32TeamsByCorner(corner).forEach(t => {
+        if (seen.has(t.code)) return;
+        seen.add(t.code);
+        teams.push(t);
+      });
+    });
+    return teams.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }
+
   function getFinalSlotSide(index) {
     return index === 0 ? 'ARRIBA' : 'ABAJO';
   }
@@ -585,6 +674,17 @@
     const idx = KO_SEMI_CORNER_KEYS.indexOf(corner);
     if (idx < 0) return -1;
     return ex.semis[idx] ? -1 : idx;
+  }
+
+  function requireKoUserForPick() {
+    if (getActiveKoUser()) return true;
+    koExtraWarn = '👆 <strong>Primero elige participante</strong> en el desplegable de arriba (debajo de las instrucciones).';
+    renderKnockoutExtras();
+    requestAnimationFrame(() => {
+      document.getElementById('koUserSelect')?.focus();
+      document.getElementById('koPlayerBar')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    return false;
   }
 
   function getKoR32TeamsSorted() {
@@ -922,10 +1022,15 @@
       return;
     }
     bar.classList.remove('hidden');
+    bar.classList.toggle('ko-user-bar--needs-user', !getActiveKoUser());
     if (sel) {
       const active = getActiveKoUser();
-      sel.innerHTML = '<option value="">— Elige participante —</option>' +
-        PARTICIPANTS.map(n => `<option value="${n.replace(/"/g, '&quot;')}"${n === active ? ' selected' : ''}>${n}</option>`).join('');
+      const needOptions = sel.options.length !== PARTICIPANTS.length + 1;
+      if (needOptions) {
+        sel.innerHTML = '<option value="">— Elige participante —</option>' +
+          PARTICIPANTS.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+      }
+      sel.value = active || '';
     }
   }
 
@@ -987,6 +1092,7 @@
   }
 
   function assignKoExtra(field, code) {
+    if (!requireKoUserForPick()) return;
     const ex = getActiveKoData().extras;
     let index;
     if (koActiveExtraSlot && koActiveExtraSlot.field === field) {
@@ -1002,7 +1108,15 @@
       }
       index = findSemiSlotIndexByCorner(ex, corner);
       if (index < 0) {
-        koExtraWarn = `Ya tienes elegido ${getCornerHint(corner)}. Toca esa casilla para cambiarlo.`;
+        const side = KO_SEMI_SIDES.find(s => s.corners.includes(corner));
+        const zone = side?.zones.find(z => z.corner === corner);
+        if (side && zone && ex.semis[zone.index]) {
+          koExtraWarn = getSemiZoneRepeatMessage(side, zone, ex);
+        } else if (side) {
+          koExtraWarn = `Ya tienes los 2 del lado ${side.short.toLowerCase()} o esa zona está llena. Toca la casilla de abajo para cambiar.`;
+        } else {
+          koExtraWarn = 'Esa casilla ya está llena. Tócala para cambiar el equipo.';
+        }
         renderKnockoutExtras();
         return;
       }
@@ -1015,7 +1129,8 @@
       }
       index = side === 'ARRIBA' ? 0 : 1;
       if (ex.finalists[index]) {
-        koExtraWarn = `Ya tienes finalista del lado ${side.toLowerCase()}. Toca esa casilla para cambiarlo.`;
+        const mitad = side === 'ARRIBA' ? 'mitad de arriba' : 'mitad de abajo';
+        koExtraWarn = `Ya tienes finalista de la ${mitad}. Toca esa casilla para cambiarlo.`;
         renderKnockoutExtras();
         return;
       }
@@ -1041,9 +1156,11 @@
         return;
       }
       if (field === 'semis' && getKoCorner(code) !== getSemiSlotCorner(index)) {
-        const teamCorner = getKoCorner(code);
-        const slotCorner = getSemiSlotCorner(index);
-        koExtraWarn = `Este equipo pertenece a ${getCornerHint(teamCorner)}. La casilla ${KO_SEMI_SLOT_LABELS[index]} es de ${getCornerHint(slotCorner)}.`;
+        const sideKey = getSemiSideKeyForIndex(index);
+        const teamSide = KO_SEMI_SIDES.find(s => s.corners.includes(getKoCorner(code)));
+        koExtraWarn = teamSide && sideKey
+          ? `Este equipo es del lado ${teamSide.short.toLowerCase()}. Usa una casilla del mismo lado.`
+          : 'Este equipo no encaja en esa casilla. Elige otra del mismo lado.';
         renderKnockoutExtras();
         return;
       }
@@ -1060,8 +1177,8 @@
           return;
         }
         if (getKoBracketSide(code) !== getFinalSlotSide(index)) {
-          const side = getFinalSlotSide(index) === 'ARRIBA' ? 'arriba (G1/G2)' : 'abajo (G3/G4)';
-          koExtraWarn = `Esta casilla pide un equipo del lado ${side}.`;
+          const side = getFinalSlotSide(index) === 'ARRIBA' ? 'mitad de arriba' : 'mitad de abajo';
+          koExtraWarn = `Esta casilla es de la ${side} del cuadro.`;
           renderKnockoutExtras();
           return;
         }
@@ -1110,12 +1227,11 @@
   }
 
   function koExtrasSemiSummaryHTML(ex) {
-    return KO_SEMI_CORNER_KEYS.map((corner, i) => {
-      const code = ex.semis[i];
-      const chips = code ? koExtrasReadOnlyChip(code, 'semi') : '';
+    return KO_SEMI_SIDES.map(side => {
+      const chips = side.indices.map(i => ex.semis[i] ? koExtrasReadOnlyChip(ex.semis[i], 'semi') : '').filter(Boolean).join('');
       if (!chips) return '';
       return `<div class="ko-extras-summary-side">
-        <span class="ko-extras-summary-side-label">${KO_SEMI_CORNER_LABELS[i]}</span>
+        <span class="ko-extras-summary-side-label">${side.title}</span>
         <div class="ko-extras-summary-row">${chips}</div>
       </div>`;
     }).join('');
@@ -1138,6 +1254,22 @@
       </div>`;
   }
 
+  function koLegendBlockHTML() {
+    return `<div class="ko-legend-top" aria-label="Instrucciones">
+      <p class="ko-legend-top-title">📖 Léelo primero (30 segundos)</p>
+      <div class="ko-simple-legend ko-simple-legend--top">
+        <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--win">✓</span> <strong>Verde</strong> = el equipo que crees que <strong>gana</strong> el partido</p>
+        <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--lose">✗</span> <strong>Rojo</strong> = el que <strong>pierde</strong></p>
+        <p class="ko-simple-legend-row">Etiquetas moradas/naranjas/doradas = tus pronósticos especiales (semi, final, campeón)</p>
+      </div>
+      <div class="ko-r32-picker-legend ko-r32-picker-legend--top">
+        <span class="ko-legend-item">${koRoleBadgeHTML('semi', 'md')} Semifinalista</span>
+        <span class="ko-legend-item">${koRoleBadgeHTML('finalist', 'md')} Finalista</span>
+        <span class="ko-legend-item">${koRoleBadgeHTML('champion', 'md')} Campeón</span>
+      </div>
+    </div>`;
+  }
+
   function koExtrasEditorHTML(ex) {
     const done = koExtrasDone();
     const pct = Math.round((done / KO_EXTRAS_TOTAL) * 100);
@@ -1145,38 +1277,29 @@
     const finalsFull = ex.finalists.filter(Boolean).length >= 2;
     return `
       ${koExtraWarn ? `<p class="ko-extra-warn" role="alert">${koExtraWarn}</p>` : ''}
+      ${!getActiveKoUser() ? `<p class="ko-pick-user-first" role="status">👆 <strong>Elige participante</strong> en el desplegable de arriba antes de tocar equipos.</p>` : ''}
       <p class="ko-extras-deadline-hint">Puedes cambiarlos hasta el <strong>${formatKoExtrasLockShort()}</strong> (inicio de dieciseisavos).</p>
       <div class="ko-extras-progress-wrap">
         <div class="ko-extras-progress"><div class="ko-extras-progress-fill" style="width:${pct}%"></div></div>
         <span class="ko-extras-progress-label">${done}/${KO_EXTRAS_TOTAL} completados</span>
       </div>
-      <div class="ko-simple-legend" aria-label="Cómo leer los colores">
-        <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--win">✓</span> <strong>Verde</strong> = ganador</p>
-        <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--lose">✗</span> <strong>Rojo</strong> = eliminado</p>
-        <p class="ko-simple-legend-row">Etiquetas <strong>SEMI</strong> · <strong>FINAL</strong> · <strong>CAMPEÓN</strong> = tus pronósticos especiales</p>
-      </div>
-      <div class="ko-r32-picker-legend">
-        <span class="ko-legend-item">${koRoleBadgeHTML('semi', 'md')} Semifinalista</span>
-        <span class="ko-legend-item">${koRoleBadgeHTML('finalist', 'md')} Finalista</span>
-        <span class="ko-legend-item">${koRoleBadgeHTML('champion', 'md')} Campeón</span>
-      </div>
       <section class="ko-extras-step ko-extras-step--semi">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--semi">1</span> 4 semifinalistas</h4>
-        <p class="ko-extras-step-hint">1 por cada esquina del cuadro: G1 sup-izq, G2 sup-der, G3 inf-izq, G4 inf-der</p>
-        <div class="ko-semis-corners-stack">
-          ${KO_SEMI_CORNER_KEYS.map((corner, i) => koSemiCornerBlockHTML(corner, i, ex)).join('')}
+        <p class="ko-extras-step-hint"><strong>2 equipos del lado IZQUIERDO</strong> + <strong>2 del lado DERECHO</strong>.<br>👇 Primero toca la <strong>BANDERA</strong> del equipo · se guarda en la casilla de abajo.</p>
+        <div class="ko-semis-sides-stack">
+          ${KO_SEMI_SIDES.map(side => koSemiSideBlockHTML(side.key, ex)).join('')}
         </div>
       </section>
       <section class="ko-extras-step ko-extras-step--final${semisFull ? '' : ' ko-extras-step--locked'}">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--final">2</span> 2 finalistas</h4>
-        <p class="ko-extras-step-hint">1 del lado de arriba + 1 del lado de abajo</p>
+        <p class="ko-extras-step-hint"><strong>1 de ARRIBA</strong> + <strong>1 de ABAJO</strong> del cuadro (solo entre tus semifinalistas).</p>
         <div class="ko-finals-sides-stack">
           ${[0, 1].map(i => koFinalSideBlockHTML(i, ex)).join('')}
         </div>
       </section>
       <section class="ko-extras-step ko-extras-step--champion${finalsFull ? '' : ' ko-extras-step--locked'}">
         <h4 class="ko-extras-step-title"><span class="ko-extras-step-badge ko-extras-step-badge--gold">3</span> Campeón del mundo</h4>
-        <p class="ko-extras-step-hint">Solo de tus 2 finalistas</p>
+        <p class="ko-extras-step-hint">Elige <strong>UN SOLO</strong> campeón entre tus 2 finalistas — toca su bandera o la casilla dorada.</p>
         ${koChampionBlockHTML(ex)}
       </section>`;
   }
@@ -1194,9 +1317,7 @@
       const fieldRole = koFieldToRole(field);
       if (fieldRole) roleBadge = koRoleBadgeHTML(fieldRole, 'md');
     }
-    const cornerChip = field === 'semis'
-      ? `<span class="ko-corner-chip ko-corner-chip--${getSemiSlotCorner(index).toLowerCase()}">${getSemiSlotCorner(index)}</span>`
-      : '';
+    const cornerChip = '';
     const qual = filled && isKoR32Team(selected) ? koQualificationHTML(selected, 'ko-extra-slot-qual') : '';
     return `<div class="ko-extra-slot${filled ? ' ko-extra-slot--filled' : ''}${isActive ? ' ko-extra-slot--active' : ''} ko-extra-slot--${field}">
       <span class="ko-extra-slot-num">${label}</span>
@@ -1211,21 +1332,28 @@
     </div>`;
   }
 
-  function koPickerTeamBtn(code, field, ex, used) {
+  function koPickerTeamBtn(code, field, ex, used, opts) {
+    opts = opts || {};
     const roles = getKoPickerRoles(code, ex);
     const taken = used.has(code);
+    const zoneBlocked = !!opts.zoneBlocked;
     const cls = ['ko-r32-pick'];
     if (roles.includes('semi')) cls.push('ko-r32-pick--semi');
     if (roles.includes('finalist')) cls.push('ko-r32-pick--final');
     if (roles.includes('champion')) cls.push('ko-r32-pick--champ');
     if (taken) cls.push('ko-r32-pick--taken');
+    if (zoneBlocked) cls.push('ko-r32-pick--zone-blocked');
     const badge = roles.length
       ? `<span class="ko-r32-pick-badges${roles.length > 1 ? ' ko-r32-pick-badges--multi' : ''}">${koRoleBadgesHTML(roles, roles.length > 1 ? 'xs' : 'sm')}</span>`
       : '';
     const flag = typeof flagHTML === 'function' ? flagHTML(code, field === 'semis' ? 24 : 32) : '';
     if (roles.length > 1) cls.push('ko-r32-pick--multi-badge');
     const qual = isKoR32Team(code) ? koQualificationHTML(code, 'ko-r32-pick-qual') : '';
-    return `<button type="button" class="${cls.join(' ')}" data-ko-pick-code="${code}" data-ko-picker-field="${field}"${taken ? ' disabled' : ''} aria-label="${teamNameKo(code)}">
+    const disabled = taken;
+    const zoneAttrs = zoneBlocked && opts.zoneBlockMsg
+      ? ` data-ko-zone-blocked="1" data-ko-zone-msg="${opts.zoneBlockMsg.replace(/"/g, '&quot;')}"`
+      : '';
+    return `<button type="button" class="${cls.join(' ')}" data-ko-pick-code="${code}" data-ko-picker-field="${field}"${disabled ? ' disabled' : ''}${zoneAttrs} aria-label="${teamNameKo(code)}">
       ${badge}
       ${flag}
       <span class="ko-r32-pick-name">${teamNameKoShort(code, field === 'semis' ? 11 : 14)}</span>
@@ -1261,23 +1389,27 @@
   function koFinalSideBlockHTML(index, ex) {
     const side = getFinalSlotSide(index);
     const sideKey = index === 0 ? 'top' : 'bottom';
+    const sideLabel = index === 0 ? 'Mitad de arriba' : 'Mitad de abajo';
     const used = getUsedExtraCodes(ex, 'finalists', koActiveExtraSlot);
     const isActive = koActiveExtraSlot && koActiveExtraSlot.field === 'finalists' && koActiveExtraSlot.index === index;
     const cls = ['ko-final-side-block', `ko-final-side-block--${sideKey}`];
     if (isActive) cls.push('is-active');
     if (ex.finalists[index]) cls.push('is-filled');
     const hint = isActive
-      ? `Elige semifinalista del <strong>lado ${side.toLowerCase()}</strong>`
+      ? `Elige un semifinalista de la <strong>${sideLabel.toLowerCase()}</strong>`
       : (ex.finalists[index]
-        ? 'Toca la casilla o elige otro del mismo lado'
-        : `Toca <strong>+</strong> o elige del lado ${side.toLowerCase()}`);
+        ? 'Toca la casilla o elige otro de la misma mitad'
+        : `Toca una <strong>bandera</strong> o la casilla de abajo`);
     return `<div class="${cls.join(' ')}" id="ko-final-side-${sideKey}">
-      <p class="ko-semi-side-label">${KO_FINAL_SLOT_LABELS[index]}</p>
+      <p class="ko-semi-side-title">${sideLabel}</p>
+      <p class="ko-semi-side-hint">${KO_FINAL_SLOT_LABELS[index]}</p>
+      <p class="ko-semi-corner-picker-hint ko-picker-first-hint">👇 <strong>1.</strong> Toca un semifinalista (bandera)</p>
+      <div class="ko-semi-corner-picker">${koFinalistPickerHTML(side, ex, used)}</div>
+      <p class="ko-semi-corner-picker-hint">👆 <strong>2.</strong> Queda en la casilla</p>
       <div class="ko-extras-row ko-extras-row--1">
-        ${koExtraSlotHTML('finalists', index, ex.finalists[index], KO_FINAL_SLOT_LABELS[index])}
+        ${koExtraSlotHTML('finalists', index, ex.finalists[index], 'Tu finalista')}
       </div>
       <p class="ko-semi-corner-picker-hint">${hint}</p>
-      <div class="ko-semi-corner-picker">${koFinalistPickerHTML(side, ex, used)}</div>
     </div>`;
   }
 
@@ -1289,8 +1421,13 @@
       ? 'Elige campeón entre tus 2 finalistas'
       : (ex.champion
         ? 'Toca la casilla o elige otro finalista'
-        : 'Toca <strong>+</strong> o elige un finalista');
+        : 'Toca una <strong>bandera</strong> de tus finalistas');
     return `<div class="ko-champion-block${isActive ? ' is-active' : ''}${ex.champion ? ' is-filled' : ''}" id="ko-champion-block">
+      <p class="ko-semi-corner-picker-hint ko-picker-first-hint">👇 <strong>1.</strong> Toca un finalista (bandera)</p>
+      <div class="ko-section-picker-grid ko-section-picker-grid--champion" role="listbox" aria-label="Elige campeón">
+        ${finals.map(code => koPickerTeamBtn(code, 'champion', ex, used)).join('')}
+      </div>
+      <p class="ko-semi-corner-picker-hint">👆 <strong>2.</strong> Campeón del mundo</p>
       <div class="ko-champion-block-inner">
         <img src="/assets/wc-trophy.svg" class="ko-champion-block-trophy" alt="" onerror="this.style.display='none'"/>
         <div class="ko-champion-block-slot">
@@ -1298,31 +1435,58 @@
         </div>
       </div>
       <p class="ko-semi-corner-picker-hint">${hint}</p>
-      <div class="ko-section-picker-grid ko-section-picker-grid--champion" role="listbox" aria-label="Elige campeón">
-        ${finals.map(code => koPickerTeamBtn(code, 'champion', ex, used)).join('')}
+    </div>`;
+  }
+
+  function koSemiZoneBlockHTML(zone, side, ex, used) {
+    const filled = !!ex.semis[zone.index];
+    const teams = getKoR32TeamsByCorner(zone.corner);
+    const blockMsg = filled ? getSemiZoneRepeatMessage(side, zone, ex) : '';
+    const blockMsgPlain = blockMsg.replace(/<[^>]+>/g, '');
+    const zoneCls = ['ko-semi-zone', `ko-semi-zone--${zone.corner.toLowerCase()}`];
+    if (filled) zoneCls.push('is-zone-done');
+    const pickerOpts = filled ? { zoneBlocked: true, zoneBlockMsg: blockMsgPlain } : {};
+    const status = filled
+      ? `<p class="ko-semi-zone-status ko-semi-zone-status--done">✓ <strong>Ya elegido.</strong> Elige el de la otra zona o toca la casilla de abajo.</p>`
+      : `<p class="ko-semi-zone-status">👇 Elige <strong>1 SOLO equipo</strong> de esta zona</p>`;
+    return `<div class="${zoneCls.join(' ')}" data-ko-semi-zone="${zone.corner}">
+      <p class="ko-semi-zone-label">${zone.zoneLabel}</p>
+      ${status}
+      <div class="ko-section-picker-grid ko-section-picker-grid--semis-zone" role="listbox" aria-label="${zone.zoneLabel}">
+        ${teams.map(t => koPickerTeamBtn(t.code, 'semis', ex, used, pickerOpts)).join('')}
       </div>
     </div>`;
   }
 
-  function koSemiCornerBlockHTML(corner, index, ex) {
+  function koSemiSideBlockHTML(sideKey, ex) {
+    const side = KO_SEMI_SIDES.find(s => s.key === sideKey);
+    if (!side) return '';
     const used = getUsedExtraCodes(ex, 'semis', koActiveExtraSlot);
-    const isActive = koActiveExtraSlot && koActiveExtraSlot.field === 'semis' && koActiveExtraSlot.index === index;
-    const isFilled = !!ex.semis[index];
-    const cls = ['ko-semi-corner-block', `ko-semi-corner-block--${corner.toLowerCase()}`];
+    const isActive = koActiveExtraSlot && koActiveExtraSlot.field === 'semis' && side.indices.includes(koActiveExtraSlot.index);
+    const cls = ['ko-semi-side-block', `ko-semi-side-block--${sideKey}`];
     if (isActive) cls.push('is-active');
-    if (isFilled) cls.push('is-filled');
-    const hint = isActive
-      ? `Elige un equipo de <strong>${corner}</strong>`
-      : (isFilled ? 'Toca la casilla o elige otro equipo de esta esquina' : `Toca <strong>+</strong> o elige un equipo de <strong>${corner}</strong>`);
-    return `<div class="${cls.join(' ')}" id="ko-semi-corner-${corner.toLowerCase()}">
-      <p class="ko-semi-side-label"><span class="ko-corner-chip ko-corner-chip--${corner.toLowerCase()}">${corner}</span> ${KO_SEMI_CORNER_LABELS[index]}</p>
-      <div class="ko-extras-row ko-extras-row--1">
-        ${koExtraSlotHTML('semis', index, ex.semis[index], KO_SEMI_SLOT_LABELS[index])}
-      </div>
-      <p class="ko-semi-corner-picker-hint">${hint}</p>
-      <div class="ko-semi-corner-picker">
-        ${koSemiPickerGridHTML(corner, ex, used)}
-      </div>
+    if (side.indices.every(i => ex.semis[i])) cls.push('is-filled');
+    const zoneBlocks = side.zones.map((zone, zi) => {
+      const divider = zi > 0
+        ? `<div class="ko-semi-zone-divider" role="separator"><span>Y ahora elige en la otra mitad ↓</span></div>`
+        : '';
+      return divider + koSemiZoneBlockHTML(zone, side, ex, used);
+    }).join('');
+    const slots = side.zones.map(zone =>
+      koExtraSlotHTML('semis', zone.index, ex.semis[zone.index], zone.slotLabel)
+    ).join('');
+    const filledCount = side.indices.filter(i => ex.semis[i]).length;
+    const progressHint = filledCount === 1
+      ? `<p class="ko-semi-side-progress">⏳ Llevas <strong>1 de 2</strong> — te falta elegir el de la otra zona.</p>`
+      : (filledCount === 2 ? `<p class="ko-semi-side-progress ko-semi-side-progress--done">✓ <strong>2 de 2</strong> del lado ${side.short.toLowerCase()} — perfecto.</p>` : '');
+    return `<div class="${cls.join(' ')}" id="ko-semi-side-${sideKey}">
+      <p class="ko-semi-side-title">${side.title}</p>
+      <p class="ko-semi-side-hint">${side.hint}</p>
+      ${progressHint}
+      <p class="ko-semi-corner-picker-hint ko-picker-first-hint">👇 <strong>1.</strong> Toca una bandera (arriba o abajo de la barra)</p>
+      <div class="ko-semi-zones-stack">${zoneBlocks}</div>
+      <p class="ko-semi-corner-picker-hint">👆 <strong>2.</strong> Queda guardado en la casilla de abajo</p>
+      <div class="ko-extras-row ko-extras-row--2">${slots}</div>
     </div>`;
   }
 
@@ -1332,21 +1496,40 @@
     let teams = [];
     let hint = '';
     if (field === 'semis') {
-      const activeCorner = koActiveExtraSlot && koActiveExtraSlot.field === 'semis'
-        ? getSemiSlotCorner(koActiveExtraSlot.index)
+      const activeSideKey = koActiveExtraSlot && koActiveExtraSlot.field === 'semis'
+        ? getSemiSideKeyForIndex(koActiveExtraSlot.index)
         : null;
       if (koActiveExtraSlot && koActiveExtraSlot.field === 'semis') {
-        hint = `Elige un equipo de <strong>${activeCorner}</strong> para <strong>${KO_SEMI_SLOT_LABELS[koActiveExtraSlot.index]}</strong>`;
+        const side = KO_SEMI_SIDES.find(s => s.key === activeSideKey);
+        hint = side
+          ? `Elige un equipo del <strong>lado ${side.short.toLowerCase()}</strong>`
+          : 'Elige un equipo del mismo lado del cuadro';
       } else {
-        const next = KO_SEMI_CORNER_KEYS.find((k, i) => !ex.semis[i]);
-        hint = next
-          ? `Toca un equipo de <strong>${next}</strong> o toca esa casilla para cambiarla.`
-          : 'Las 4 casillas están llenas. Toca una casilla para cambiarla.';
+        const nextIdx = ex.semis.findIndex(s => !s);
+        if (nextIdx >= 0) {
+          const side = KO_SEMI_SIDES.find(s => s.indices.includes(nextIdx));
+          hint = side
+            ? `Falta un semifinalista del <strong>lado ${side.short.toLowerCase()}</strong>. Toca una bandera o una casilla.`
+            : 'Toca una bandera o una casilla para elegir semifinalistas.';
+        } else {
+          hint = 'Las 4 casillas están llenas. Toca una casilla para cambiarla.';
+        }
       }
       return `<div class="ko-section-picker" data-ko-picker-field="${field}">
         <p class="ko-section-picker-hint">${hint}</p>
-        <div class="ko-semi-picker-sides">
-          ${KO_SEMI_CORNER_KEYS.map(corner => koSemiPickerSideHTML(corner, ex, used, activeCorner)).join('')}
+        <div class="ko-semis-sides-stack">
+          ${KO_SEMI_SIDES.map(s => {
+            const used2 = getUsedExtraCodes(ex, 'semis', koActiveExtraSlot);
+            const teams = getKoR32TeamsBySide(s.key);
+            const cls = ['ko-semi-side-block', `ko-semi-side-block--${s.key}`];
+            if (activeSideKey === s.key) cls.push('is-active');
+            return `<div class="${cls.join(' ')}">
+              <p class="ko-semi-side-title">${s.title}</p>
+              <div class="ko-section-picker-grid ko-section-picker-grid--semis-side" role="listbox">
+                ${teams.map(t => koPickerTeamBtn(t.code, 'semis', ex, used2)).join('')}
+              </div>
+            </div>`;
+          }).join('')}
         </div>
       </div>`;
     } else if (field === 'finalists') {
@@ -1399,6 +1582,7 @@
       const slotBtn = e.target.closest('[data-ko-extra-slot]');
       if (slotBtn) {
         e.preventDefault();
+        if (!requireKoUserForPick()) return;
         const field = slotBtn.getAttribute('data-ko-extra-field');
         const index = parseInt(slotBtn.getAttribute('data-ko-extra-index'), 10);
         if (field === 'finalists' && getActiveKoData().extras.semis.filter(Boolean).length < 4) return;
@@ -1411,6 +1595,12 @@
       const pickBtn = e.target.closest('[data-ko-pick-code][data-ko-picker-field]');
       if (!pickBtn || pickBtn.disabled) return;
       e.preventDefault();
+      if (pickBtn.getAttribute('data-ko-zone-blocked')) {
+        const plain = pickBtn.getAttribute('data-ko-zone-msg') || '';
+        koExtraWarn = plain || 'Ya elegiste un equipo de esta zona. Elige el de la otra mitad.';
+        renderKnockoutExtras();
+        return;
+      }
       assignKoExtra(pickBtn.getAttribute('data-ko-picker-field'), pickBtn.getAttribute('data-ko-pick-code'));
     });
     koExtrasClickBound = true;
@@ -1433,9 +1623,9 @@
       bindKoExtrasClicks();
       grid.innerHTML = koExtrasEditorHTML(ex);
       if (koActiveExtraSlot && koActiveExtraSlot.field === 'semis') {
-        const corner = getSemiSlotCorner(koActiveExtraSlot.index).toLowerCase();
+        const sideKey = getSemiSideKeyForIndex(koActiveExtraSlot.index) || 'left';
         requestAnimationFrame(() => {
-          const block = document.getElementById(`ko-semi-corner-${corner}`);
+          const block = document.getElementById(`ko-semi-side-${sideKey}`);
           if (block) block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
       } else if (koActiveExtraSlot && koActiveExtraSlot.field === 'finalists') {
@@ -1457,6 +1647,31 @@
     }
   }
 
+  function showKoToast(id, ms) {
+    const toast = document.getElementById(id);
+    if (!toast) return;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), ms || 5000);
+  }
+
+  function maybeCelebrateKoExtrasComplete() {
+    const ed = koExtrasDone();
+    const extrasComplete = ed >= KO_EXTRAS_TOTAL;
+    if (!_koExtrasCelebrationInit) {
+      _koExtrasCelebrationInit = true;
+      koWasExtrasComplete = extrasComplete;
+      return;
+    }
+    if (extrasComplete && !koWasExtrasComplete) {
+      if (typeof fireConfetti === 'function') fireConfetti();
+      showKoToast('koChampionToast', 5500);
+      requestAnimationFrame(() => {
+        document.getElementById('koBracket')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+    koWasExtrasComplete = extrasComplete;
+  }
+
   function updateKnockoutStatus() {
     const st = document.getElementById('koStatus');
     const btn = document.getElementById('btnExportKo');
@@ -1468,7 +1683,9 @@
     if (!getActiveKoUser()) {
       st.textContent = 'Elige un participante arriba para empezar.';
     } else if (complete) {
-      st.textContent = '✓ Eliminatorias al día — puedes exportar el PDF';
+      st.textContent = '✓ Todo listo — puedes exportar el PDF';
+    } else if (ed >= KO_EXTRAS_TOTAL) {
+      st.textContent = `Campeón elegido ✓ — rellena la quiniela: ${md}/${req} partidos`;
     } else if (isKoExtrasLocked() && ed < KO_EXTRAS_TOTAL) {
       st.textContent = `Partidos (${req} activos): ${md}/${req} · Especiales cerrados (${ed}/${KO_EXTRAS_TOTAL})`;
     } else {
@@ -1482,15 +1699,16 @@
       btn.classList.toggle('btn-export-ko-ready', complete);
       btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
     }
-    if (complete && !koWasComplete && typeof document !== 'undefined') {
-      if (typeof fireConfetti === 'function') fireConfetti();
-      const toast = document.getElementById('koCelebrationToast');
-      if (toast) {
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 4200);
-      }
+    if (!_koStatusCelebrationInit) {
+      _koStatusCelebrationInit = true;
+      koWasComplete = complete;
+    } else if (complete && !koWasComplete) {
+      showKoToast('koCelebrationToast', 4500);
+      koWasComplete = complete;
+    } else {
+      koWasComplete = complete;
     }
-    koWasComplete = complete;
+    maybeCelebrateKoExtrasComplete();
     const clearBtn = document.getElementById('btnClearKo');
     const clearMatchesBtn = document.getElementById('btnClearKoMatches');
     const canClear = !!getActiveKoUser();
@@ -1513,13 +1731,10 @@
     const subtitle = document.getElementById('koSubtitle');
     if (subtitle) {
       subtitle.textContent = isKnockoutAccessible()
-        ? 'Elige participante · especiales + toca al ganador.'
+        ? 'Lee las instrucciones · elige participante · rellena tu porra.'
         : 'Se abrirá el 12 de julio a las 7:00 (hora peninsular). Modo prueba con contraseña.';
     }
-    renderKnockoutUserBar();
-    renderKnockoutExtras();
-    renderKnockoutMatches();
-    updateKnockoutStatus();
+    refreshKnockoutUI();
   }
 
   const KO_PDF_C = {

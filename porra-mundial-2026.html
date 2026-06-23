@@ -237,9 +237,46 @@ input,select,textarea{color:#fff;}
 .btn-score-secondary{background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;}
 /* === Eliminatorias === */
 .ko-user-bar{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.5rem .75rem;align-items:center;}
-.ko-user-bar label{font-size:.72rem;color:#9ca3af;font-weight:600;flex:0 0 auto;}
-.ko-user-select{background:#1f2937;border:1px solid #4b5563;border-radius:8px;color:#fff;padding:.5rem .75rem;font-size:.85rem;font-weight:600;min-width:12rem;flex:1;max-width:22rem;}
-.ko-user-hint{flex:1 1 100%;font-size:.68rem;color:#64748b;margin:0;}
+.ko-user-bar--pick-first{margin-bottom:1.1rem;}
+.ko-user-bar--needs-user{border:2px solid #60a5fa;background:rgba(37,99,235,.15);box-shadow:0 0 0 3px rgba(96,165,250,.2);}
+.ko-user-bar label{font-size:.85rem;color:#fff;font-weight:800;flex:0 0 auto;}
+.ko-user-select{background:#1f2937;border:1px solid #4b5563;border-radius:8px;color:#fff;padding:.6rem .75rem;font-size:.9rem;font-weight:700;min-width:12rem;flex:1;max-width:22rem;}
+.ko-user-hint{flex:1 1 100%;font-size:.75rem;color:#e5e7eb;margin:0;line-height:1.4;}
+.ko-read-first{margin:0 0 1rem;padding:.85rem .95rem;border-radius:14px;background:rgba(37,99,235,.18);border:2px solid rgba(96,165,250,.55);}
+.ko-read-first-title{margin:0 0 .65rem;font-size:.92rem;font-weight:900;color:#fff;text-align:center;}
+.ko-simple-legend--read{margin:.4rem 0 .55rem;font-size:.8rem;color:#fff;border-color:rgba(148,163,184,.45);background:rgba(15,23,42,.35);}
+.ko-simple-legend--read .ko-simple-legend-row{color:#fff;}
+.ko-simple-legend--read strong{color:#fff;}
+.ko-r32-picker-legend--read{margin-bottom:.65rem;font-size:.76rem;color:#fff;border-color:rgba(148,163,184,.45);background:rgba(15,23,42,.35);}
+.ko-r32-picker-legend--read .ko-legend-item{color:#fff;}
+.ko-r32-picker-legend--read strong{color:#fff;}
+.ko-steps-card--read{margin-bottom:0;border-color:rgba(148,163,184,.45);background:rgba(15,23,42,.35);}
+.ko-steps-card--read .ko-steps-title{color:#fff;font-size:.8rem;}
+.ko-steps-card--read .ko-steps-list li{color:#fff;font-size:.78rem;line-height:1.45;}
+.ko-steps-card--read .ko-steps-list strong{color:#fde68a;}
+.ko-extras-intro{margin:0 0 .85rem;padding:.55rem .7rem;border-radius:10px;background:rgba(30,41,59,.65);border:1px solid #475569;font-size:.84rem;font-weight:600;color:#fff;line-height:1.5;}
+.ko-hint-callout{margin:0 0 .85rem;padding:.7rem .8rem;border-radius:12px;background:rgba(30,64,175,.4);border:2px solid rgba(96,165,250,.6);font-size:.88rem;font-weight:700;color:#fff;line-height:1.55;text-align:center;}
+.ko-hint-callout strong{color:#fde68a;font-weight:900;}
+.ko-hint-callout--action{background:rgba(250,204,21,.15);border-color:rgba(250,204,21,.55);font-size:.82rem;}
+.ko-hint-callout--action strong{color:#fff;text-decoration:underline;text-underline-offset:2px;}
+.ko-pick-user-first{margin:0 0 .65rem;padding:.6rem .75rem;border-radius:10px;background:rgba(37,99,235,.25);border:1px solid #60a5fa;color:#fff;font-size:.8rem;font-weight:600;text-align:center;line-height:1.4;}
+.ko-pick-user-first strong{color:#fde68a;}
+.ko-semi-zones-stack{display:flex;flex-direction:column;gap:0;}
+.ko-semi-zone{border:1px solid #334155;border-radius:10px;padding:.55rem .5rem;background:rgba(15,23,42,.4);}
+.ko-semi-zone--g1,.ko-semi-zone--g2{border-color:rgba(147,51,234,.45);}
+.ko-semi-zone--g3,.ko-semi-zone--g4{border-color:rgba(59,130,246,.4);}
+.ko-semi-zone.is-zone-done{opacity:.72;background:rgba(15,23,42,.25);}
+.ko-semi-zone.is-zone-done .ko-r32-pick--zone-blocked{opacity:.55;cursor:not-allowed;}
+.ko-semi-zone-label{margin:0 0 .4rem;font-size:.8rem;font-weight:900;color:#fff;text-align:center;letter-spacing:.04em;text-transform:uppercase;}
+.ko-semi-zone-status{margin:0 0 .5rem;padding:.45rem .5rem;border-radius:8px;font-size:.78rem;font-weight:700;color:#fff;text-align:center;line-height:1.4;background:rgba(30,41,59,.5);}
+.ko-semi-zone-status--done{color:#bbf7d0;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);}
+.ko-semi-zone-status strong{color:#fde68a;font-weight:900;}
+.ko-semi-zone-divider{display:flex;align-items:center;justify-content:center;margin:.6rem 0;padding:.45rem 0;border-top:2px dashed rgba(250,204,21,.55);border-bottom:2px dashed rgba(250,204,21,.55);background:rgba(30,41,59,.7);}
+.ko-semi-zone-divider span{font-size:.78rem;font-weight:900;color:#fde68a;text-align:center;line-height:1.35;padding:0 .4rem;}
+.ko-semi-side-progress{margin:0 0 .55rem;padding:.55rem .65rem;border-radius:10px;background:rgba(250,204,21,.18);border:2px solid rgba(250,204,21,.45);font-size:.82rem;font-weight:800;color:#fff;text-align:center;line-height:1.4;}
+.ko-semi-side-progress--done{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:#bbf7d0;}
+.ko-section-picker-grid--semis-zone{grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem;}
+@media(max-width:479px){.ko-section-picker-grid--semis-zone{grid-template-columns:repeat(2,minmax(0,1fr));}}
 .ko-team-pick{display:flex;align-items:center;gap:.35rem;width:100%;padding:.45rem .5rem;border-radius:6px;border:2px solid transparent;background:#111827;color:#f3f4f6;font-size:.72rem;font-weight:600;cursor:pointer;min-height:44px;text-align:left;transition:background .12s,border-color .12s,box-shadow .12s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:1;}
 .ko-steps-card{margin:0 0 .9rem;padding:.65rem .75rem;border-radius:12px;background:rgba(15,23,42,.5);border:1px solid #334155;}
 .ko-steps-title{margin:0 0 .4rem;font-size:.75rem;font-weight:800;color:#bfdbfe;letter-spacing:.04em;text-transform:uppercase;}
@@ -296,6 +333,10 @@ input,select,textarea{color:#fff;}
 .ko-role-badge--finalist{background:#ea580c;border-color:#fdba74;color:#fff7ed;}
 .ko-role-badge--champion{color:#facc15;border-color:#facc15;}
 .ko-simple-legend{display:flex;flex-direction:column;gap:.35rem;margin:.5rem 0 .75rem;padding:.65rem .75rem;border-radius:10px;background:rgba(15,23,42,.55);border:1px solid #334155;font-size:.72rem;color:#d1d5db;line-height:1.45;}
+.ko-legend-top{margin:0 0 .85rem;padding:.75rem .85rem;border-radius:14px;background:rgba(37,99,235,.12);border:2px solid rgba(96,165,250,.45);}
+.ko-legend-top-title{margin:0 0 .5rem;font-size:.82rem;font-weight:800;color:#fff;text-align:center;}
+.ko-simple-legend--top{margin:.35rem 0 .55rem;font-size:.74rem;}
+.ko-r32-picker-legend--top{margin-bottom:0;}
 .ko-simple-legend-row{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:0;}
 .ko-legend-swatch{display:inline-flex;align-items:center;justify-content:center;width:1.35rem;height:1.35rem;border-radius:5px;font-size:.7rem;font-weight:900;flex-shrink:0;}
 .ko-legend-swatch--win{background:rgba(34,197,94,.35);border:2px solid #22c55e;color:#bbf7d0;}
@@ -340,21 +381,21 @@ input,select,textarea{color:#fff;}
 .ko-color-key-item{flex-direction:row;justify-content:center;padding:.5rem;}
 .ko-extras-card,.extras-card{padding:1rem!important;}
 .ko-section-picker-grid--semis{grid-template-columns:repeat(3,minmax(0,1fr));max-height:14rem;}
-.ko-list-pair--qual{grid-template-columns:1fr;gap:.35rem;}
-.ko-list-pair--qual .ko-vs{padding:.1rem 0;font-size:.62rem;}
-.ko-team-pick--qual{min-height:4.25rem;padding:.52rem .55rem;}
-.ko-qual-line--pos{font-size:.64rem;}
-.ko-qual-line--stats{font-size:.62rem;}
-.ko-qual-goals{font-size:.64rem;padding:.1rem .38rem;}
+.ko-list-pair--qual{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:.25rem;align-items:stretch;}
+.ko-list-pair--qual .ko-vs{padding:0 .1rem;font-size:.58rem;}
+.ko-team-pick--qual{min-height:3.6rem;padding:.38rem .32rem;}
+.ko-team-pick--qual .ko-qual-line--pos{font-size:.52rem;}
+.ko-team-pick--qual .ko-qual-line--stats{font-size:.5rem;line-height:1.2;}
+.ko-team-pick--qual .ko-qual-goals{font-size:.5rem;padding:.06rem .28rem;}
 .ko-r32-pick-qual .ko-qual-line--pos{font-size:.58rem;}
 .ko-r32-pick-qual .ko-qual-goals{font-size:.6rem;}
 .ko-extra-slot-qual .ko-qual-line--pos{font-size:.56rem;}
 .ko-extra-slot-qual .ko-qual-goals{font-size:.58rem;}
 }
 @media(max-width:400px){
-.ko-list-pair{grid-template-columns:1fr;gap:.3rem;}
-.ko-vs{padding:.1rem 0;font-size:.6rem;}
-.ko-team-pick{min-height:48px;font-size:.7rem;padding:.5rem .45rem;}
+.ko-list-pair--qual{gap:.2rem;}
+.ko-team-pick--qual{min-height:3.35rem;font-size:.62rem;padding:.32rem .28rem;}
+.ko-vs{font-size:.55rem;}
 }
 .ko-upcoming-rounds{background:rgba(15,23,42,.4);border:1px solid #334155;border-radius:10px;padding:.55rem .8rem;margin-top:.25rem;}
 .ko-upcoming-title{font-size:.62rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:0 0 .35rem;}
@@ -442,13 +483,27 @@ input,select,textarea{color:#fff;}
 .ko-extras-step-title{display:flex;align-items:center;gap:.5rem;margin:0 0 .35rem;font-size:.85rem;font-weight:800;color:#fff;}
 .ko-extras-step-badge{display:inline-flex;align-items:center;justify-content:center;width:1.35rem;height:1.35rem;border-radius:999px;background:#2563eb;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0;}
 .ko-extras-step-badge--gold{background:linear-gradient(135deg,#ca8a04,#facc15);color:#1f2937;}
-.ko-extras-step-hint{margin:0 0 .75rem;font-size:.68rem;color:#64748b;}
+.ko-extras-step-hint{margin:0 0 .85rem;}
+.ko-extras-step-hint:not(.ko-hint-callout){padding:.7rem .8rem;border-radius:12px;background:rgba(30,64,175,.4);border:2px solid rgba(96,165,250,.6);font-size:.88rem;font-weight:700;color:#fff;line-height:1.55;text-align:center;}
+.ko-extras-step-hint strong{color:#fde68a;font-weight:900;}
 .ko-extras-row{display:grid;gap:.5rem;}
 .ko-extras-row--4{grid-template-columns:repeat(2,1fr);}
 .ko-extras-row--2{grid-template-columns:repeat(2,1fr);}
 .ko-extras-row--1{grid-template-columns:1fr;}
 @media(min-width:640px){.ko-extras-row--4{grid-template-columns:repeat(4,1fr);}}
 .ko-semis-corners-stack{display:flex;flex-direction:column;gap:.75rem;}
+.ko-semis-sides-stack{display:flex;flex-direction:column;gap:.75rem;}
+.ko-semi-side-block{border:1px solid #334155;border-radius:12px;padding:.65rem;background:rgba(15,23,42,.35);}
+.ko-semi-side-block--left{border-color:rgba(147,51,234,.5);}
+.ko-semi-side-block--right{border-color:rgba(59,130,246,.45);}
+.ko-semi-side-block.is-active{box-shadow:0 0 0 2px rgba(96,165,250,.4);border-color:#60a5fa;background:rgba(37,99,235,.08);scroll-margin-top:5.5rem;}
+.ko-semi-side-title{margin:0 0 .35rem;font-size:.92rem;font-weight:900;color:#fff;text-align:center;}
+.ko-semi-side-hint{margin:0 0 .6rem;padding:.55rem .65rem;border-radius:10px;background:rgba(15,23,42,.75);border:1px solid rgba(148,163,184,.45);font-size:.82rem;font-weight:700;color:#fff;text-align:center;line-height:1.45;}
+.ko-semi-side-hint strong{color:#fde68a;font-weight:900;}
+.ko-section-picker-grid--semis-side{grid-template-columns:repeat(4,minmax(0,1fr));gap:.4rem;}
+@media(max-width:479px){.ko-section-picker-grid--semis-side{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(min-width:768px){.ko-semis-sides-stack{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;}}
+.ko-section-picker-grid--semis-side .ko-r32-pick{min-height:4rem;}
 .ko-semi-corner-block{border:1px solid #334155;border-radius:12px;padding:.55rem;background:rgba(15,23,42,.35);}
 .ko-semi-corner-block--g1{border-color:rgba(147,51,234,.5);}
 .ko-semi-corner-block--g2{border-color:rgba(59,130,246,.45);}
@@ -456,7 +511,9 @@ input,select,textarea{color:#fff;}
 .ko-semi-corner-block--g4{border-color:rgba(250,204,21,.45);}
 .ko-semi-corner-block.is-active{box-shadow:0 0 0 2px rgba(96,165,250,.4);border-color:#60a5fa;background:rgba(37,99,235,.08);scroll-margin-top:5.5rem;}
 .ko-semi-corner-picker{margin-top:.15rem;}
-.ko-semi-corner-picker-hint{margin:.35rem 0 .45rem;font-size:.68rem;color:#93c5fd;text-align:center;line-height:1.35;}
+.ko-semi-corner-picker-hint{margin:.45rem 0 .5rem;padding:.45rem .55rem;border-radius:8px;font-size:.8rem;font-weight:700;color:#fff;text-align:center;line-height:1.45;background:rgba(30,41,59,.55);}
+.ko-picker-first-hint{color:#fde68a;background:rgba(250,204,21,.18);border:1px solid rgba(250,204,21,.45);font-size:.86rem;font-weight:800;}
+.ko-picker-first-hint strong{color:#fff;}
 @media(max-width:479px){
 .ko-section-picker-grid--semis-g1,.ko-section-picker-grid--semis-g2,.ko-section-picker-grid--semis-g3,.ko-section-picker-grid--semis-g4{grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem;}
 .ko-r32-pick{min-height:4.35rem;}
@@ -883,28 +940,43 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <h2 class="text-lg font-bold text-white mb-0">🏅 Fase final — Eliminatorias</h2>
         <span id="koPreviewBadge" class="ko-preview-badge hidden">Modo prueba</span>
       </div>
-      <p id="koSubtitle" class="text-xs text-gray-500 mb-4">Se abrirá el 12 de julio a las 7:00 (hora peninsular).</p>
+      <p id="koSubtitle" class="text-xs text-gray-500 mb-3">Se abrirá el 12 de julio a las 7:00 (hora peninsular).</p>
 
-      <div id="koPlayerBar" class="ko-user-bar hidden">
-        <label for="koUserSelect">👤 Participante</label>
+      <div id="koReadFirst" class="ko-read-first" aria-label="Instrucciones eliminatorias">
+        <p class="ko-read-first-title">📖 Léelo todo antes de empezar</p>
+        <div class="ko-simple-legend ko-simple-legend--read">
+          <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--win">✓</span> <strong>Verde</strong> = el equipo que crees que <strong>gana</strong> el partido</p>
+          <p class="ko-simple-legend-row"><span class="ko-legend-swatch ko-legend-swatch--lose">✗</span> <strong>Rojo</strong> = el que <strong>pierde</strong> y queda fuera</p>
+          <p class="ko-simple-legend-row">Etiquetas <strong>morada SEMI</strong>, <strong>naranja FINAL</strong> y <strong>dorada CAMPEÓN</strong> = tus pronósticos especiales</p>
+        </div>
+        <div class="ko-r32-picker-legend ko-r32-picker-legend--read">
+          <span class="ko-legend-item"><span class="ko-role-badge ko-role-badge--semi ko-role-badge--md">SEMI</span> Semifinalista</span>
+          <span class="ko-legend-item"><span class="ko-role-badge ko-role-badge--finalist ko-role-badge--md">FINAL</span> Finalista</span>
+          <span class="ko-legend-item"><span class="ko-role-badge ko-role-badge--champion ko-role-badge--md">CAMPEÓN</span> Campeón</span>
+        </div>
+        <div class="ko-steps-card ko-steps-card--read" aria-label="Pasos eliminatorias">
+          <p class="ko-steps-title">Pasos (en este orden)</p>
+          <ol class="ko-steps-list">
+            <li>Lee estas instrucciones con calma.</li>
+            <li><strong>Elige participante</strong> en el desplegable de justo debajo.</li>
+            <li><strong>4 semifinalistas:</strong> 2 del lado izquierdo (arriba + abajo) y 2 del derecho (arriba + abajo).</li>
+            <li><strong>2 finalistas:</strong> 1 de la mitad de arriba del cuadro + 1 de la mitad de abajo.</li>
+            <li><strong>Campeón:</strong> solo uno de tus 2 finalistas.</li>
+            <li>Marca el <strong>ganador</strong> en cada partido de la quiniela.</li>
+            <li>Exporta el PDF cuando el botón esté en verde.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div id="koPlayerBar" class="ko-user-bar ko-user-bar--pick-first hidden">
+        <label for="koUserSelect">👤 Elige participante</label>
         <select id="koUserSelect" class="ko-user-select" onchange="setActiveKoUser(this.value)"></select>
-        <p class="ko-user-hint">Cada uno tiene su porra en este dispositivo · el PDF lleva el nombre seleccionado</p>
+        <p class="ko-user-hint">Elige tu nombre antes de tocar equipos. La porra se guarda por participante en este móvil.</p>
       </div>
 
       <div id="koExtrasSection" class="ko-extras-panel">
         <h3 class="text-sm font-bold text-white mb-1">⭐ Pronósticos especiales</h3>
-        <div class="ko-steps-card" aria-label="Pasos eliminatorias">
-          <p class="ko-steps-title">Pasos rápidos</p>
-          <ol class="ko-steps-list">
-            <li>Elige participante.</li>
-            <li>Semifinalistas: 1 por esquina (G1, G2, G3, G4).</li>
-            <li>Finalistas: 1 del lado arriba + 1 del lado abajo.</li>
-            <li>Elige campeón entre tus 2 finalistas.</li>
-            <li>Marca ganador en cada partido.</li>
-            <li>Exporta PDF cuando el botón esté en verde.</li>
-          </ol>
-        </div>
-        <p class="text-xs text-gray-500 mb-4">Elige <strong class="text-gray-400">4 semifinalistas por esquinas del cuadro</strong> (G1 sup-izq, G2 sup-der, G3 inf-izq, G4 inf-der) → luego 2 finalistas (arriba/abajo) → campeón. Puedes cambiarlos hasta que empiecen los dieciseisavos (28 jun, 12:00).</p>
+        <p class="ko-extras-intro">Resumen: <strong>4 semifinalistas</strong> → <strong>2 finalistas</strong> → <strong>campeón</strong> → marca ganadores en la quiniela.</p>
         <div id="koExtrasGrid"></div>
       </div>
 
@@ -992,7 +1064,8 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
   </span>
 </button>
 <div id="celebrationToast" class="celebration-toast" role="status" aria-live="polite">🏆 ¡Quiniela completa! Ya puedes exportar tu PDF</div>
-<div id="koCelebrationToast" class="ko-celebration-toast" role="status" aria-live="polite">🔥 Eliminatorias completas. ¡PDF listo para mandar al grupo!</div>
+<div id="koChampionToast" class="ko-celebration-toast" role="status" aria-live="polite">🏆 ¡Ya has elegido al campeón! Ahora rellena la quiniela. El botón del PDF se activará cuando termines.</div>
+<div id="koCelebrationToast" class="ko-celebration-toast" role="status" aria-live="polite">✓ Quiniela completa — ya puedes exportar el PDF de eliminatorias</div>
 
 <!-- Barra fija en PC: acceso rápido al exportar sin perder el bloque al final -->
 <div id="exportDock" class="export-dock dock-hidden" aria-label="Acceso rápido a exportar PDF">
@@ -2550,7 +2623,7 @@ if (document.readyState === 'loading') {
   bootApp();
 }
 </script>
-<script src="knockout.js?v=46"></script>
+<script src="knockout.js?v=52"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
