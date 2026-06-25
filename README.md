@@ -53,7 +53,7 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
   - Semifinalistas: **1 por esquina** → `G1 ↖`, `G2 ↗`, `G3 ↙`, `G4 ↘`
   - Finalistas: **1 de arriba** + **1 de abajo**
   - Campeón: entre tus 2 finalistas  
-  *(editables hasta 28 jun 12:00)*
+  *(editables hasta 28 jun, 7:00)*
 - **Quiniela:** ganador de cada partido (16avos → final)
 - **Verde** = ganador · **Rojo** = eliminado · etiquetas SEMI / FINAL / CAMPEÓN
 - **Limpiar partidos** no borra la quiniela de grupos
@@ -65,7 +65,7 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 ### 📋 Extra
 - Resultados oficiales · `results.json` · modo `?admin=1`
 - PWA: «Añadir a pantalla de inicio» en móvil (`manifest.json`)
-- Modo prueba eliminatorias (contraseña antes del 12 jul)
+- Modo prueba eliminatorias (contraseña `Españita` si hiciera falta)
 
 ---
 
@@ -94,8 +94,9 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 | Hito | Fecha |
 |------|--------|
 | 🔒 Cierre pronósticos **grupos** | 11 jun 2026, 21:00 |
-| 🔒 Cierre **especiales** KO | 28 jun 2026, 12:00 |
-| 🏅 Apertura **eliminatorias** | 12 jul 2026, 7:00 |
+| 🔒 Cierre **especiales** KO | 28 jun 2026, 7:00 |
+| 🏅 Apertura **quiniela dieciseisavos** | 28 jun 2026, 7:00 |
+| 🏅 Octavos / cuartos / semis / final | 4, 9, 14 y 19 jul 2026, 7:00 |
 | 📊 Clasificación provisional | Tras grupos (27 jun+) |
 
 ---

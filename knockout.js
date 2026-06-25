@@ -5,7 +5,7 @@
 (function () {
   const KO_PASSWORD = 'Españita';
   const KO_EXTRAS_TOTAL = 7;
-  const KO_EXTRAS_LOCK_AT = '2026-06-28T12:00:00+02:00'; // cierre especiales = inicio 1er partido de dieciseisavos
+  const KO_EXTRAS_LOCK_AT = '2026-06-28T07:00:00+02:00'; // cierre especiales = apertura quiniela dieciseisavos
   const KO_ROUND_ORDER = ['r32', 'r16', 'r8', 'r4', 'r2'];
 
   const PARTICIPANTS = [
@@ -29,7 +29,7 @@
   ];
 
   const KO_ROUND_OPENS = {
-    r32: '2026-07-12T07:00:00+02:00',
+    r32: '2026-06-28T07:00:00+02:00', // dieciseisavos — 7:00 peninsular
     r16: '2026-07-04T07:00:00+02:00',
     r8: '2026-07-09T07:00:00+02:00',
     r4: '2026-07-14T07:00:00+02:00',
@@ -43,7 +43,7 @@
     ['at', 'jo'], ['dz', 'uz'], ['sn', 'no'], ['gh', 'pa']
   ];
 
-  // Plantilla de cruces R32: 1A = 1º grupo A, 2B = 2º grupo B, 3P = tercero (pendiente)
+  // Plantilla de cruces R32 (bracket FIFA) — 3P = mejor tercero (se define al cerrar grupos)
   const KO_R32_SLOT_TEMPLATES = [
     { home: '1A', away: '3P' },
     { home: '2A', away: '2B' },
@@ -52,7 +52,7 @@
     { home: '1D', away: '3P' },
     { home: '1B', away: '3P' },
     { home: '1H', away: '2J' },
-    { home: '1I', away: '2I' },
+    { home: '1I', away: '3P' },
     { home: '1L', away: '3P' },
     { home: '1K', away: '3P' },
     { home: '2K', away: '2L' },
@@ -60,52 +60,53 @@
     { home: '1J', away: '2H' },
     { home: '1F', away: '2C' },
     { home: '2D', away: '2G' },
-    { home: '2E', away: '3P' }
+    { home: '2E', away: '2I' }
   ];
 
+  // Horarios peninsulares (CEST, España) — orden FIFA partidos 73-88 por sortAt al mostrar
   const R32_META = [
-    { date: 'Sáb 28 Jun', hour: '12:00', venue: 'SoFi Stadium, Los Ángeles' },
-    { date: 'Dom 29 Jun', hour: '16:30', venue: 'Gillette Stadium, Boston' },
-    { date: 'Dom 29 Jun', hour: '19:00', venue: 'Estadio BBVA, Monterrey' },
-    { date: 'Dom 29 Jun', hour: '12:00', venue: 'NRG Stadium, Houston' },
-    { date: 'Lun 30 Jun', hour: '17:00', venue: 'MetLife Stadium, Nueva York' },
-    { date: 'Lun 30 Jun', hour: '12:00', venue: 'AT&T Stadium, Dallas' },
-    { date: 'Lun 30 Jun', hour: '19:00', venue: 'Azteca, Ciudad de México' },
-    { date: 'Mar 1 Jul', hour: '12:00', venue: 'Mercedes-Benz, Atlanta' },
-    { date: 'Mar 1 Jul', hour: '17:00', venue: "Levi's Stadium, San Francisco" },
-    { date: 'Mar 1 Jul', hour: '13:00', venue: 'Lumen Field, Seattle' },
-    { date: 'Mié 2 Jul', hour: '19:00', venue: 'BMO Field, Toronto' },
-    { date: 'Mié 2 Jul', hour: '12:00', venue: 'SoFi Stadium, Los Ángeles' },
-    { date: 'Mié 2 Jul', hour: '20:00', venue: 'BC Place, Vancouver' },
-    { date: 'Jue 3 Jul', hour: '18:00', venue: 'Hard Rock Stadium, Miami' },
-    { date: 'Jue 3 Jul', hour: '20:30', venue: 'Arrowhead Stadium, Kansas City' },
-    { date: 'Jue 3 Jul', hour: '13:00', venue: 'AT&T Stadium, Dallas' }
+    { fifaNo: 79, date: 'Mié 1 Jul', hour: '03:00', venue: 'Estadio Azteca, Ciudad de México', sortAt: '2026-07-01T03:00:00+02:00' },
+    { fifaNo: 73, date: 'Dom 28 Jun', hour: '21:00', venue: 'SoFi Stadium, Los Ángeles', sortAt: '2026-06-28T21:00:00+02:00' },
+    { fifaNo: 76, date: 'Lun 29 Jun', hour: '19:00', venue: 'NRG Stadium, Houston', sortAt: '2026-06-29T19:00:00+02:00' },
+    { fifaNo: 74, date: 'Lun 29 Jun', hour: '22:30', venue: 'Gillette Stadium, Boston', sortAt: '2026-06-29T22:30:00+02:00' },
+    { fifaNo: 81, date: 'Jue 2 Jul', hour: '02:00', venue: "Levi's Stadium, San Francisco", sortAt: '2026-07-02T02:00:00+02:00' },
+    { fifaNo: 85, date: 'Vie 3 Jul', hour: '05:00', venue: 'BC Place, Vancouver', sortAt: '2026-07-03T05:00:00+02:00' },
+    { fifaNo: 84, date: 'Mié 2 Jul', hour: '21:00', venue: 'SoFi Stadium, Los Ángeles', sortAt: '2026-07-02T21:00:00+02:00' },
+    { fifaNo: 77, date: 'Mar 30 Jun', hour: '23:00', venue: 'MetLife Stadium, Nueva York', sortAt: '2026-06-30T23:00:00+02:00' },
+    { fifaNo: 80, date: 'Mié 1 Jul', hour: '18:00', venue: 'Mercedes-Benz, Atlanta', sortAt: '2026-07-01T18:00:00+02:00' },
+    { fifaNo: 87, date: 'Sáb 4 Jul', hour: '03:30', venue: 'Arrowhead Stadium, Kansas City', sortAt: '2026-07-04T03:30:00+02:00' },
+    { fifaNo: 83, date: 'Vie 3 Jul', hour: '01:00', venue: 'BMO Field, Toronto', sortAt: '2026-07-03T01:00:00+02:00' },
+    { fifaNo: 82, date: 'Mié 1 Jul', hour: '22:00', venue: 'Lumen Field, Seattle', sortAt: '2026-07-01T22:00:00+02:00' },
+    { fifaNo: 86, date: 'Sáb 4 Jul', hour: '00:00', venue: 'Hard Rock Stadium, Miami', sortAt: '2026-07-04T00:00:00+02:00' },
+    { fifaNo: 75, date: 'Mar 30 Jun', hour: '03:00', venue: 'Estadio BBVA, Monterrey', sortAt: '2026-06-30T03:00:00+02:00' },
+    { fifaNo: 88, date: 'Vie 3 Jul', hour: '20:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-07-03T20:00:00+02:00' },
+    { fifaNo: 78, date: 'Mar 30 Jun', hour: '19:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-06-30T19:00:00+02:00' }
   ];
 
   const R16_META = [
-    { date: 'Sáb 4 Jul', hour: '17:00', venue: 'Lincoln Financial, Filadelfia' },
-    { date: 'Sáb 4 Jul', hour: '12:00', venue: 'NRG Stadium, Houston' },
-    { date: 'Dom 5 Jul', hour: '16:00', venue: 'MetLife Stadium, Nueva York' },
-    { date: 'Dom 5 Jul', hour: '18:00', venue: 'Azteca, Ciudad de México' },
-    { date: 'Lun 6 Jul', hour: '14:00', venue: 'AT&T Stadium, Dallas' },
-    { date: 'Lun 6 Jul', hour: '17:00', venue: 'Lumen Field, Seattle' },
-    { date: 'Mar 7 Jul', hour: '12:00', venue: 'Mercedes-Benz, Atlanta' },
-    { date: 'Mar 7 Jul', hour: '13:00', venue: 'BC Place, Vancouver' }
+    { fifaNo: 90, date: 'Sáb 4 Jul', hour: '19:00', venue: 'NRG Stadium, Houston', sortAt: '2026-07-04T19:00:00+02:00' },
+    { fifaNo: 89, date: 'Sáb 4 Jul', hour: '23:00', venue: 'Lincoln Financial, Filadelfia', sortAt: '2026-07-04T23:00:00+02:00' },
+    { fifaNo: 91, date: 'Dom 5 Jul', hour: '22:00', venue: 'MetLife Stadium, Nueva York', sortAt: '2026-07-05T22:00:00+02:00' },
+    { fifaNo: 92, date: 'Lun 6 Jul', hour: '02:00', venue: 'Estadio Azteca, Ciudad de México', sortAt: '2026-07-06T02:00:00+02:00' },
+    { fifaNo: 93, date: 'Lun 6 Jul', hour: '21:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-07-06T21:00:00+02:00' },
+    { fifaNo: 94, date: 'Mar 7 Jul', hour: '02:00', venue: 'Lumen Field, Seattle', sortAt: '2026-07-07T02:00:00+02:00' },
+    { fifaNo: 95, date: 'Mar 7 Jul', hour: '18:00', venue: 'Mercedes-Benz, Atlanta', sortAt: '2026-07-07T18:00:00+02:00' },
+    { fifaNo: 96, date: 'Mar 7 Jul', hour: '22:00', venue: 'BC Place, Vancouver', sortAt: '2026-07-07T22:00:00+02:00' }
   ];
 
   const R8_META = [
-    { date: 'Jue 9 Jul', hour: '16:00', venue: 'Gillette Stadium, Boston' },
-    { date: 'Vie 10 Jul', hour: '12:00', venue: 'SoFi Stadium, Los Ángeles' },
-    { date: 'Sáb 11 Jul', hour: '17:00', venue: 'Hard Rock Stadium, Miami' },
-    { date: 'Sáb 11 Jul', hour: '20:00', venue: 'Arrowhead Stadium, Kansas City' }
+    { fifaNo: 97, date: 'Jue 9 Jul', hour: '22:00', venue: 'Gillette Stadium, Boston', sortAt: '2026-07-09T22:00:00+02:00' },
+    { fifaNo: 98, date: 'Vie 10 Jul', hour: '21:00', venue: 'SoFi Stadium, Los Ángeles', sortAt: '2026-07-10T21:00:00+02:00' },
+    { fifaNo: 99, date: 'Sáb 11 Jul', hour: '23:00', venue: 'Hard Rock Stadium, Miami', sortAt: '2026-07-11T23:00:00+02:00' },
+    { fifaNo: 100, date: 'Dom 12 Jul', hour: '03:00', venue: 'Arrowhead Stadium, Kansas City', sortAt: '2026-07-12T03:00:00+02:00' }
   ];
 
   const R4_META = [
-    { date: 'Mar 14 Jul', hour: '14:00', venue: 'AT&T Stadium, Dallas' },
-    { date: 'Mié 15 Jul', hour: '15:00', venue: 'Mercedes-Benz, Atlanta' }
+    { fifaNo: 101, date: 'Mar 14 Jul', hour: '21:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-07-14T21:00:00+02:00' },
+    { fifaNo: 102, date: 'Mié 15 Jul', hour: '21:00', venue: 'Mercedes-Benz, Atlanta', sortAt: '2026-07-15T21:00:00+02:00' }
   ];
 
-  const FINAL_META = { date: 'Dom 19 Jul', hour: '15:00', venue: 'MetLife Stadium, Nueva York' };
+  const FINAL_META = { fifaNo: 104, date: 'Dom 19 Jul', hour: '21:00', venue: 'MetLife Stadium, Nueva York', sortAt: '2026-07-19T21:00:00+02:00' };
 
   function mkKoMatch(id, home, away, meta) {
     return {
@@ -114,13 +115,27 @@
       away: away || 'tbd',
       date: meta.date,
       hour: meta.hour,
-      venue: meta.venue
+      venue: meta.venue,
+      fifaNo: meta.fifaNo || null,
+      sortAt: meta.sortAt || ''
     };
   }
 
-  const KO_R32_MATCHES = KO_R32_SEEDS.map((pair, i) =>
-    mkKoMatch('KO32-' + (i + 1), pair[0], pair[1], R32_META[i])
-  );
+  function koSortMatches(matches) {
+    return matches.slice().sort((a, b) => {
+      if (a.sortAt && b.sortAt) return a.sortAt.localeCompare(b.sortAt);
+      if (a.fifaNo && b.fifaNo) return a.fifaNo - b.fifaNo;
+      return 0;
+    });
+  }
+
+  const KO_R32_MATCHES = KO_R32_SLOT_TEMPLATES.map((tpl, i) => {
+    const pair = KO_R32_SEEDS[i] || ['tbd', 'tbd'];
+    return Object.assign(mkKoMatch('KO32-' + (i + 1), pair[0], pair[1], R32_META[i]), {
+      homeSlot: tpl.home,
+      awaySlot: tpl.away
+    });
+  });
 
   const KO_R16_MATCHES = R16_META.map((meta, i) =>
     mkKoMatch('KO16-' + (i + 1), null, null, meta)
@@ -403,7 +418,7 @@
   }
 
   function shouldShowKoExtrasSection() {
-    return isKnockoutAccessible() && isKoRoundOpen('r32');
+    return isKnockoutAccessible();
   }
 
   function showKoExtraBadges() {
@@ -495,11 +510,12 @@
   function koMatchNameMaxLen() {
     if (typeof window === 'undefined' || !window.innerWidth) return 14;
     const w = window.innerWidth;
-    if (w < 360) return 9;
-    if (w < 400) return 11;
-    if (w < 480) return 12;
-    if (w < 768) return 14;
-    if (w < 1024) return 11;
+    if (w < 360) return 24;
+    if (w < 480) return 28;
+    if (w < 640) return 30;
+    if (w < 768) return 20;
+    if (w < 1024) return 22;
+    if (w < 1280) return 13;
     return 15;
   }
 
@@ -510,11 +526,12 @@
     _koViewportBound = true;
     function bucket(w) {
       if (w < 360) return 0;
-      if (w < 400) return 1;
-      if (w < 480) return 2;
+      if (w < 480) return 1;
+      if (w < 640) return 2;
       if (w < 768) return 3;
       if (w < 1024) return 4;
-      return 5;
+      if (w < 1280) return 5;
+      return 6;
     }
     let lastBucket = bucket(window.innerWidth);
     window.addEventListener('resize', () => {
@@ -581,7 +598,13 @@
     }
     const req = koMatchesRequired();
     const md = koMatchesDone();
-    if (req > 0 && md < req) {
+    if (req === 0) {
+      if (!isKoRoundOpen('r32')) {
+        blockers.push(`Quiniela dieciseisavos: abre el ${formatKoOpensAtShort('r32')} — el PDF se activará al completar especiales y partidos.`);
+      } else {
+        blockers.push('Quiniela: aún no hay cruces completos para marcar (faltan equipos por clasificar).');
+      }
+    } else if (md < req) {
       blockers.push(`Partidos: ${md}/${req} ganadores marcados.`);
     }
     return blockers;
@@ -867,6 +890,18 @@
     return koAllExtraRoles(code, ex);
   }
 
+  function koQualificationPosHTML(code, className) {
+    if (!code || code === 'tbd') return '';
+    if (typeof getTeamQualificationRecord !== 'function') return '';
+    const q = getTeamQualificationRecord(code);
+    if (!q) return '';
+    const cls = className || 'ko-team-qual';
+    const prov = q.provisional ? '<span class="ko-qual-prov">prov.</span>' : '';
+    return `<span class="${cls}" title="${q.detail}">
+      <span class="ko-qual-line ko-qual-line--pos">${q.line1}${prov}</span>
+    </span>`;
+  }
+
   function koQualificationHTML(code, className) {
     if (!code || code === 'tbd') return '';
     if (typeof getTeamQualificationRecord !== 'function') return '';
@@ -880,27 +915,43 @@
     </span>`;
   }
 
+  function koSlotDisplayLabel(slot) {
+    if (!slot) return 'Por definir';
+    if (slot === '3P') return '3º (mejor tercero)';
+    const m = String(slot).match(/^([12])([A-L])$/);
+    if (m) return (m[1] === '1' ? '1º' : '2º') + ' Gr.' + m[2];
+    return slot;
+  }
+
   function koTeamPickBtnHTML(m, side) {
     const code = side === 'home' ? m.home : m.away;
+    const slot = side === 'home' ? m.homeSlot : m.awaySlot;
     const pick = getKoPick(m.id);
+    const rKey = getRoundKeyForMatch(m.id);
+    const roundOpen = rKey ? isKoRoundOpen(rKey) : false;
     const ready = isMatchReady(m);
-    if (!ready || !code || code === 'tbd') {
-      return `<button type="button" class="ko-team-pick tbd" disabled>Por definir</button>`;
+    if (!code || code === 'tbd') {
+      return `<button type="button" class="ko-team-pick ko-team-pick--slot tbd" disabled>${koSlotDisplayLabel(slot)}</button>`;
     }
+    const canPick = ready && roundOpen;
     const showSpecial = showKoExtraOnMatch(m.id);
     const cls = ['ko-team-pick', `ko-team-pick--${side}`];
+    if (!canPick) cls.push('ko-team-pick--locked');
     if (pick === side) cls.push('winner');
     else if (pick) cls.push('eliminated');
     const flag = typeof flagHTML === 'function' ? flagHTML(code, 22) : '';
     const name = teamNameKoShort(code, koMatchNameMaxLen());
     const badges = showSpecial ? getKoExtraBadge(code).badge : '';
     const badgeRow = badges ? `<div class="ko-team-pick-badges-row">${badges}</div>` : '';
+    const qual = showSpecial ? koQualificationPosHTML(code) : '';
+    const qualRow = qual ? `<div class="ko-team-pick-qual-row">${qual}</div>` : '';
     const main = side === 'away'
       ? `<span class="ko-team-pick-main ko-team-pick-main--away"><span class="ko-team-name">${name}</span>${flag}</span>`
       : `<span class="ko-team-pick-main"><span class="ko-team-pick-flag">${flag}</span><span class="ko-team-name">${name}</span></span>`;
-    return `<button type="button" class="${cls.join(' ')}" data-ko-pick-match="${m.id}" data-ko-pick-side="${side}" aria-label="Gana ${teamNameKo(code)}">
+    return `<button type="button" class="${cls.join(' ')}" data-ko-pick-match="${m.id}" data-ko-pick-side="${side}"${canPick ? '' : ' disabled'} aria-label="Gana ${teamNameKo(code)}">
       ${badgeRow}
       ${main}
+      ${qualRow}
     </button>`;
   }
 
@@ -911,9 +962,10 @@
   }
 
   function koRoundMatchesHTML(matches) {
-    const chunks = koChunkMatches(matches);
+    const ordered = koSortMatches(matches);
+    const chunks = koChunkMatches(ordered);
     if (chunks.length === 1) {
-      return `<div class="ko-round-matches">${matches.map(koMatchRowHTML).join('')}</div>`;
+      return `<div class="ko-round-matches">${ordered.map(koMatchRowHTML).join('')}</div>`;
     }
     const labels = ['A', 'B'];
     return `<div class="ko-round-matches-grid">${chunks.map((chunk, i) =>
@@ -926,11 +978,15 @@
 
   function koMatchRowHTML(m) {
     const pick = getKoPick(m.id);
+    const cross = m.homeSlot && m.awaySlot
+      ? `<span class="ko-cross-badge">${koSlotDisplayLabel(m.homeSlot)} vs ${koSlotDisplayLabel(m.awaySlot)}</span>`
+      : '';
     return `<div class="ko-list-match px-3 py-2.5" id="ko-mr-${m.id}">
       <div class="match-meta">
         <span class="text-xs text-gray-500">${m.date}</span>
-        <span class="hora-badge">${m.hour}</span>
+        <span class="hora-badge" title="Hora peninsular (España)">${m.hour} ESP</span>
         <span class="sede-badge">${m.venue}</span>
+        ${cross}
       </div>
       <div class="ko-list-pair${pick ? ' has-pick' : ''}">
         ${koTeamPickBtnHTML(m, 'home')}
@@ -940,14 +996,18 @@
     </div>`;
   }
 
-  function koRoundCardHTML(round) {
+  function koRoundCardHTML(round, opts) {
+    opts = opts || {};
     const playable = round.matches.filter(isMatchReady);
     const done = playable.filter(m => getKoPick(m.id)).length;
     const total = playable.length;
     const allDefined = round.matches.every(isMatchReady);
     const complete = total > 0 && done === total;
     const pendingTeams = !allDefined;
-    const qualBar = '';
+    const preview = !!opts.preview;
+    const previewBar = preview
+      ? `<div class="ko-round-preview-banner">🔒 Vista previa de cruces — podrás marcar ganadores desde el <strong>${formatKoOpensAtShort(round.key)}</strong>.</div>`
+      : '';
     return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}" id="ko-round-${round.key}">
       <div class="group-header px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2 flex-shrink-0">
@@ -956,11 +1016,11 @@
         </div>
         <span class="ko-round-status text-xs text-gray-500">${round.matches.length} partido${round.matches.length === 1 ? '' : 's'} · toca al ganador</span>
       </div>
-      ${qualBar}
+      ${previewBar}
       <div>${koRoundMatchesHTML(round.matches)}</div>
       <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-xs text-gray-600">${pendingTeams ? 'Equipos pendientes de clasificación' : 'Quiniela ' + round.label.toLowerCase()}</span>
-        <span id="koMatchCount-${round.key}" class="text-yellow-500 font-semibold text-xs">${total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—'}</span>
+        <span class="text-xs text-gray-600">${pendingTeams ? 'Algunos equipos aún por definir (3º y grupos abiertos)' : 'Quiniela ' + round.label.toLowerCase()}</span>
+        <span id="koMatchCount-${round.key}" class="text-yellow-500 font-semibold text-xs">${preview ? 'Vista previa' : (total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—')}</span>
       </div>
     </div>`;
   }
@@ -1020,10 +1080,17 @@
   }
 
   function updateKoRoundCounts() {
-    getOpenRounds().forEach(round => {
+    KO_ROUND_ORDER.forEach(key => {
+      const round = KO_ROUNDS[key];
+      if (!isKoRoundOpen(key) && key !== 'r32') return;
       const el = document.getElementById('koMatchCount-' + round.key);
       const card = document.getElementById('ko-round-' + round.key);
       if (!el) return;
+      if (!isKoRoundOpen(key)) {
+        el.textContent = 'Vista previa';
+        el.className = 'text-blue-300 font-semibold text-xs';
+        return;
+      }
       const playable = round.matches.filter(isMatchReady);
       const done = playable.filter(m => getKoPick(m.id)).length;
       const complete = playable.length > 0 && done === playable.length;
@@ -1095,30 +1162,38 @@
     bindKoMatchClicks();
     if (!isKnockoutAccessible()) {
       el.innerHTML = `<div class="extras-locked">
-        <p class="text-gray-400 text-sm">🔒 Las eliminatorias se abren el <strong class="text-white">12 de julio a las 7:00</strong>.</p>
+        <p class="text-gray-400 text-sm">🔒 Las eliminatorias no están disponibles en este momento.</p>
         <p class="text-xs text-gray-500 mt-2">Modo prueba: pulsa la pestaña e introduce la contraseña.</p>
       </div>`;
       return;
     }
-    if (!getActiveKoUser()) {
-      el.innerHTML = '<p class="text-yellow-500 text-sm">Elige tu <strong>participante</strong> arriba para marcar la quiniela de eliminatorias.</p>';
-      return;
-    }
-
     const parts = [];
     const lockedRounds = [];
+    KO_ROUND_ORDER.forEach(key => {
+      if (key === 'r32') return;
+      if (!isKoRoundOpen(key)) lockedRounds.push(KO_ROUNDS[key]);
+    });
+
+    if (!getActiveKoUser()) {
+      parts.push(koRoundCardHTML(KO_ROUNDS.r32, { preview: true }));
+      parts.push('<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba para poder marcar ganadores cuando abra la ronda (28 jun, 7:00).</p>');
+      if (lockedRounds.length) parts.push(koUpcomingRoundsHTML(lockedRounds));
+      el.innerHTML = parts.join('');
+      updateKoRoundCounts();
+      return;
+    }
 
     KO_ROUND_ORDER.forEach(key => {
       const round = KO_ROUNDS[key];
       if (!isKoRoundOpen(key)) {
-        lockedRounds.push(round);
+        if (key === 'r32') {
+          parts.push(koRoundCardHTML(round, { preview: true }));
+        } else {
+          lockedRounds.push(round);
+        }
         return;
       }
-      if (round.matches.some(isMatchReady)) {
-        parts.push(koRoundCardHTML(round));
-      } else {
-        parts.push(koRoundWaitingHTML(round));
-      }
+      parts.push(koRoundCardHTML(round));
     });
 
     if (lockedRounds.length) parts.push(koUpcomingRoundsHTML(lockedRounds));
@@ -1398,6 +1473,7 @@
       ? `<span class="ko-r32-pick-badges${roles.length > 1 ? ' ko-r32-pick-badges--multi' : ''}">${koRoleBadgesHTML(roles, roles.length > 1 ? 'xs' : 'sm')}</span>`
       : '';
     const flag = typeof flagHTML === 'function' ? flagHTML(code, field === 'semis' ? 24 : 32) : '';
+    const qual = field === 'semis' ? koQualificationPosHTML(code, 'ko-r32-pick-qual') : '';
     if (roles.length > 1) cls.push('ko-r32-pick--multi-badge');
     const disabled = taken;
     const zoneAttrs = zoneBlocked && opts.zoneBlockMsg
@@ -1407,6 +1483,7 @@
       ${badge}
       ${flag}
       <span class="ko-r32-pick-name">${teamNameKoShort(code, field === 'semis' ? 11 : 14)}</span>
+      ${qual}
     </button>`;
   }
 
@@ -1688,7 +1765,8 @@
       if (typeof fireConfetti === 'function') fireConfetti();
       showKoToast('koChampionToast', 5500);
       requestAnimationFrame(() => {
-        document.getElementById('koBracket')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const target = isKoRoundOpen('r32') ? document.getElementById('koBracket') : document.getElementById('koExtrasSection');
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
     koWasExtrasComplete = extrasComplete;
@@ -1706,12 +1784,16 @@
       st.textContent = 'Elige un participante arriba para empezar.';
     } else if (complete) {
       st.textContent = '✓ Todo listo — puedes exportar el PDF';
+    } else if (ed >= KO_EXTRAS_TOTAL && req === 0) {
+      st.textContent = isKoRoundOpen('r32')
+        ? 'Campeón elegido ✓ — esperando cruces completos para marcar partidos'
+        : `Campeón elegido ✓ — dieciseisavos abren el ${formatKoOpensAtShort('r32')} · PDF bloqueado hasta completar`;
     } else if (ed >= KO_EXTRAS_TOTAL) {
-      st.textContent = `Campeón elegido ✓ — rellena la quiniela: ${md}/${req} partidos`;
+      st.textContent = `Campeón elegido ✓ — quiniela: ${md}/${req} partidos · PDF al completar todo`;
     } else if (isKoExtrasLocked() && ed < KO_EXTRAS_TOTAL) {
       st.textContent = `Partidos (${req} activos): ${md}/${req} · Especiales cerrados (${ed}/${KO_EXTRAS_TOTAL})`;
     } else {
-      st.textContent = `Partidos (${req} activos): ${md}/${req} · Especiales: ${ed}/${KO_EXTRAS_TOTAL}`;
+      st.textContent = `Especiales: ${ed}/${KO_EXTRAS_TOTAL} · Partidos (${req} activos): ${md}/${req} · PDF bloqueado hasta completar`;
     }
     st.className = complete
       ? 'text-xs text-green-400 font-medium mt-3'
@@ -1753,8 +1835,8 @@
     const subtitle = document.getElementById('koSubtitle');
     if (subtitle) {
       subtitle.textContent = isKnockoutAccessible()
-        ? 'Lee las instrucciones · elige participante · rellena tu porra.'
-        : 'Se abrirá el 12 de julio a las 7:00 (hora peninsular). Modo prueba con contraseña.';
+        ? 'Especiales hasta el 28 jun, 7:00 · dieciseisavos (16 cruces) abajo · cada ronda en su fecha.'
+        : 'Eliminatorias abiertas · especiales y quiniela por rondas.';
     }
     refreshKnockoutUI();
   }
@@ -1794,7 +1876,7 @@
   }
 
   function koPdfChunkMatches(matches) {
-    return koChunkMatches(matches);
+    return koChunkMatches(koSortMatches(matches));
   }
 
   function koPdfSyncColumns(colY) {
@@ -1859,7 +1941,7 @@
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(...KO_PDF_C.mut);
     const city = koPdfVenueShort(m.venue);
-    const line = `${m.date} ${m.hour}${city ? ' · ' + city : ''}`;
+    const line = `${m.date} ${m.hour} ESP${city ? ' · ' + city : ''}`;
     koPdfDrawFittedText(pdf, line, centerX, metaY, maxW, { size: 3.2, align: 'center' });
   }
 
@@ -2102,7 +2184,7 @@
   function koPdfQualShort(code) {
     if (typeof getTeamQualificationRecord !== 'function') return '';
     const q = getTeamQualificationRecord(code);
-    return q ? q.short : '';
+    return q ? q.line1 : '';
   }
 
   function koPdfDrawTeamCell(pdf, code, isWin, isLose, role, x, y, w, h, cache, alignRight, showQual) {
@@ -2175,7 +2257,7 @@
     const cellW = (CW - vsW - pad * 2) / 2;
     const cellX1 = xOff + pad;
     const cellX2 = xOff + CW - pad - cellW;
-    const showQual = false;
+    const showQual = getRoundKeyForMatch(m.id) === 'r32';
     const metaY = my + 1.5;
     const teamY = my + (showQual ? 2.65 : 2.85);
     const cellH = matchH - (showQual ? 3.55 : 3.35);
