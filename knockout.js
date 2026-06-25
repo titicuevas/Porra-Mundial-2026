@@ -307,6 +307,7 @@
     renderKnockoutExtras();
     renderKnockoutMatches();
     updateKnockoutStatus();
+    if (typeof renderQualifiedSummary === 'function') renderQualifiedSummary();
   }
 
   function setActiveKoUser(name) {
@@ -333,13 +334,16 @@
     }
   }
 
+  function isKnockoutPublicOpen() {
+    return Date.now() >= new Date(KO_ROUND_OPENS.r32).getTime();
+  }
+
   function isKnockoutAccessible() {
-    return (typeof isExtrasOpen === 'function' && isExtrasOpen()) || isKnockoutPreviewUnlocked();
+    return isKnockoutPublicOpen() || isKnockoutPreviewUnlocked();
   }
 
   function isKoRoundOpen(key) {
     if (!isKnockoutAccessible()) return false;
-    if (key === 'r32' && isKnockoutPreviewUnlocked()) return true;
     return Date.now() >= new Date(KO_ROUND_OPENS[key]).getTime();
   }
 
@@ -389,10 +393,10 @@
       koPasswordFails++;
       if (koPasswordFails >= 3) {
         err.classList.add('ko-modal-error--big');
-        err.textContent = '😅 Ten un poco más de paciencia, ¡que queda poco! (pista: la selección favorita)';
+        err.textContent = 'Demasiados intentos. Vuelve a probar en un momento.';
       } else {
         err.classList.remove('ko-modal-error--big');
-        err.textContent = 'Contraseña incorrecta. Pista: la selección favorita…';
+        err.textContent = 'Código incorrecto.';
       }
     }
   }
@@ -890,37 +894,16 @@
     return koAllExtraRoles(code, ex);
   }
 
-  function koQualificationPosHTML(code, className) {
-    if (!code || code === 'tbd') return '';
-    if (typeof getTeamQualificationRecord !== 'function') return '';
-    const q = getTeamQualificationRecord(code);
-    if (!q) return '';
-    const cls = className || 'ko-team-qual';
-    const prov = q.provisional ? '<span class="ko-qual-prov">prov.</span>' : '';
-    return `<span class="${cls}" title="${q.detail}">
-      <span class="ko-qual-line ko-qual-line--pos">${q.line1}${prov}</span>
-    </span>`;
+  function koQualificationPosHTML() {
+    return '';
   }
 
-  function koQualificationHTML(code, className) {
-    if (!code || code === 'tbd') return '';
-    if (typeof getTeamQualificationRecord !== 'function') return '';
-    const q = getTeamQualificationRecord(code);
-    if (!q) return '';
-    const cls = className || 'ko-team-qual';
-    const prov = q.provisional ? '<span class="ko-qual-prov">prov.</span>' : '';
-    return `<span class="${cls}" title="${q.detail}">
-      <span class="ko-qual-line ko-qual-line--pos">${q.line1}${prov}</span>
-      <span class="ko-qual-line ko-qual-line--stats"><span class="ko-qual-ved">${q.w}-${q.d}-${q.l}</span><span class="ko-qual-goals">${q.gf}:${q.ga}</span></span>
-    </span>`;
+  function koQualificationHTML() {
+    return '';
   }
 
-  function koSlotDisplayLabel(slot) {
-    if (!slot) return 'Por definir';
-    if (slot === '3P') return '3º (mejor tercero)';
-    const m = String(slot).match(/^([12])([A-L])$/);
-    if (m) return (m[1] === '1' ? '1º' : '2º') + ' Gr.' + m[2];
-    return slot;
+  function koSlotDisplayLabel() {
+    return 'Por definir';
   }
 
   function koTeamPickBtnHTML(m, side) {
@@ -943,15 +926,12 @@
     const name = teamNameKoShort(code, koMatchNameMaxLen());
     const badges = showSpecial ? getKoExtraBadge(code).badge : '';
     const badgeRow = badges ? `<div class="ko-team-pick-badges-row">${badges}</div>` : '';
-    const qual = showSpecial ? koQualificationPosHTML(code) : '';
-    const qualRow = qual ? `<div class="ko-team-pick-qual-row">${qual}</div>` : '';
     const main = side === 'away'
       ? `<span class="ko-team-pick-main ko-team-pick-main--away"><span class="ko-team-name">${name}</span>${flag}</span>`
       : `<span class="ko-team-pick-main"><span class="ko-team-pick-flag">${flag}</span><span class="ko-team-name">${name}</span></span>`;
     return `<button type="button" class="${cls.join(' ')}" data-ko-pick-match="${m.id}" data-ko-pick-side="${side}"${canPick ? '' : ' disabled'} aria-label="Gana ${teamNameKo(code)}">
       ${badgeRow}
       ${main}
-      ${qualRow}
     </button>`;
   }
 
@@ -978,15 +958,11 @@
 
   function koMatchRowHTML(m) {
     const pick = getKoPick(m.id);
-    const cross = m.homeSlot && m.awaySlot
-      ? `<span class="ko-cross-badge">${koSlotDisplayLabel(m.homeSlot)} vs ${koSlotDisplayLabel(m.awaySlot)}</span>`
-      : '';
     return `<div class="ko-list-match px-3 py-2.5" id="ko-mr-${m.id}">
       <div class="match-meta">
         <span class="text-xs text-gray-500">${m.date}</span>
         <span class="hora-badge" title="Hora peninsular (España)">${m.hour} ESP</span>
         <span class="sede-badge">${m.venue}</span>
-        ${cross}
       </div>
       <div class="ko-list-pair${pick ? ' has-pick' : ''}">
         ${koTeamPickBtnHTML(m, 'home')}
@@ -1019,7 +995,7 @@
       ${previewBar}
       <div>${koRoundMatchesHTML(round.matches)}</div>
       <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-xs text-gray-600">${pendingTeams ? 'Algunos equipos aún por definir (3º y grupos abiertos)' : 'Quiniela ' + round.label.toLowerCase()}</span>
+        <span class="text-xs text-gray-600">${pendingTeams ? 'Algunos equipos aún por definir' : 'Quiniela ' + round.label.toLowerCase()}</span>
         <span id="koMatchCount-${round.key}" class="text-yellow-500 font-semibold text-xs">${preview ? 'Vista previa' : (total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—')}</span>
       </div>
     </div>`;
@@ -1162,8 +1138,8 @@
     bindKoMatchClicks();
     if (!isKnockoutAccessible()) {
       el.innerHTML = `<div class="extras-locked">
-        <p class="text-gray-400 text-sm">🔒 Las eliminatorias no están disponibles en este momento.</p>
-        <p class="text-xs text-gray-500 mt-2">Modo prueba: pulsa la pestaña e introduce la contraseña.</p>
+        <p class="text-gray-400 text-sm">🔒 Las eliminatorias abren el <strong>28 de junio a las 7:00</strong> (hora peninsular).</p>
+        <p class="text-xs text-gray-500 mt-2">Si tienes código de acceso anticipado, pulsa la pestaña 🏅 Eliminatorias.</p>
       </div>`;
       return;
     }
@@ -1473,7 +1449,6 @@
       ? `<span class="ko-r32-pick-badges${roles.length > 1 ? ' ko-r32-pick-badges--multi' : ''}">${koRoleBadgesHTML(roles, roles.length > 1 ? 'xs' : 'sm')}</span>`
       : '';
     const flag = typeof flagHTML === 'function' ? flagHTML(code, field === 'semis' ? 24 : 32) : '';
-    const qual = field === 'semis' ? koQualificationPosHTML(code, 'ko-r32-pick-qual') : '';
     if (roles.length > 1) cls.push('ko-r32-pick--multi-badge');
     const disabled = taken;
     const zoneAttrs = zoneBlocked && opts.zoneBlockMsg
@@ -1483,7 +1458,6 @@
       ${badge}
       ${flag}
       <span class="ko-r32-pick-name">${teamNameKoShort(code, field === 'semis' ? 11 : 14)}</span>
-      ${qual}
     </button>`;
   }
 
@@ -1831,12 +1805,16 @@
   function renderKnockout() {
     loadKnockoutStore();
     const preview = document.getElementById('koPreviewBadge');
-    if (preview) preview.classList.toggle('hidden', !isKnockoutPreviewUnlocked() || (typeof isExtrasOpen === 'function' && isExtrasOpen()));
+    if (preview) preview.classList.toggle('hidden', !isKnockoutPreviewUnlocked() || isKnockoutPublicOpen());
     const subtitle = document.getElementById('koSubtitle');
     if (subtitle) {
-      subtitle.textContent = isKnockoutAccessible()
-        ? 'Especiales hasta el 28 jun, 7:00 · dieciseisavos (16 cruces) abajo · cada ronda en su fecha.'
-        : 'Eliminatorias abiertas · especiales y quiniela por rondas.';
+      if (!isKnockoutAccessible()) {
+        subtitle.textContent = 'Apertura oficial el 28 jun, 7:00 (hora peninsular).';
+      } else if (!isKoRoundOpen('r32')) {
+        subtitle.textContent = 'Completa los especiales ahora · la quiniela de partidos se activa el 28 jun, 7:00.';
+      } else {
+        subtitle.textContent = 'Especiales hasta el 28 jun, 7:00 · dieciseisavos abajo · cada ronda en su fecha.';
+      }
     }
     refreshKnockoutUI();
   }
@@ -2181,13 +2159,11 @@
     return y + cardH + 2.5;
   }
 
-  function koPdfQualShort(code) {
-    if (typeof getTeamQualificationRecord !== 'function') return '';
-    const q = getTeamQualificationRecord(code);
-    return q ? q.line1 : '';
+  function koPdfQualShort() {
+    return '';
   }
 
-  function koPdfDrawTeamCell(pdf, code, isWin, isLose, role, x, y, w, h, cache, alignRight, showQual) {
+  function koPdfDrawTeamCell(pdf, code, isWin, isLose, role, x, y, w, h, cache, alignRight) {
     const C = KO_PDF_C;
     const { FLAG_W, FLAG_H } = KO_PDF;
     const pad = 0.9;
@@ -2210,9 +2186,8 @@
     }
 
     const img = cache[code];
-    const nameY = showQual ? y + h / 2 - 0.15 : y + h / 2 + 0.45;
+    const nameY = y + h / 2 + 0.45;
     const nameColor = isWin ? [220, 252, 231] : isLose ? [254, 205, 211] : C.txt;
-    const qualLine = showQual ? koPdfQualShort(code) : '';
 
     if (alignRight) {
       let tx = x + w - pad;
@@ -2224,7 +2199,7 @@
       const nameMax = Math.max(6, tx - x - pad);
       pdf.setFont('helvetica', isWin ? 'bold' : 'normal');
       pdf.setTextColor(...nameColor);
-      koPdfDrawFittedText(pdf, teamNameKo(code), tx, nameY, nameMax, { size: showQual ? 4.4 : 4.8, align: 'right' });
+      koPdfDrawFittedText(pdf, teamNameKo(code), tx, nameY, nameMax, { size: 4.8, align: 'right' });
     } else {
       let tx = x + pad;
       if (img) {
@@ -2234,19 +2209,7 @@
       const nameMax = Math.max(6, x + w - pad - tx);
       pdf.setFont('helvetica', isWin ? 'bold' : 'normal');
       pdf.setTextColor(...nameColor);
-      koPdfDrawFittedText(pdf, teamNameKo(code), tx, nameY, nameMax, { size: showQual ? 4.4 : 4.8, align: 'left' });
-    }
-
-    if (qualLine) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(3);
-      pdf.setTextColor(...(isWin ? [134, 239, 172] : isLose ? [252, 165, 165] : KO_PDF_C.mut));
-      const qy = y + h - 0.55;
-      if (alignRight) {
-        koPdfDrawFittedText(pdf, qualLine, x + w - pad, qy, w - pad * 2, { size: 3, align: 'right' });
-      } else {
-        koPdfDrawFittedText(pdf, qualLine, x + pad, qy, w - pad * 2, { size: 3, align: 'left' });
-      }
+      koPdfDrawFittedText(pdf, teamNameKo(code), tx, nameY, nameMax, { size: 4.8, align: 'left' });
     }
   }
 
@@ -2257,10 +2220,9 @@
     const cellW = (CW - vsW - pad * 2) / 2;
     const cellX1 = xOff + pad;
     const cellX2 = xOff + CW - pad - cellW;
-    const showQual = getRoundKeyForMatch(m.id) === 'r32';
     const metaY = my + 1.5;
-    const teamY = my + (showQual ? 2.65 : 2.85);
-    const cellH = matchH - (showQual ? 3.55 : 3.35);
+    const teamY = my + 2.85;
+    const cellH = matchH - 3.35;
 
     if (stripe) {
       pdf.setFillColor(20, 28, 42);
@@ -2276,8 +2238,8 @@
 
     const homeRole = showSpecials ? getKoExtraRole(m.home, ex) : '';
     const awayRole = showSpecials ? getKoExtraRole(m.away, ex) : '';
-    koPdfDrawTeamCell(pdf, m.home, pick === 'home', pick === 'away', homeRole, cellX1, teamY, cellW, cellH, cache, false, showQual);
-    koPdfDrawTeamCell(pdf, m.away, pick === 'away', pick === 'home', awayRole, cellX2, teamY, cellW, cellH, cache, true, showQual);
+    koPdfDrawTeamCell(pdf, m.home, pick === 'home', pick === 'away', homeRole, cellX1, teamY, cellW, cellH, cache, false);
+    koPdfDrawTeamCell(pdf, m.away, pick === 'away', pick === 'home', awayRole, cellX2, teamY, cellW, cellH, cache, true);
   }
 
   function koPdfDrawMatchColumn(pdf, matches, xOff, y, CW, picks, cache, label, ex, matchH, showSpecials) {
@@ -2414,6 +2376,7 @@
   }
 
   window.isKnockoutAccessible = isKnockoutAccessible;
+  window.isKnockoutPublicOpen = isKnockoutPublicOpen;
   window.isKnockoutPreviewUnlocked = isKnockoutPreviewUnlocked;
   window.isKnockoutComplete = isKnockoutComplete;
   window.renderKnockout = renderKnockout;

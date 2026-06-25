@@ -65,7 +65,6 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 ### 📋 Extra
 - Resultados oficiales · `results.json` · modo `?admin=1`
 - PWA: «Añadir a pantalla de inicio» en móvil (`manifest.json`)
-- Modo prueba eliminatorias (contraseña `Españita` si hiciera falta)
 
 ---
 
@@ -117,9 +116,6 @@ python -m http.server 8765          # alternativa manual
 
 > ⚠️ No uses `file://`. Tras editar HTML, **siempre** `sync-html.bat`.  
 > Al cambiar `knockout.js`, sube `?v=35` (o siguiente) en ambos HTML.
-
-### Modo prueba eliminatorias
-Pestaña 🏅 → contraseña `Españita` (solo esa sesión del navegador).
 
 ---
 

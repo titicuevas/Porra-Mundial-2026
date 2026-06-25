@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0e1a"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <meta name="description" content="Porra Mundial 2026 entre colegas. La quiniela que cuenta es eliminatorias — especiales + ganadores. Exporta PDF."/>
 <meta property="og:title" content="Porra Mundial 2026"/>
 <meta property="og:description" content="Quiniela del Mundial 2026 — eliminatorias, PDF y clasificación. Plan de Manolin."/>
@@ -89,7 +92,11 @@ input,select,textarea{color:#fff;}
 .group-standings-row--qualified{color:#bbf7d0;font-weight:700;}
 .group-standings-row--qualified .group-standings-pos{color:#4ade80;}
 .group-standings-row--qualified .group-standings-pts{color:#86efac;}
+.group-standings-row--third-qualifies{color:#c4b5fd;font-weight:700;}
+.group-standings-row--third-qualifies .group-standings-pos{color:#a78bfa;}
+.group-standings-row--third-qualifies .group-standings-pts{color:#ddd6fe;}
 .group-standings-badge{font-size:.5rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:.1rem .32rem;border-radius:999px;background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.45);color:#bbf7d0;margin-left:auto;flex-shrink:0;}
+.group-standings-badge--third{background:rgba(139,92,246,.2);border-color:rgba(167,139,250,.45);color:#ddd6fe;}
 .qualified-summary{margin:0 0 1rem;padding:.85rem .9rem;border-radius:14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);}
 .qualified-summary-title{margin:0 0 .55rem;font-size:.82rem;font-weight:800;color:#fff;}
 .qualified-summary-hint{margin:.55rem 0 0;font-size:.68rem;color:#9ca3af;line-height:1.4;}
@@ -99,6 +106,12 @@ input,select,textarea{color:#fff;}
 .qualified-team-row{display:flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:700;color:#e5e7eb;padding:.18rem 0;}
 .qualified-team-pos{width:1.35rem;font-size:.62rem;font-weight:900;color:#4ade80;flex-shrink:0;}
 .qualified-team-pos--third{color:#94a3b8;}
+.qualified-team-pos--third-qual{color:#c4b5fd;}
+.qualified-team-pos--fourth{color:#6b7280;}
+.qualified-team-meta{margin-left:auto;font-size:.58rem;font-weight:700;color:#94a3b8;white-space:nowrap;}
+.qualified-thirds-block{margin-top:.85rem;padding-top:.75rem;border-top:1px solid rgba(167,139,250,.25);}
+.qualified-summary-title--thirds{color:#e9d5ff;}
+.qualified-thirds-list{display:flex;flex-direction:column;gap:.12rem;}
 .qualified-team-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 @media(min-width:640px){.qualified-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(min-width:1024px){.qualified-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
@@ -109,6 +122,10 @@ input,select,textarea{color:#fff;}
 .phase-note--groups{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.35);color:#cbd5e1;}
 .phase-note--ko{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#d1fae5;}
 .phase-note strong{color:#fff;}
+.app-reload-banner{position:sticky;top:0;z-index:90;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.65rem;padding:.65rem 1rem;background:linear-gradient(90deg,#7c2d12,#92400e);border-bottom:2px solid #fbbf24;color:#fff;font-size:.78rem;line-height:1.4;text-align:center;}
+.app-reload-banner p{margin:0;max-width:42rem;}
+.app-reload-btn{flex-shrink:0;background:#facc15;color:#1a1a1a;border:none;border-radius:8px;padding:.45rem .85rem;font-size:.75rem;font-weight:800;cursor:pointer;min-height:40px;}
+.app-reload-btn:active{transform:scale(.97);}
 .ko-backup-hint{margin:.85rem 0 0;padding:.6rem .75rem;border-radius:10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);font-size:clamp(.68rem,2.4vw,.74rem);color:#93c5fd;line-height:1.45;text-align:center;}
 @media(max-width:767px){
 .ko-backup-hint{margin-bottom:.25rem;padding:.65rem .7rem;}
@@ -525,7 +542,35 @@ input,select,textarea{color:#fff;}
 
 .ko-extra-readonly-flag{display:inline-flex;align-items:center;}
 .ko-matches-section{margin-top:.85rem;scroll-margin-top:4.75rem;}
-#koQualifiedSummary,#koBracketSection{scroll-margin-top:4.75rem;}
+#koBracketSection,#koQualifiedSummary{scroll-margin-top:4.75rem;}
+.ko-qual-panel-wrap{margin:0 0 .65rem;}
+.ko-qual-panel{padding:.45rem .5rem .4rem;border-radius:10px;background:rgba(15,23,42,.88);border:1px solid #334155;box-shadow:none;}
+.ko-qual-panel-title{margin:0 0 .35rem;font-size:.7rem;font-weight:800;color:#e5e7eb;letter-spacing:.01em;}
+.ko-qual-section+.ko-qual-section{margin-top:.4rem;padding-top:.38rem;border-top:1px solid rgba(55,65,81,.5);}
+.ko-qual-section-title{margin:0 0 .28rem;font-size:.54rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;}
+.ko-qual-groups-grid{display:grid;grid-template-columns:1fr;gap:.3rem;}
+.ko-qual-group-card{border-radius:8px;background:rgba(17,24,39,.65);border:1px solid #374151;overflow:hidden;}
+.ko-qual-group-head{padding:.2rem .42rem;background:rgba(30,58,95,.45);font-size:.54rem;font-weight:900;color:#93c5fd;letter-spacing:.08em;text-transform:uppercase;line-height:1.2;}
+.ko-qual-list{list-style:none;margin:0;padding:.05rem 0;}
+.ko-qual-list-item{display:flex;align-items:center;gap:.28rem;padding:.18rem .4rem;font-size:.6rem;line-height:1.15;color:#e5e7eb;border-bottom:1px solid rgba(31,41,55,.45);}
+.ko-qual-list-item:last-child{border-bottom:none;}
+.ko-qual-list-item--passes{background:rgba(34,197,94,.05);}
+.ko-qual-list-item--qualifies-third{background:rgba(139,92,246,.08);}
+.ko-qual-list-pos{width:1.1rem;flex-shrink:0;font-size:.54rem;font-weight:900;text-align:center;}
+.ko-qual-list-pos--1,.ko-qual-list-pos--2{color:#4ade80;}
+.ko-qual-list-pos--3{color:#a78bfa;}
+.ko-qual-list-pos--4{color:#6b7280;}
+.ko-qual-list-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ko-qual-list-pts,.ko-qual-list-meta{flex-shrink:0;font-size:.5rem;font-weight:700;color:#9ca3af;}
+.ko-qual-list-meta{color:#a78bfa;}
+.ko-qual-rank{width:.95rem;flex-shrink:0;font-size:.54rem;font-weight:900;color:#c4b5fd;text-align:right;}
+.ko-qual-thirds-list{display:grid;grid-template-columns:1fr;gap:0;padding:0;}
+.ko-qual-panel-note{margin:.32rem 0 0;font-size:.5rem;color:#6b7280;line-height:1.3;}
+.ko-qual-prov{color:#fbbf24;font-weight:700;}
+@media(min-width:480px){.ko-qual-thirds-list{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(min-width:640px){.ko-qual-groups-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.32rem;}}
+@media(min-width:900px){.ko-qual-groups-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(min-width:1200px){.ko-qual-groups-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
 .ko-team-pick-qual-row{width:100%;margin-top:.08rem;}
 .ko-export-hint{text-align:center;line-height:1.45;margin:0;}
 .ko-export-block .ko-export-hint{padding:0 .15rem;}
@@ -1123,11 +1168,11 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <div id="koExtrasGrid"></div>
       </div>
 
-      <div id="koQualifiedSummary" class="qualified-summary hidden" aria-live="polite"></div>
+      <div id="koQualifiedSummary" class="ko-qual-panel-wrap hidden" aria-live="polite"></div>
 
       <div class="ko-matches-section" id="koBracketSection">
         <h3 class="text-sm font-bold text-white mb-1">⚽ Quiniela — dieciseisavos (16 cruces)</h3>
-        <p class="text-xs text-gray-500 mb-3">Los <strong>16 partidos</strong> en orden cronológico (calendario FIFA). Horarios en <strong>hora peninsular española (CEST)</strong>. Marcar ganadores desde el <strong>28 jun, 7:00</strong>.</p>
+        <p class="text-xs text-gray-500 mb-3">Los <strong>16 partidos</strong> en orden cronológico. <strong>Marcar ganadores desde el 28 jun, 7:00</strong> (antes solo vista previa).</p>
         <div id="koBracket"></div>
       </div>
 
@@ -1160,9 +1205,9 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 <div id="koPasswordModal" class="ko-modal hidden" role="dialog" aria-labelledby="koModalTitle">
   <div class="ko-modal-box">
     <div class="ko-modal-mascot" aria-hidden="true">🏆</div>
-    <h3 id="koModalTitle">🔒 Eliminatorias — modo prueba</h3>
-    <p>Contraseña de modo prueba (por si la pestaña estuviera cerrada en otro dispositivo).</p>
-    <input type="password" id="koPasswordInput" class="ko-modal-input" placeholder="Contraseña" autocomplete="off"
+    <h3 id="koModalTitle">🔒 Eliminatorias</h3>
+    <p>Introduce el código de acceso para entrar antes de la apertura oficial (28 jun, 7:00).</p>
+    <input type="password" id="koPasswordInput" class="ko-modal-input" placeholder="Código de acceso" autocomplete="off"
       onkeydown="if(event.key==='Enter')submitKoPassword()"/>
     <p id="koPasswordError" class="ko-modal-error"></p>
     <div class="ko-modal-btns">
@@ -1353,6 +1398,29 @@ const groups = [
 
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
+/** Sincronizar con knockout.js?v= y manifest start_url al desplegar */
+const APP_BUILD = '76';
+
+function showAppReloadBannerIfNeeded() {
+  if (!window.__appNeedsReload) return;
+  if (document.getElementById('appReloadBanner')) return;
+  const bar = document.createElement('div');
+  bar.id = 'appReloadBanner';
+  bar.className = 'app-reload-banner';
+  bar.setAttribute('role', 'status');
+  bar.innerHTML = '<p><strong>Nueva versión de la porra.</strong> Recarga para ver horarios y eliminatorias actualizados. <strong>Tus pronósticos guardados no se borran.</strong></p>' +
+    '<button type="button" class="app-reload-btn" onclick="location.reload(true)">Recargar ahora</button>';
+  document.body.prepend(bar);
+}
+
+(function checkAppBuild() {
+  const key = 'porra2026_app_build';
+  try {
+    const prev = localStorage.getItem(key);
+    if (prev && prev !== APP_BUILD) window.__appNeedsReload = true;
+    localStorage.setItem(key, APP_BUILD);
+  } catch (e) { /* */ }
+})();
 
 // Horarios peninsulares (CEST, UTC+2)
 const SCHEDULE = {
@@ -1634,6 +1702,8 @@ function renderScheduleBanner() {
       '</div></div>';
   } else if (!isExtrasOpen()) {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Fase de grupos cerrada</strong> desde el 11 jun, 21:00. Ya no se pueden cambiar los pronósticos de grupos.</div>';
+  } else if (typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 7:00</strong> (hora peninsular)</div>';
   } else {
     el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Fase final abierta</strong> — especiales, cruces de dieciseisavos y quiniela por rondas (PDF al completar cada fase)</div>';
   }
@@ -1650,11 +1720,13 @@ function updateCountdownDisplay() {
 
 function tickSchedule() {
   const g = isGroupsOpen(), e = isExtrasOpen(), lb = isLeaderboardOpen();
+  const ko = typeof isKnockoutAccessible === 'function' ? isKnockoutAccessible() : e;
   updateCountdownDisplay();
-  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard) {
+  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard || ko !== window._schedKo) {
     window._schedGroups = g;
     window._schedExtras = e;
     window._schedLeaderboard = lb;
+    window._schedKo = ko;
     renderScheduleBanner();
     renderGroups();
     if (typeof renderKnockout === 'function') renderKnockout();
@@ -1698,7 +1770,7 @@ function openDefaultPhaseTab() {
 
 function switchPhaseTab(tab) {
   if (tab === 'extras' && typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
-    showPhaseLockMessage('Las eliminatorias', 'Se abrirán el <strong>24 de junio</strong> (hora peninsular).<br>Modo prueba: contraseña <strong>Españita</strong>.');
+    showPhaseLockMessage('Las eliminatorias', 'Apertura oficial el <strong>28 de junio a las 7:00</strong> (hora peninsular).');
     if (typeof requestKnockoutAccess === 'function') requestKnockoutAccess();
     return;
   }
@@ -1717,7 +1789,10 @@ function switchPhaseTab(tab) {
   const dock = document.getElementById('exportDock');
   if (dock) dock.style.display = tab === 'grupos' ? '' : 'none';
   if (tab === 'leaderboard') renderLeaderboard();
-  if (tab === 'extras' && typeof renderKnockout === 'function') renderKnockout();
+  if (tab === 'extras' && typeof renderKnockout === 'function') {
+    renderKnockout();
+    renderQualifiedSummary();
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -2431,45 +2506,205 @@ function isGroupComplete(group) {
   return group.matches.every(m => getResult(m.id));
 }
 
-function renderQualifiedSummary() {
-  const html = buildQualifiedSummaryHTML();
-  ['qualifiedSummary', 'koQualifiedSummary'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (!html) {
-      el.classList.add('hidden');
-      el.innerHTML = '';
-      return;
-    }
-    el.classList.remove('hidden');
-    el.innerHTML = html;
-  });
+const BEST_THIRD_SLOTS = 8;
+
+function compareBestThird(a, b) {
+  return b.p - a.p || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name, 'es');
 }
 
-function buildQualifiedSummaryHTML() {
-  const cards = [];
-  const posLabels = ['1º', '2º', '3º'];
-  const posClasses = ['', '', ' qualified-team-pos--third'];
+function getThirdPlaceEntry(group, standings) {
+  const table = standings[group.id];
+  if (!table || table.length < 3) return null;
+  const row = table[2];
+  if (!row || !row.g) return null;
+  const groupComplete = isGroupComplete(group);
+  const teamPlayedOfficial = teamOfficialResultsPlayed(group, row.code);
+  const teamTotal = teamMatchCount(group, row.code);
+  return {
+    code: row.code,
+    name: row.name,
+    groupId: group.id,
+    p: row.p,
+    gd: row.gd,
+    gf: row.gf,
+    ga: row.ga,
+    w: row.w,
+    d: row.d,
+    l: row.l,
+    groupComplete,
+    provisional: !groupComplete || teamPlayedOfficial < teamTotal
+  };
+}
+
+function getBestThirdQualifiers() {
+  const standings = buildOfficialGroupStandings();
+  const all = groups.map(g => getThirdPlaceEntry(g, standings)).filter(Boolean);
+  all.sort(compareBestThird);
+  const qualifying = all.slice(0, BEST_THIRD_SLOTS);
+  const qualifyingCodes = new Set(qualifying.map(t => t.code));
+  const allGroupsClosed = groups.every(isGroupComplete);
+  return { all, qualifying, qualifyingCodes, allGroupsClosed };
+}
+
+window.getBestThirdQualifiers = getBestThirdQualifiers;
+
+function getQualifiedSummaryData() {
+  const standings = buildOfficialGroupStandings();
+  const { qualifying, qualifyingCodes, allGroupsClosed } = getBestThirdQualifiers();
+  const closedGroups = [];
   groups.forEach(g => {
     if (!isGroupComplete(g)) return;
-    const table = computeGroupTable(g, true);
-    const rows = table.slice(0, 3).map((t, i) => {
-      const pos = posLabels[i] || (i + 1) + 'º';
-      return `<div class="qualified-team-row">
-        <span class="qualified-team-pos${posClasses[i] || ''}">${pos}</span>
+    const table = standings[g.id] || computeGroupTable(g, true);
+    if (!table.length) return;
+    closedGroups.push({
+      id: g.id,
+      rows: table.slice(0, 4)
+    });
+  });
+  return { closedGroups, qualifying, qualifyingCodes, allGroupsClosed };
+}
+
+function renderQualifiedSummary() {
+  const data = getQualifiedSummaryData();
+
+  const groupsEl = document.getElementById('qualifiedSummary');
+  if (groupsEl) {
+    const html = buildGroupsQualifiedSummaryHTML(data);
+    if (!html) {
+      groupsEl.classList.add('hidden');
+      groupsEl.innerHTML = '';
+    } else {
+      groupsEl.classList.remove('hidden');
+      groupsEl.innerHTML = html;
+    }
+  }
+
+  const koEl = document.getElementById('koQualifiedSummary');
+  if (koEl) {
+    const html = buildKoQualifiedFootHTML(data);
+    if (!html) {
+      koEl.classList.add('hidden');
+      koEl.innerHTML = '';
+    } else {
+      koEl.classList.remove('hidden');
+      koEl.innerHTML = html;
+    }
+  }
+}
+
+function buildGroupsQualifiedSummaryHTML(data) {
+  const { closedGroups, qualifying, allGroupsClosed } = data;
+  const cards = [];
+  const posLabels = ['1º', '2º', '3º', '4º'];
+  const posClasses = ['', '', ' qualified-team-pos--third', ' qualified-team-pos--fourth'];
+
+  closedGroups.forEach(g => {
+    const rows = g.rows.map((t, i) =>
+      `<div class="qualified-team-row">
+        <span class="qualified-team-pos${posClasses[i] || ''}">${posLabels[i]}</span>
         ${flagHTML(t.code, 18)}
         <span class="qualified-team-name">${t.name}</span>
-      </div>`;
-    }).join('');
+        <span class="qualified-team-meta">${t.p} pt</span>
+      </div>`
+    ).join('');
     cards.push(`<div class="qualified-group-card">
       <span class="qualified-group-id">Grupo ${g.id}</span>
       ${rows}
     </div>`);
   });
-  if (!cards.length) return '';
-  return `<p class="qualified-summary-title">✅ Clasificación de grupos cerrados (1º, 2º y 3º)</p>
-    <div class="qualified-grid">${cards.join('')}</div>
-    <p class="qualified-summary-hint">1º y 2º de cada grupo pasan directo. Los mejores terceros se conocen al terminar todos los grupos (27 jun).</p>`;
+
+  let thirdsBlock = '';
+  if (qualifying.length) {
+    const provHint = allGroupsClosed
+      ? 'Clasificación final: estos 8 mejores terceros completan los dieciseisavos.'
+      : 'Provisional: puede cambiar mientras sigan partidos en otros grupos.';
+    const rows = qualifying.map((t, i) => {
+      const prov = t.provisional ? '<span class="ko-qual-prov">prov.</span>' : '';
+      return `<div class="qualified-team-row">
+        <span class="qualified-team-pos qualified-team-pos--third-qual">${i + 1}.</span>
+        ${flagHTML(t.code, 18)}
+        <span class="qualified-team-name">${t.name}</span>
+        <span class="qualified-team-meta">Gr.${t.groupId} · ${t.p} pt${prov}</span>
+      </div>`;
+    }).join('');
+    thirdsBlock = `<div class="qualified-thirds-block">
+      <p class="qualified-summary-title qualified-summary-title--thirds">🥉 Mejores terceros que clasifican (${qualifying.length} de ${BEST_THIRD_SLOTS})</p>
+      <div class="qualified-thirds-list">${rows}</div>
+      <p class="qualified-summary-hint">De los 12 terceros, pasan los 8 mejores (puntos, diferencia de goles, goles a favor). ${provHint}</p>
+    </div>`;
+  }
+
+  if (!cards.length && !thirdsBlock) return '';
+
+  let main = '';
+  if (cards.length) {
+    main = `<p class="qualified-summary-title">✅ Grupos cerrados</p>
+      <div class="qualified-grid">${cards.join('')}</div>
+      <p class="qualified-summary-hint">1º y 2º pasan directo. De los 3º, clasifican los 8 mejores.</p>`;
+  }
+  return main + thirdsBlock;
+}
+
+function buildKoQualifiedFootHTML(data) {
+  const { closedGroups, qualifying, qualifyingCodes, allGroupsClosed } = data;
+  if (!closedGroups.length && !qualifying.length) return '';
+
+  const posLabels = ['1º', '2º', '3º', '4º'];
+  let groupsSection = '';
+
+  if (closedGroups.length) {
+    const cards = closedGroups.map(g => {
+      const items = g.rows.map((t, i) => {
+        const itemCls = ['ko-qual-list-item'];
+        if (i < 2) itemCls.push('ko-qual-list-item--passes');
+        if (i === 2 && qualifyingCodes.has(t.code)) itemCls.push('ko-qual-list-item--qualifies-third');
+        return `<li class="${itemCls.join(' ')}">
+          <span class="ko-qual-list-pos ko-qual-list-pos--${i + 1}">${posLabels[i]}</span>
+          ${flagHTML(t.code, 14)}
+          <span class="ko-qual-list-name">${t.name}</span>
+          <span class="ko-qual-list-pts">${t.p} pt</span>
+        </li>`;
+      }).join('');
+      return `<article class="ko-qual-group-card">
+        <div class="ko-qual-group-head">Grupo ${g.id}</div>
+        <ul class="ko-qual-list">${items}</ul>
+      </article>`;
+    }).join('');
+    groupsSection = `<div class="ko-qual-section">
+      <p class="ko-qual-section-title">Grupos cerrados</p>
+      <div class="ko-qual-groups-grid">${cards}</div>
+    </div>`;
+  }
+
+  let thirdsSection = '';
+  if (qualifying.length) {
+    const prov = allGroupsClosed ? '' : ' <span class="ko-qual-prov">(provisional)</span>';
+    const items = qualifying.map((t, i) =>
+      `<li class="ko-qual-list-item ko-qual-list-item--qualifies-third">
+        <span class="ko-qual-rank">${i + 1}.</span>
+        ${flagHTML(t.code, 14)}
+        <span class="ko-qual-list-name">${t.name}</span>
+        <span class="ko-qual-list-meta">Gr. ${t.groupId} · ${t.p} pt</span>
+      </li>`
+    ).join('');
+    thirdsSection = `<div class="ko-qual-section">
+      <p class="ko-qual-section-title">8 mejores 3º${prov}</p>
+      <ul class="ko-qual-list ko-qual-thirds-list">${items}</ul>
+    </div>`;
+  }
+
+  const note = allGroupsClosed ? '' : '<p class="ko-qual-panel-note">Provisional — puede cambiar.</p>';
+
+  return `<section class="ko-qual-panel" aria-label="Clasificación a dieciseisavos">
+    <h3 class="ko-qual-panel-title">📋 Clasificación</h3>
+    ${groupsSection}
+    ${thirdsSection}
+    ${note}
+  </section>`;
+}
+
+function buildQualifiedSummaryHTML() {
+  return buildGroupsQualifiedSummaryHTML(getQualifiedSummaryData());
 }
 
 function buildOfficialGroupStandings() {
@@ -2490,6 +2725,7 @@ function renderGroupStandings(group) {
   const hint = document.getElementById(`gs-hint-${group.id}`);
   if (!box) return;
   const table = computeGroupTable(group, true);
+  const qualifyingCodes = window._bestThirdQualifiers?.qualifyingCodes || new Set();
   if (hint) hint.textContent = groupStandingsHint(group);
   if (!table.some(t => t.g > 0)) {
     box.innerHTML = '<span class="text-xs text-gray-600">Sin resultados oficiales aún</span>';
@@ -2498,11 +2734,15 @@ function renderGroupStandings(group) {
   box.innerHTML = table.map((t, i) => {
     const leader = i === 0 ? ' group-standings-row--leader' : '';
     const qualified = isGroupComplete(group) && i < 2 ? ' group-standings-row--qualified' : '';
-    const pos = i === 0 ? '1º' : (i === 1 ? '2º' : (i + 1) + 'º');
-    const badge = qualified
-      ? `<span class="group-standings-badge">${i === 0 ? '1º' : '2º'} · pasa</span>`
-      : '';
-    return `<div class="group-standings-row${leader}${qualified}">
+    const thirdQual = i === 2 && qualifyingCodes.has(t.code) ? ' group-standings-row--third-qualifies' : '';
+    const pos = i === 0 ? '1º' : (i === 1 ? '2º' : (i === 2 ? '3º' : (i + 1) + 'º'));
+    let badge = '';
+    if (isGroupComplete(group) && i < 2) {
+      badge = `<span class="group-standings-badge">${pos} · pasa</span>`;
+    } else if (i === 2 && qualifyingCodes.has(t.code)) {
+      badge = '<span class="group-standings-badge group-standings-badge--third">3º · clasifica</span>';
+    }
+    return `<div class="group-standings-row${leader}${qualified}${thirdQual}">
       <span class="group-standings-pos">${pos}</span>
       ${flagHTML(t.code, 14)}
       <span class="truncate">${t.name}</span>
@@ -2512,6 +2752,7 @@ function renderGroupStandings(group) {
 }
 
 function refreshGroupStandingsAndKnockout() {
+  window._bestThirdQualifiers = getBestThirdQualifiers();
   groups.forEach(renderGroupStandings);
   renderQualifiedSummary();
   if (typeof syncKnockoutGroupSeeds === 'function') {
@@ -2815,10 +3056,12 @@ function exportResultsJson() {
 // INIT
 // ============================================================
 function bootApp() {
+  try { showAppReloadBannerIfNeeded(); } catch (e) { console.warn(e); }
   try { loadState(); } catch (e) { console.warn('loadState', e); picks = {}; }
   window._schedGroups = isGroupsOpen();
   window._schedExtras = isExtrasOpen();
   window._schedLeaderboard = isLeaderboardOpen();
+  window._schedKo = typeof isKnockoutAccessible === 'function' ? isKnockoutAccessible() : false;
 
   try { renderScheduleBanner(); } catch (e) { console.warn(e); }
   try { if (typeof renderKnockout === 'function') renderKnockout(); } catch (e) { console.warn(e); }
@@ -2852,7 +3095,7 @@ if (document.readyState === 'loading') {
   bootApp();
 }
 </script>
-<script src="knockout.js?v=68"></script>
+<script src="knockout.js?v=76"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
