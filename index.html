@@ -454,11 +454,8 @@ input,select,textarea{color:#fff;}
 .ko-color-key-item{flex-direction:row;justify-content:center;padding:.5rem;}
 .ko-extras-card,.extras-card{padding:1rem!important;}
 .ko-section-picker-grid--semis{grid-template-columns:repeat(3,minmax(0,1fr));max-height:14rem;}
-.ko-list-pair{display:flex;flex-direction:column;align-items:stretch;gap:.32rem;}
-.ko-list-pair .ko-vs{align-self:center;min-height:auto;padding:.12rem 0;}
-.ko-team-pick--away .ko-team-pick-main--away{justify-content:flex-start;}
-.ko-team-pick--away .ko-team-name{text-align:left;}
-.ko-team-pick--away .ko-team-pick-badges-row{justify-content:flex-start;}
+.ko-list-pair{gap:.32rem;}
+.ko-list-pair .ko-vs{font-size:.56rem;min-width:.85rem;padding:0 .05rem;}
 .ko-list-match .match-meta .ko-cross-badge{display:block;width:100%;margin:.2rem 0 0;text-align:left;}
 .ko-team-pick{padding:.52rem .45rem;min-height:48px;}
 .ko-team-pick .ko-team-name{font-size:.78rem;}
@@ -888,6 +885,8 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
   .ko-round-matches-grid{grid-template-columns:1fr;}
   .ko-round-col{border-right:none;border-bottom:1px solid #1f2937;}
   .ko-round-col:last-child{border-bottom:none;}
+  .ko-list-pair{gap:.38rem;}
+  .ko-list-pair .ko-vs{font-size:.58rem;}
   #panelExtras .extras-card{padding:1.2rem 1.1rem!important;}
   .qualified-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;}
   .ko-list-match{padding-left:.75rem!important;padding-right:.75rem!important;}
@@ -1408,7 +1407,7 @@ const groups = [
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 /** Sincronizar con knockout.js?v= y manifest start_url al desplegar */
-const APP_BUILD = '83';
+const APP_BUILD = '84';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
