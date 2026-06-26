@@ -36,11 +36,23 @@
     r2: '2026-07-19T07:00:00+02:00'
   };
 
+  // Terceros posibles por partido R32 (Anexo FIFA — hueco 3P)
+  const KO_3P_MATCH_ELIGIBLE = {
+    0: ['C', 'E', 'F', 'H', 'I'],
+    3: ['A', 'B', 'C', 'D', 'F'],
+    4: ['B', 'E', 'F', 'I', 'J'],
+    5: ['E', 'F', 'G', 'I', 'J'],
+    7: ['C', 'D', 'F', 'G', 'H'],
+    8: ['E', 'H', 'I', 'J', 'K'],
+    9: ['D', 'E', 'I', 'J', 'L'],
+    11: ['A', 'E', 'H', 'I', 'J']
+  };
+
   const KO_R32_SEEDS = [
-    ['mx', 'cz'], ['kr', 'qa'], ['br', 'ch'], ['de', 'cw'],
-    ['us', 'au'], ['ca', 'ma'], ['es', 'uy'], ['fr', 'ar'],
-    ['gb-eng', 'hr'], ['pt', 'co'], ['nl', 'jp'], ['be', 'eg'],
-    ['at', 'jo'], ['dz', 'uz'], ['sn', 'no'], ['gh', 'pa']
+    ['mx', 'se'], ['za', 'ca'], ['br', 'jp'], ['de', 'ba'],
+    ['us', 'dz'], ['ch', 'be'], ['es', 'at'], ['fr', 'py'],
+    ['gb-eng', 'cv'], ['co', 'tbd'], ['pt', 'gh'], ['eg', 'kr'],
+    ['ar', 'uy'], ['nl', 'ma'], ['au', 'ir'], ['ci', 'no']
   ];
 
   // Plantilla de cruces R32 (bracket FIFA) — 3P = mejor tercero (se define al cerrar grupos)
@@ -197,8 +209,49 @@
     });
   }
 
-  function resolveKoR32Slot(slot, standings, fallback) {
-    if (!slot || slot === '3P') return 'tbd';
+  function compareKoThirdEntry(a, b) {
+    return b.p - a.p || b.gd - a.gd || b.gf - a.gf || (a.name || '').localeCompare(b.name || '', 'es');
+  }
+
+  function collectKoBestThirdPlaces(standings) {
+    const thirds = [];
+    Object.keys(standings).forEach(groupId => {
+      const table = standings[groupId];
+      if (!table || table.length < 3) return;
+      const row = table[2];
+      if (!row || !row.g) return;
+      thirds.push({
+        groupId,
+        code: row.code,
+        name: row.name,
+        p: row.p,
+        gd: row.gd,
+        gf: row.gf
+      });
+    });
+    thirds.sort(compareKoThirdEntry);
+    return thirds.slice(0, 8);
+  }
+
+  function assignKoThirdPlaceCodes(standings) {
+    const qualifying = collectKoBestThirdPlaces(standings);
+    const used = new Set();
+    const byMatch = {};
+    Object.keys(KO_3P_MATCH_ELIGIBLE).forEach(idxStr => {
+      const idx = Number(idxStr);
+      const eligible = KO_3P_MATCH_ELIGIBLE[idx];
+      const pick = qualifying.find(t => eligible.includes(t.groupId) && !used.has(t.code));
+      if (pick) {
+        used.add(pick.code);
+        byMatch[idx] = pick.code;
+      }
+    });
+    return byMatch;
+  }
+
+  function resolveKoR32Slot(slot, standings, thirdByMatch, matchIdx, fallback) {
+    if (slot === '3P') return (thirdByMatch && thirdByMatch[matchIdx]) || fallback || 'tbd';
+    if (!slot) return fallback || 'tbd';
     const m = String(slot).match(/^([12])([A-L])$/);
     if (!m) return fallback || 'tbd';
     const pos = m[1] === '1' ? 0 : 1;
@@ -210,10 +263,11 @@
 
   function syncKnockoutGroupSeeds(standings) {
     if (!standings || typeof standings !== 'object') return;
+    const thirdByMatch = assignKoThirdPlaceCodes(standings);
     KO_R32_SLOT_TEMPLATES.forEach((tpl, i) => {
       const prev = KO_R32_SEEDS[i] || ['tbd', 'tbd'];
-      const home = resolveKoR32Slot(tpl.home, standings, prev[0]);
-      const away = resolveKoR32Slot(tpl.away, standings, prev[1]);
+      const home = resolveKoR32Slot(tpl.home, standings, thirdByMatch, i, prev[0]);
+      const away = resolveKoR32Slot(tpl.away, standings, thirdByMatch, i, prev[1]);
       KO_R32_SEEDS[i][0] = home;
       KO_R32_SEEDS[i][1] = away;
       const match = KO_R32_MATCHES[i];
@@ -2377,6 +2431,8 @@
 
   window.isKnockoutAccessible = isKnockoutAccessible;
   window.isKnockoutPublicOpen = isKnockoutPublicOpen;
+  window.KO_EXTRAS_LOCK_AT = KO_EXTRAS_LOCK_AT;
+  window.isKoExtrasLocked = isKoExtrasLocked;
   window.isKnockoutPreviewUnlocked = isKnockoutPreviewUnlocked;
   window.isKnockoutComplete = isKnockoutComplete;
   window.renderKnockout = renderKnockout;

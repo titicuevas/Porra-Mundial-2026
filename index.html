@@ -543,6 +543,10 @@ input,select,textarea{color:#fff;}
 .ko-extra-readonly-flag{display:inline-flex;align-items:center;}
 .ko-matches-section{margin-top:.85rem;scroll-margin-top:4.75rem;}
 #koBracketSection,#koQualifiedSummary{scroll-margin-top:4.75rem;}
+.ko-countdown-box{margin:.35rem 0 .55rem;padding:.4rem .5rem;border-radius:9px;background:rgba(30,58,95,.32);border:1px solid rgba(59,130,246,.32);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.3rem .45rem;}
+.ko-countdown-label{font-size:.6rem;color:#93c5fd;font-weight:600;line-height:1.25;flex:1;min-width:8rem;}
+.ko-countdown-digits{font-size:1rem;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;letter-spacing:.05em;}
+.ko-countdown-digits.urgent{color:#fca5a5;animation:pulse-glow 1s infinite;}
 .ko-qual-panel-wrap{margin:0 0 .65rem;}
 .ko-qual-panel{padding:.45rem .5rem .4rem;border-radius:10px;background:rgba(15,23,42,.88);border:1px solid #334155;box-shadow:none;}
 .ko-qual-panel-title{margin:0 0 .35rem;font-size:.7rem;font-weight:800;color:#e5e7eb;letter-spacing:.01em;}
@@ -550,6 +554,10 @@ input,select,textarea{color:#fff;}
 .ko-qual-section-title{margin:0 0 .28rem;font-size:.54rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;}
 .ko-qual-groups-grid{display:grid;grid-template-columns:1fr;gap:.3rem;}
 .ko-qual-group-card{border-radius:8px;background:rgba(17,24,39,.65);border:1px solid #374151;overflow:hidden;}
+.ko-qual-group-card--prov{border-color:rgba(180,83,9,.35);}
+.ko-qual-group-card--prov .ko-qual-group-head{background:linear-gradient(90deg,rgba(120,53,15,.45),rgba(30,58,95,.25));color:#fcd34d;}
+.qualified-group-card--prov{border-color:rgba(180,83,9,.35);}
+.qualified-group-id--prov{color:#fbbf24;}
 .ko-qual-group-head{padding:.2rem .42rem;background:rgba(30,58,95,.45);font-size:.54rem;font-weight:900;color:#93c5fd;letter-spacing:.08em;text-transform:uppercase;line-height:1.2;}
 .ko-qual-list{list-style:none;margin:0;padding:.05rem 0;}
 .ko-qual-list-item{display:flex;align-items:center;gap:.28rem;padding:.18rem .4rem;font-size:.6rem;line-height:1.15;color:#e5e7eb;border-bottom:1px solid rgba(31,41,55,.45);}
@@ -1129,6 +1137,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <span id="koPreviewBadge" class="ko-preview-badge hidden">Modo prueba</span>
       </div>
       <p id="koSubtitle" class="text-xs text-gray-500 mb-3">Especiales hasta el 28 jun, 7:00 · dieciseisavos abajo · cada ronda en su fecha.</p>
+      <div id="koCountdownBox" class="ko-countdown-box hidden" aria-live="polite"></div>
 
       <div id="koReadFirst" class="ko-read-first" aria-label="Instrucciones eliminatorias">
         <p class="ko-read-first-title">📖 Léelo todo antes de empezar</p>
@@ -1399,7 +1408,7 @@ const groups = [
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 /** Sincronizar con knockout.js?v= y manifest start_url al desplegar */
-const APP_BUILD = '76';
+const APP_BUILD = '80';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
@@ -1426,7 +1435,8 @@ function showAppReloadBannerIfNeeded() {
 const SCHEDULE = {
   groupsClose: '2026-06-11T21:00:00+02:00', // cierre pronósticos fase de grupos
   leaderboardOpen: '2026-06-27T23:59:00+02:00', // fin partidos fase de grupos
-  extrasOpen:  '2026-06-01T00:00:00+02:00', // eliminatorias abiertas — PDF solo cuando todo esté completo
+  extrasOpen:  '2026-06-01T00:00:00+02:00',
+  koLockAt: '2026-06-28T07:00:00+02:00' // cierre especiales + apertura quiniela dieciseisavos
 };
 
 function isGroupsOpen() { return Date.now() < new Date(SCHEDULE.groupsClose).getTime(); }
@@ -1670,6 +1680,50 @@ function initExportDock() {
   }
 }
 
+function getCountdownToKoLock() {
+  const at = (typeof window.KO_EXTRAS_LOCK_AT === 'string' && window.KO_EXTRAS_LOCK_AT) || SCHEDULE.koLockAt;
+  const ms = new Date(at).getTime() - Date.now();
+  if (ms <= 0) return null;
+  const total = Math.floor(ms / 1000);
+  return {
+    h: Math.floor(total / 3600),
+    m: Math.floor((total % 3600) / 60),
+    s: total % 60,
+    ms
+  };
+}
+
+function renderKoCountdown() {
+  const box = document.getElementById('koCountdownBox');
+  if (!box) return;
+  const c = getCountdownToKoLock();
+  if (!c) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+  const urgent = c.ms < 3600000 ? ' urgent' : '';
+  const accessible = typeof isKnockoutAccessible === 'function' && isKnockoutAccessible();
+  const label = accessible
+    ? '⏳ Cierran especiales y abre la quiniela en:'
+    : '⏳ Abren eliminatorias en:';
+  box.classList.remove('hidden');
+  box.innerHTML = `<span class="ko-countdown-label">${label} <strong>28 jun, 7:00</strong></span>` +
+    `<span id="koCountdownTimer" class="ko-countdown-digits${urgent}">${formatCountdown(c)}</span>`;
+}
+
+function updateKoCountdownDisplay() {
+  if (getCountdownToKoLock()) {
+    const el = document.getElementById('koCountdownTimer');
+    const c = getCountdownToKoLock();
+    if (!el || !c) { renderKoCountdown(); return; }
+    el.textContent = formatCountdown(c);
+    el.classList.toggle('urgent', c.ms < 3600000);
+    return;
+  }
+  renderKoCountdown();
+}
+
 function getCountdownToGroupsClose() {
   const ms = new Date(SCHEDULE.groupsClose).getTime() - Date.now();
   if (ms <= 0) return null;
@@ -1721,15 +1775,20 @@ function updateCountdownDisplay() {
 function tickSchedule() {
   const g = isGroupsOpen(), e = isExtrasOpen(), lb = isLeaderboardOpen();
   const ko = typeof isKnockoutAccessible === 'function' ? isKnockoutAccessible() : e;
+  const koLockDone = !!window._schedKoLock;
+  const koLockNow = !getCountdownToKoLock();
   updateCountdownDisplay();
-  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard || ko !== window._schedKo) {
+  updateKoCountdownDisplay();
+  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard || ko !== window._schedKo || koLockNow !== koLockDone) {
     window._schedGroups = g;
     window._schedExtras = e;
     window._schedLeaderboard = lb;
     window._schedKo = ko;
+    window._schedKoLock = koLockNow;
     renderScheduleBanner();
     renderGroups();
     if (typeof renderKnockout === 'function') renderKnockout();
+    renderKoCountdown();
     updateProgress();
     updateExportButton();
     updatePhaseTabs();
@@ -1792,6 +1851,7 @@ function switchPhaseTab(tab) {
   if (tab === 'extras' && typeof renderKnockout === 'function') {
     renderKnockout();
     renderQualifiedSummary();
+    renderKoCountdown();
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2551,17 +2611,17 @@ window.getBestThirdQualifiers = getBestThirdQualifiers;
 function getQualifiedSummaryData() {
   const standings = buildOfficialGroupStandings();
   const { qualifying, qualifyingCodes, allGroupsClosed } = getBestThirdQualifiers();
-  const closedGroups = [];
+  const groupCards = [];
   groups.forEach(g => {
     if (!isGroupComplete(g)) return;
     const table = standings[g.id] || computeGroupTable(g, true);
-    if (!table.length) return;
-    closedGroups.push({
+    groupCards.push({
       id: g.id,
       rows: table.slice(0, 4)
     });
   });
-  return { closedGroups, qualifying, qualifyingCodes, allGroupsClosed };
+  groupCards.sort((a, b) => a.id.localeCompare(b.id));
+  return { groupCards, qualifying, qualifyingCodes, allGroupsClosed };
 }
 
 function renderQualifiedSummary() {
@@ -2593,12 +2653,12 @@ function renderQualifiedSummary() {
 }
 
 function buildGroupsQualifiedSummaryHTML(data) {
-  const { closedGroups, qualifying, allGroupsClosed } = data;
+  const { groupCards, qualifying, allGroupsClosed } = data;
   const cards = [];
   const posLabels = ['1º', '2º', '3º', '4º'];
   const posClasses = ['', '', ' qualified-team-pos--third', ' qualified-team-pos--fourth'];
 
-  closedGroups.forEach(g => {
+  groupCards.forEach(g => {
     const rows = g.rows.map((t, i) =>
       `<div class="qualified-team-row">
         <span class="qualified-team-pos${posClasses[i] || ''}">${posLabels[i]}</span>
@@ -2638,7 +2698,7 @@ function buildGroupsQualifiedSummaryHTML(data) {
 
   let main = '';
   if (cards.length) {
-    main = `<p class="qualified-summary-title">✅ Grupos cerrados</p>
+    main = `<p class="qualified-summary-title">✅ Grupos cerrados (${cards.length})</p>
       <div class="qualified-grid">${cards.join('')}</div>
       <p class="qualified-summary-hint">1º y 2º pasan directo. De los 3º, clasifican los 8 mejores.</p>`;
   }
@@ -2646,14 +2706,14 @@ function buildGroupsQualifiedSummaryHTML(data) {
 }
 
 function buildKoQualifiedFootHTML(data) {
-  const { closedGroups, qualifying, qualifyingCodes, allGroupsClosed } = data;
-  if (!closedGroups.length && !qualifying.length) return '';
+  const { groupCards, qualifying, qualifyingCodes, allGroupsClosed } = data;
+  if (!groupCards.length && !qualifying.length) return '';
 
   const posLabels = ['1º', '2º', '3º', '4º'];
   let groupsSection = '';
 
-  if (closedGroups.length) {
-    const cards = closedGroups.map(g => {
+  if (groupCards.length) {
+    const cards = groupCards.map(g => {
       const items = g.rows.map((t, i) => {
         const itemCls = ['ko-qual-list-item'];
         if (i < 2) itemCls.push('ko-qual-list-item--passes');
@@ -2671,7 +2731,7 @@ function buildKoQualifiedFootHTML(data) {
       </article>`;
     }).join('');
     groupsSection = `<div class="ko-qual-section">
-      <p class="ko-qual-section-title">Grupos cerrados</p>
+      <p class="ko-qual-section-title">Grupos cerrados (${groupCards.length})</p>
       <div class="ko-qual-groups-grid">${cards}</div>
     </div>`;
   }
@@ -3062,9 +3122,11 @@ function bootApp() {
   window._schedExtras = isExtrasOpen();
   window._schedLeaderboard = isLeaderboardOpen();
   window._schedKo = typeof isKnockoutAccessible === 'function' ? isKnockoutAccessible() : false;
+  window._schedKoLock = !getCountdownToKoLock();
 
   try { renderScheduleBanner(); } catch (e) { console.warn(e); }
   try { if (typeof renderKnockout === 'function') renderKnockout(); } catch (e) { console.warn(e); }
+  try { renderKoCountdown(); } catch (e) { console.warn(e); }
   try { renderGroups(); } catch (e) {
     console.error(e);
     showBootError(e, false);
@@ -3095,7 +3157,7 @@ if (document.readyState === 'loading') {
   bootApp();
 }
 </script>
-<script src="knockout.js?v=76"></script>
+<script src="knockout.js?v=80"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
