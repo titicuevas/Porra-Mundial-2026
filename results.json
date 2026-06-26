@@ -47,12 +47,18 @@
   "I2": { "home": 1, "away": 4 },
   "I3": { "home": 3, "away": 2 },
   "I4": { "home": 3, "away": 0 },
+  "I5": { "home": 5, "away": 0 },
+  "I6": { "home": 1, "away": 4 },
   "J1": { "home": 3, "away": 0 },
   "J2": { "home": 3, "away": 1 },
   "J3": { "home": 2, "away": 0 },
   "J4": { "home": 2, "away": 1 },
   "K1": { "home": 1, "away": 1 },
   "K2": { "home": 1, "away": 3 },
+  "K3": { "home": 5, "away": 0 },
+  "K4": { "home": 1, "away": 0 },
   "L1": { "home": 1, "away": 0 },
-  "L2": { "home": 4, "away": 2 }
+  "L2": { "home": 4, "away": 2 },
+  "L3": { "home": 0, "away": 0 },
+  "L4": { "home": 1, "away": 0 }
 }
