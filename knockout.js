@@ -4,8 +4,10 @@
  */
 (function () {
   const KO_PASSWORD = 'Españita';
+  /** Prueba local: true = eliminatorias + dieciseisavos abiertos. Volver a false antes del 28 jun 10:00. */
+  const KO_TEST_MODE = false;
   const KO_EXTRAS_TOTAL = 7;
-  const KO_EXTRAS_LOCK_AT = '2026-06-28T07:00:00+02:00'; // cierre especiales = apertura quiniela dieciseisavos
+  const KO_EXTRAS_LOCK_AT = '2026-06-28T10:00:00+02:00'; // cierre especiales = apertura quiniela dieciseisavos
   const KO_ROUND_ORDER = ['r32', 'r16', 'r8', 'r4', 'r2'];
 
   const PARTICIPANTS = [
@@ -29,7 +31,7 @@
   ];
 
   const KO_ROUND_OPENS = {
-    r32: '2026-06-28T07:00:00+02:00', // dieciseisavos — 7:00 peninsular
+    r32: '2026-06-28T10:00:00+02:00', // dieciseisavos — 10:00 peninsular
     r16: '2026-07-04T07:00:00+02:00',
     r8: '2026-07-09T07:00:00+02:00',
     r4: '2026-07-14T07:00:00+02:00',
@@ -389,6 +391,7 @@
   }
 
   function isKnockoutPublicOpen() {
+    if (KO_TEST_MODE) return true;
     return Date.now() >= new Date(KO_ROUND_OPENS.r32).getTime();
   }
 
@@ -398,6 +401,7 @@
 
   function isKoRoundOpen(key) {
     if (!isKnockoutAccessible()) return false;
+    if (KO_TEST_MODE && key === 'r32') return true;
     return Date.now() >= new Date(KO_ROUND_OPENS[key]).getTime();
   }
 
@@ -460,6 +464,7 @@
   }
 
   function isKoExtrasLocked() {
+    if (KO_TEST_MODE) return false;
     return Date.now() >= new Date(KO_EXTRAS_LOCK_AT).getTime();
   }
 
@@ -1192,12 +1197,15 @@
     bindKoMatchClicks();
     if (!isKnockoutAccessible()) {
       el.innerHTML = `<div class="extras-locked">
-        <p class="text-gray-400 text-sm">🔒 Las eliminatorias abren el <strong>28 de junio a las 7:00</strong> (hora peninsular).</p>
+        <p class="text-gray-400 text-sm">🔒 Las eliminatorias abren el <strong>28 de junio a las 10:00</strong> (hora peninsular).</p>
         <p class="text-xs text-gray-500 mt-2">Si tienes código de acceso anticipado, pulsa la pestaña 🏅 Eliminatorias.</p>
       </div>`;
       return;
     }
     const parts = [];
+    if (KO_TEST_MODE) {
+      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>🧪 <strong>Modo prueba</strong> — dieciseisavos y especiales abiertos. Desactiva <code>KO_TEST_MODE</code> en knockout.js antes del 28 jun, 10:00.</p></div>');
+    }
     const lockedRounds = [];
     KO_ROUND_ORDER.forEach(key => {
       if (key === 'r32') return;
@@ -1206,7 +1214,7 @@
 
     if (!getActiveKoUser()) {
       parts.push(koRoundCardHTML(KO_ROUNDS.r32, { preview: true }));
-      parts.push('<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba para poder marcar ganadores cuando abra la ronda (28 jun, 7:00).</p>');
+      parts.push('<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba para poder marcar ganadores cuando abra la ronda (28 jun, 10:00).</p>');
       if (lockedRounds.length) parts.push(koUpcomingRoundsHTML(lockedRounds));
       el.innerHTML = parts.join('');
       updateKoRoundCounts();
@@ -1863,11 +1871,11 @@
     const subtitle = document.getElementById('koSubtitle');
     if (subtitle) {
       if (!isKnockoutAccessible()) {
-        subtitle.textContent = 'Apertura oficial el 28 jun, 7:00 (hora peninsular).';
+        subtitle.textContent = 'Apertura oficial el 28 jun, 10:00 (hora peninsular).';
       } else if (!isKoRoundOpen('r32')) {
-        subtitle.textContent = 'Completa los especiales ahora · la quiniela de partidos se activa el 28 jun, 7:00.';
+        subtitle.textContent = 'Completa los especiales ahora · la quiniela de partidos se activa el 28 jun, 10:00.';
       } else {
-        subtitle.textContent = 'Especiales hasta el 28 jun, 7:00 · dieciseisavos abajo · cada ronda en su fecha.';
+        subtitle.textContent = 'Especiales hasta el 28 jun, 10:00 · dieciseisavos abajo · cada ronda en su fecha.';
       }
     }
     refreshKnockoutUI();
@@ -2429,6 +2437,7 @@
     showKoPasswordModal();
   }
 
+  window.KO_TEST_MODE = KO_TEST_MODE;
   window.isKnockoutAccessible = isKnockoutAccessible;
   window.isKnockoutPublicOpen = isKnockoutPublicOpen;
   window.KO_EXTRAS_LOCK_AT = KO_EXTRAS_LOCK_AT;

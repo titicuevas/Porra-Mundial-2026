@@ -1136,7 +1136,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <h2 class="text-lg font-bold text-white mb-0">🏅 Fase final — Eliminatorias</h2>
         <span id="koPreviewBadge" class="ko-preview-badge hidden">Modo prueba</span>
       </div>
-      <p id="koSubtitle" class="text-xs text-gray-500 mb-3">Especiales hasta el 28 jun, 7:00 · dieciseisavos abajo · cada ronda en su fecha.</p>
+      <p id="koSubtitle" class="text-xs text-gray-500 mb-3">Especiales hasta el 28 jun, 10:00 · dieciseisavos abajo · cada ronda en su fecha.</p>
       <div id="koCountdownBox" class="ko-countdown-box hidden" aria-live="polite"></div>
 
       <div id="koReadFirst" class="ko-read-first" aria-label="Instrucciones eliminatorias">
@@ -1181,7 +1181,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 
       <div class="ko-matches-section" id="koBracketSection">
         <h3 class="text-sm font-bold text-white mb-1">⚽ Quiniela — dieciseisavos (16 cruces)</h3>
-        <p class="text-xs text-gray-500 mb-3">Los <strong>16 partidos</strong> en orden cronológico. <strong>Marcar ganadores desde el 28 jun, 7:00</strong> (antes solo vista previa).</p>
+        <p class="text-xs text-gray-500 mb-3">Los <strong>16 partidos</strong> en orden cronológico. <strong>Marcar ganadores desde el 28 jun, 10:00</strong> (antes solo vista previa).</p>
         <div id="koBracket"></div>
       </div>
 
@@ -1215,7 +1215,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
   <div class="ko-modal-box">
     <div class="ko-modal-mascot" aria-hidden="true">🏆</div>
     <h3 id="koModalTitle">🔒 Eliminatorias</h3>
-    <p>Introduce el código de acceso para entrar antes de la apertura oficial (28 jun, 7:00).</p>
+    <p>Introduce el código de acceso para entrar antes de la apertura oficial (28 jun, 10:00).</p>
     <input type="password" id="koPasswordInput" class="ko-modal-input" placeholder="Código de acceso" autocomplete="off"
       onkeydown="if(event.key==='Enter')submitKoPassword()"/>
     <p id="koPasswordError" class="ko-modal-error"></p>
@@ -1408,7 +1408,7 @@ const groups = [
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 /** Sincronizar con knockout.js?v= y manifest start_url al desplegar */
-const APP_BUILD = '80';
+const APP_BUILD = '83';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
@@ -1436,7 +1436,7 @@ const SCHEDULE = {
   groupsClose: '2026-06-11T21:00:00+02:00', // cierre pronósticos fase de grupos
   leaderboardOpen: '2026-06-27T23:59:00+02:00', // fin partidos fase de grupos
   extrasOpen:  '2026-06-01T00:00:00+02:00',
-  koLockAt: '2026-06-28T07:00:00+02:00' // cierre especiales + apertura quiniela dieciseisavos
+  koLockAt: '2026-06-28T10:00:00+02:00' // cierre especiales + apertura quiniela dieciseisavos
 };
 
 function isGroupsOpen() { return Date.now() < new Date(SCHEDULE.groupsClose).getTime(); }
@@ -1708,7 +1708,7 @@ function renderKoCountdown() {
     ? '⏳ Cierran especiales y abre la quiniela en:'
     : '⏳ Abren eliminatorias en:';
   box.classList.remove('hidden');
-  box.innerHTML = `<span class="ko-countdown-label">${label} <strong>28 jun, 7:00</strong></span>` +
+  box.innerHTML = `<span class="ko-countdown-label">${label} <strong>28 jun, 10:00</strong></span>` +
     `<span id="koCountdownTimer" class="ko-countdown-digits${urgent}">${formatCountdown(c)}</span>`;
 }
 
@@ -1757,7 +1757,7 @@ function renderScheduleBanner() {
   } else if (!isExtrasOpen()) {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Fase de grupos cerrada</strong> desde el 11 jun, 21:00. Ya no se pueden cambiar los pronósticos de grupos.</div>';
   } else if (typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
-    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 7:00</strong> (hora peninsular)</div>';
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular)</div>';
   } else {
     el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Fase final abierta</strong> — especiales, cruces de dieciseisavos y quiniela por rondas (PDF al completar cada fase)</div>';
   }
@@ -1829,7 +1829,7 @@ function openDefaultPhaseTab() {
 
 function switchPhaseTab(tab) {
   if (tab === 'extras' && typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
-    showPhaseLockMessage('Las eliminatorias', 'Apertura oficial el <strong>28 de junio a las 7:00</strong> (hora peninsular).');
+    showPhaseLockMessage('Las eliminatorias', 'Apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular).');
     if (typeof requestKnockoutAccess === 'function') requestKnockoutAccess();
     return;
   }
@@ -3157,7 +3157,7 @@ if (document.readyState === 'loading') {
   bootApp();
 }
 </script>
-<script src="knockout.js?v=80"></script>
+<script src="knockout.js?v=83"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
