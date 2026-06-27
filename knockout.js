@@ -177,20 +177,23 @@
   KO_ROUND_ORDER.forEach(k => KO_ROUNDS[k].matches.forEach(m => koMatchMap.set(m.id, m)));
 
   const KO_R32_CODES = new Set();
-  const KO_R32_CORNER_1 = new Set(); // superior izquierda
-  const KO_R32_CORNER_2 = new Set(); // superior derecha
-  const KO_R32_CORNER_3 = new Set(); // inferior izquierda
-  const KO_R32_CORNER_4 = new Set(); // inferior derecha
-  KO_R32_SEEDS.forEach((pair, i) => {
-    let cornerSet = KO_R32_CORNER_1;
-    if (i >= 4 && i < 8) cornerSet = KO_R32_CORNER_2;
-    else if (i >= 8 && i < 12) cornerSet = KO_R32_CORNER_3;
-    else if (i >= 12) cornerSet = KO_R32_CORNER_4;
-    pair.forEach(code => {
-      KO_R32_CODES.add(code);
-      cornerSet.add(code);
-    });
-  });
+  const KO_R32_CORNER_1 = new Set(); // G1 — superior izquierda
+  const KO_R32_CORNER_2 = new Set(); // G2 — superior derecha
+  const KO_R32_CORNER_3 = new Set(); // G3 — inferior izquierda
+  const KO_R32_CORNER_4 = new Set(); // G4 — inferior derecha
+  /** Índices KO_R32_SEEDS por esquina (árbol FIFA: octavos P89–P96). */
+  const KO_R32_CORNER_MATCH_IDX = {
+    G1: [1, 3, 13, 7],  // P73, P74, P75, P77
+    G2: [2, 15, 0, 8],  // P76, P78, P79, P80
+    G3: [4, 11, 10, 6], // P81, P82, P83, P84
+    G4: [5, 12, 9, 14]  // P85, P86, P87, P88
+  };
+  const KO_R32_CORNER_SET_BY_KEY = {
+    G1: KO_R32_CORNER_1,
+    G2: KO_R32_CORNER_2,
+    G3: KO_R32_CORNER_3,
+    G4: KO_R32_CORNER_4
+  };
 
   function rebuildKoR32CornerSets() {
     KO_R32_CODES.clear();
@@ -198,18 +201,19 @@
     KO_R32_CORNER_2.clear();
     KO_R32_CORNER_3.clear();
     KO_R32_CORNER_4.clear();
-    KO_R32_SEEDS.forEach((pair, i) => {
-      let cornerSet = KO_R32_CORNER_1;
-      if (i >= 4 && i < 8) cornerSet = KO_R32_CORNER_2;
-      else if (i >= 8 && i < 12) cornerSet = KO_R32_CORNER_3;
-      else if (i >= 12) cornerSet = KO_R32_CORNER_4;
-      pair.forEach(code => {
-        if (!code || code === 'tbd') return;
-        KO_R32_CODES.add(code);
-        cornerSet.add(code);
+    Object.keys(KO_R32_CORNER_MATCH_IDX).forEach(corner => {
+      const cornerSet = KO_R32_CORNER_SET_BY_KEY[corner];
+      KO_R32_CORNER_MATCH_IDX[corner].forEach(i => {
+        (KO_R32_SEEDS[i] || []).forEach(code => {
+          if (!code || code === 'tbd') return;
+          KO_R32_CODES.add(code);
+          cornerSet.add(code);
+        });
       });
     });
   }
+
+  rebuildKoR32CornerSets();
 
   function compareKoThirdEntry(a, b) {
     return b.p - a.p || b.gd - a.gd || b.gf - a.gf || (a.name || '').localeCompare(b.name || '', 'es');
@@ -235,18 +239,32 @@
     return thirds.slice(0, 8);
   }
 
+  function koWinnerGroupFor3PSlot(matchIdx) {
+    const tpl = KO_R32_SLOT_TEMPLATES[matchIdx];
+    if (!tpl || !tpl.home) return null;
+    const m = String(tpl.home).match(/^1([A-L])$/);
+    return m ? m[1] : null;
+  }
+
+  /** Asignación Anexo C FIFA: según qué 8 grupos aportan tercero (no greedy por ranking). */
   function assignKoThirdPlaceCodes(standings) {
     const qualifying = collectKoBestThirdPlaces(standings);
-    const used = new Set();
+    if (qualifying.length < 8) return {};
+    const annex = typeof window !== 'undefined' && window.KO_ANNEX_C;
+    if (!annex || !annex.lookup) return {};
+    const combo = qualifying.map(t => t.groupId).sort().join('');
+    const byWinner = annex.lookup.get(combo);
+    if (!byWinner) return {};
     const byMatch = {};
     Object.keys(KO_3P_MATCH_ELIGIBLE).forEach(idxStr => {
       const idx = Number(idxStr);
-      const eligible = KO_3P_MATCH_ELIGIBLE[idx];
-      const pick = qualifying.find(t => eligible.includes(t.groupId) && !used.has(t.code));
-      if (pick) {
-        used.add(pick.code);
-        byMatch[idx] = pick.code;
-      }
+      const winnerGroup = koWinnerGroupFor3PSlot(idx);
+      if (!winnerGroup) return;
+      const thirdGroup = byWinner[winnerGroup];
+      if (!thirdGroup) return;
+      const table = standings[thirdGroup];
+      const code = table && table[2] && table[2].code;
+      if (code) byMatch[idx] = code;
     });
     return byMatch;
   }
@@ -740,17 +758,15 @@
   function getKoR32TeamsByCorner(corner) {
     const seen = new Set();
     const teams = [];
-    const map = { G1: [0, 4], G2: [4, 8], G3: [8, 12], G4: [12, 16] };
-    const range = map[corner];
-    if (!range) return teams;
-    const [start, end] = range;
-    for (let i = start; i < end; i++) {
-      KO_R32_SEEDS[i].forEach(code => {
-        if (seen.has(code)) return;
+    const indices = KO_R32_CORNER_MATCH_IDX[corner];
+    if (!indices) return teams;
+    indices.forEach(i => {
+      (KO_R32_SEEDS[i] || []).forEach(code => {
+        if (!code || code === 'tbd' || seen.has(code)) return;
         seen.add(code);
         teams.push({ code, name: teamNameKo(code) });
       });
-    }
+    });
     return teams.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   }
 
