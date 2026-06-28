@@ -263,6 +263,8 @@ input,select,textarea{color:#fff;}
 .leaderboard-table th,.leaderboard-table td{padding:.55rem .5rem;text-align:left;border-bottom:1px solid #1f2937;}
 .leaderboard-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;font-weight:700;}
 .leaderboard-table tr.leaderboard-me td{background:rgba(37,99,235,.12);}
+.leaderboard-table tbody tr:nth-child(even) td{background:rgba(59,130,246,.07);}
+.leaderboard-table tbody tr.leaderboard-me:nth-child(even) td{background:rgba(37,99,235,.18);}
 .leaderboard-rank{width:2rem;color:#9ca3af;font-weight:700;}
 .leaderboard-points{font-weight:800;color:#facc15;text-align:right;}
 .my-score-card{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:.85rem 1rem;margin:1rem 0;}
@@ -921,7 +923,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
     </div>
     <div class="header-actions">
       <div class="header-stat">
-        <p class="header-stat-label">Grupos</p>
+        <p class="header-stat-label" id="headerStatGroupsLabel">Grupos</p>
         <p class="header-stat-value"><span id="totalSelected" class="text-yellow-400">0</span><span class="text-gray-500">/<span id="totalMax">72</span></span></p>
       </div>
       <div id="scoreHeader" class="header-stat" style="display:none">
@@ -933,7 +935,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
     </div>
   </div>
   <div class="mobile-stats-bar max-w-6xl mx-auto">
-    <span class="stat-pill">Grupos <span id="totalSelectedMobile">0</span>/<span id="totalMaxMobile">72</span></span>
+    <span class="stat-pill"><span id="headerMobileGroupsLabel">Grupos</span> <span id="totalSelectedMobile">0</span>/<span id="totalMaxMobile">72</span></span>
     <span id="scoreHeaderMobile" class="stat-pill" style="display:none">Aciertos <span id="totalCorrectMobile">0</span>/<span id="totalPlayedMobile">0</span></span>
     <button onclick="clearAll()" class="btn-ghost sm:hidden" type="button" style="margin-left:auto">Borrar</button>
   </div>
@@ -1228,8 +1230,9 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 <div id="panelLeaderboard" class="phase-panel hidden">
   <div class="max-w-6xl mx-auto px-4 py-5">
     <div class="leaderboard-card p-5 sm:p-6">
-      <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación provisional</h2>
-      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Cuando termine la fase de grupos, cuenta los aciertos de tu PDF (1 punto por acierto) y registra tu puntuación aquí. Manolin publicará la tabla oficial para todos.</p>
+      <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación — fase de grupos</h2>
+      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Resultado oficial tras los 72 partidos. <strong class="text-gray-400">1 punto por acierto</strong> (1 · X · 2). Esto es orientativo: el bote se reparte con la fase eliminatoria.</p>
+      <p id="leaderboardUpdated" class="text-xs text-gray-600 mb-2 hidden"></p>
       <div id="myScoreCard" class="my-score-card hidden">
         <p class="text-xs text-gray-500 mb-1">Tu registro en este dispositivo</p>
         <p class="text-white font-bold"><span id="myScoreName">—</span> · <span id="myScorePoints" class="text-yellow-400">0</span> puntos</p>
@@ -1240,8 +1243,8 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
           <tbody id="leaderboardBody"></tbody>
         </table>
       </div>
-      <p id="leaderboardEmpty" class="text-sm text-gray-500 text-center py-4 hidden">Todavía no hay nadie en la tabla. ¡Sé el primero en registrar tus puntos!</p>
-      <div class="score-form">
+      <p id="leaderboardEmpty" class="text-sm text-gray-500 text-center py-4 hidden">Aún no hay clasificación publicada.</p>
+      <div id="leaderboardScoreForm" class="score-form">
         <div>
           <label for="scorePoints">Tus puntos (de tu PDF)</label>
           <input type="number" id="scorePoints" class="score-input-pts" min="0" max="79" placeholder="0"/>
@@ -1407,7 +1410,7 @@ const groups = [
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 /** Sincronizar con knockout.js?v= y manifest start_url al desplegar */
-const APP_BUILD = '94';
+const APP_BUILD = '96';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
@@ -1433,7 +1436,7 @@ function showAppReloadBannerIfNeeded() {
 // Horarios peninsulares (CEST, UTC+2)
 const SCHEDULE = {
   groupsClose: '2026-06-11T21:00:00+02:00', // cierre pronósticos fase de grupos
-  leaderboardOpen: '2026-06-27T23:59:00+02:00', // fin partidos fase de grupos
+  leaderboardOpen: '2026-06-27T00:00:00+02:00', // clasificación fase de grupos
   extrasOpen:  '2026-06-01T00:00:00+02:00',
   koOpenAt: '2026-06-28T10:00:00+02:00', // apertura eliminatorias (especiales + dieciseisavos)
   koCloseAt: '2026-06-28T21:00:00+02:00' // cierre plazo dieciseisavos (primer partido)
@@ -1867,7 +1870,7 @@ function switchPhaseTab(tab) {
     return;
   }
   if (tab === 'leaderboard' && !isLeaderboardOpen()) {
-    showPhaseLockMessage('La clasificación provisional', 'Se abrirá cuando termine la <strong>fase de grupos (27 de junio)</strong>.');
+    showPhaseLockMessage('La clasificación', 'Se publicará al terminar la <strong>fase de grupos</strong>.');
     return;
   }
   activePhaseTab = tab;
@@ -1907,7 +1910,7 @@ function loadMyScore() {
 
 function saveMyScore() {
   if (!isLeaderboardOpen()) {
-    showPhaseLockMessage('La clasificación provisional', 'Se abrirá cuando termine la <strong>fase de grupos (27 de junio)</strong>.');
+    showPhaseLockMessage('La clasificación', 'Se publicará al terminar la <strong>fase de grupos</strong>.');
     return;
   }
   const name = getPlayerDisplayName();
@@ -1962,10 +1965,25 @@ function renderLeaderboard() {
   const myCard = document.getElementById('myScoreCard');
   const hint = document.getElementById('scoreAutoHint');
   const ptsInput = document.getElementById('scorePoints');
+  const scoreForm = document.getElementById('leaderboardScoreForm');
+  const updatedEl = document.getElementById('leaderboardUpdated');
   if (!tbody) return;
 
+  const official = (leaderboardData.entries || []).filter(e => e.name);
+  const hasOfficial = official.length > 0;
+  if (scoreForm) scoreForm.classList.toggle('hidden', hasOfficial);
+  if (updatedEl) {
+    if (hasOfficial && leaderboardData.updated) {
+      updatedEl.textContent = 'Actualizado: ' + leaderboardData.updated + '.';
+      updatedEl.classList.remove('hidden');
+    } else {
+      updatedEl.classList.add('hidden');
+      updatedEl.textContent = '';
+    }
+  }
+
   const { played, correct } = scoreStats();
-  if (ptsInput && (ptsInput.value === '' || ptsInput.dataset.auto === '1')) {
+  if (!hasOfficial && ptsInput && (ptsInput.value === '' || ptsInput.dataset.auto === '1')) {
     if (played > 0) {
       ptsInput.value = correct;
       ptsInput.dataset.auto = '1';
@@ -1973,11 +1991,13 @@ function renderLeaderboard() {
     } else if (hint) {
       hint.textContent = 'Cuenta los aciertos de tu PDF y escribe el total aquí.';
     }
+  } else if (hint && hasOfficial) {
+    hint.textContent = '';
   }
 
   const my = loadMyScore();
   if (myCard) {
-    if (my) {
+    if (my && !hasOfficial) {
       myCard.classList.remove('hidden');
       document.getElementById('myScoreName').textContent = my.name;
       document.getElementById('myScorePoints').textContent = my.points;
@@ -1987,7 +2007,9 @@ function renderLeaderboard() {
     }
   }
 
-  const entries = getLeaderboardEntries();
+  const entries = hasOfficial
+    ? official.slice().sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'))
+    : getLeaderboardEntries();
   const myName = getPlayerDisplayName().toLowerCase();
   if (!entries.length) {
     tbody.innerHTML = '';
@@ -1996,8 +2018,8 @@ function renderLeaderboard() {
   }
   if (empty) empty.classList.add('hidden');
   tbody.innerHTML = entries.map((e, i) => {
-    const isMe = e.name.toLowerCase() === myName || e.local;
-    const suffix = e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
+    const isMe = e.name.toLowerCase() === myName;
+    const suffix = !hasOfficial && e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
     return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${i + 1}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td></tr>`;
   }).join('');
 }
@@ -2009,6 +2031,7 @@ async function loadOfficialLeaderboard() {
     const data = await res.json();
     leaderboardData = data && Array.isArray(data.entries) ? data : { entries: [] };
     renderLeaderboard();
+    updateHeaderStats();
     if (IS_ADMIN) renderAdminLeaderboardEditor();
   } catch (e) { /* sin leaderboard aún */ }
 }
@@ -2438,31 +2461,19 @@ function updateGroupCount(groupId, matches) {
   if (navBtn) navBtn.classList.toggle('done', complete);
 }
 
-function updateProgress() {
-  const total = progressTotal();
-  const allDone = totalDoneCount();
-  const sel = String(allDone);
-  const max = String(total);
-  document.getElementById('totalSelected').textContent = sel;
-  const maxEl = document.getElementById('totalMax');
-  if (maxEl) maxEl.textContent = max;
-  const sm = document.getElementById('totalSelectedMobile');
-  const smm = document.getElementById('totalMaxMobile');
-  if (sm) sm.textContent = sel;
-  if (smm) smm.textContent = max;
-  const prog = document.getElementById('mainProgress');
-  const pct = Math.round(allDone / total * 100);
-  prog.style.width = pct + '%';
-  prog.classList.toggle('complete', pct >= 100);
-  groups.forEach(g => updateGroupCount(g.id, g.matches));
-  updateExportButton();
+function getOfficialGroupStats(participantName) {
+  const entries = (leaderboardData.entries || []).filter(e => e && e.name);
+  if (!entries.length || !participantName) return null;
+  const sorted = entries.slice().sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
+  const idx = sorted.findIndex(e => e.name.toLowerCase() === participantName.toLowerCase());
+  if (idx < 0) return null;
+  return { rank: idx + 1, total: sorted.length, points: sorted[idx].points || 0 };
 }
 
-function updateScoreHeader() {
-  const { played, correct } = scoreStats();
+function setHeaderAciertos(correct, played, visible) {
   const el = document.getElementById('scoreHeader');
   const elM = document.getElementById('scoreHeaderMobile');
-  if (played > 0) {
+  if (visible) {
     if (el) el.style.display = '';
     if (elM) elM.style.display = '';
     const c = document.getElementById('totalCorrect');
@@ -2477,6 +2488,59 @@ function updateScoreHeader() {
     if (el) el.style.display = 'none';
     if (elM) elM.style.display = 'none';
   }
+}
+
+function updateHeaderStats() {
+  const koUser = typeof getActiveKoUser === 'function' ? getActiveKoUser() : '';
+  const official = koUser ? getOfficialGroupStats(koUser) : null;
+  const groupsLabel = document.getElementById('headerStatGroupsLabel');
+  const groupsLabelMobile = document.getElementById('headerMobileGroupsLabel');
+
+  if (official) {
+    if (groupsLabel) groupsLabel.textContent = 'Puesto';
+    if (groupsLabelMobile) groupsLabelMobile.textContent = 'Puesto';
+    document.getElementById('totalSelected').textContent = String(official.rank);
+    const maxEl = document.getElementById('totalMax');
+    if (maxEl) maxEl.textContent = String(official.total);
+    const sm = document.getElementById('totalSelectedMobile');
+    const smm = document.getElementById('totalMaxMobile');
+    if (sm) sm.textContent = String(official.rank);
+    if (smm) smm.textContent = String(official.total);
+    setHeaderAciertos(official.points, 72, true);
+    return;
+  }
+
+  if (groupsLabel) groupsLabel.textContent = 'Grupos';
+  if (groupsLabelMobile) groupsLabelMobile.textContent = 'Grupos';
+  const total = progressTotal();
+  const allDone = totalDoneCount();
+  document.getElementById('totalSelected').textContent = String(allDone);
+  const maxEl = document.getElementById('totalMax');
+  if (maxEl) maxEl.textContent = String(total);
+  const sm = document.getElementById('totalSelectedMobile');
+  const smm = document.getElementById('totalMaxMobile');
+  if (sm) sm.textContent = String(allDone);
+  if (smm) smm.textContent = String(total);
+  const { played, correct } = scoreStats();
+  setHeaderAciertos(correct, played, played > 0);
+}
+
+window.updateHeaderStats = updateHeaderStats;
+
+function updateProgress() {
+  updateHeaderStats();
+  const total = progressTotal();
+  const allDone = totalDoneCount();
+  const prog = document.getElementById('mainProgress');
+  const pct = Math.round(allDone / total * 100);
+  prog.style.width = pct + '%';
+  prog.classList.toggle('complete', pct >= 100);
+  groups.forEach(g => updateGroupCount(g.id, g.matches));
+  updateExportButton();
+}
+
+function updateScoreHeader() {
+  updateHeaderStats();
 }
 
 // ============================================================
@@ -3197,6 +3261,7 @@ if (document.readyState === 'loading') {
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
+if (typeof window.updateHeaderStats === 'function') window.updateHeaderStats();
 </script>
 </body>
 </html>

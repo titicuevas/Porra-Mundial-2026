@@ -407,14 +407,16 @@
       koActiveExtraSlot = null;
       koExtraWarn = '';
       saveKnockoutStore();
-      refreshKnockoutUI();
-      return;
-    }
-    if (!PARTICIPANTS.includes(name)) return;
-    koStore.activeUser = name;
-    ensureUserData(name);
-    saveKnockoutStore();
     refreshKnockoutUI();
+    if (typeof window.updateHeaderStats === 'function') window.updateHeaderStats();
+    return;
+  }
+  if (!PARTICIPANTS.includes(name)) return;
+  koStore.activeUser = name;
+  ensureUserData(name);
+  saveKnockoutStore();
+  refreshKnockoutUI();
+  if (typeof window.updateHeaderStats === 'function') window.updateHeaderStats();
   }
 
   function isKnockoutPreviewUnlocked() {
@@ -2581,6 +2583,7 @@
   window.isKnockoutComplete = isKnockoutComplete;
   window.renderKnockout = renderKnockout;
   window.setActiveKoUser = setActiveKoUser;
+  window.getActiveKoUser = getActiveKoUser;
   window.PARTICIPANTS = PARTICIPANTS;
   window.pickKoResult = pickKoResult;
   window.setKoExtra = setKoExtra;

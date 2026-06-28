@@ -1,4 +1,23 @@
 {
-  "updated": "",
-  "entries": []
+  "updated": "2026-06-27",
+  "phase": "grupos",
+  "entries": [
+    { "name": "Manolín", "points": 46 },
+    { "name": "Enrique Cuevas García", "points": 45 },
+    { "name": "Juan Medina", "points": 45 },
+    { "name": "Alicia Pérez", "points": 43 },
+    { "name": "Felipe Escobar Montaño", "points": 43 },
+    { "name": "Juani", "points": 41 },
+    { "name": "Jenifer", "points": 41 },
+    { "name": "Manuel Montaño", "points": 41 },
+    { "name": "Salomé Juanjo", "points": 41 },
+    { "name": "Daniel", "points": 39 },
+    { "name": "Carlos Mondragón", "points": 38 },
+    { "name": "Nolo", "points": 38 },
+    { "name": "Belén Que", "points": 37 },
+    { "name": "Lego", "points": 36 },
+    { "name": "Francisco Romero", "points": 35 },
+    { "name": "Chuck Norris Está Vivo", "points": 33 },
+    { "name": "María y Javi", "points": 31 }
+  ]
 }
