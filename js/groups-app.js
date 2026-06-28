@@ -593,19 +593,122 @@ function computeCompetitionRanks(entries) {
   return ranks;
 }
 
-function leaderboardMedalForRank(rank) {
-  if (rank === 1) return '🥇';
-  if (rank === 2) return '🥈';
-  if (rank === 3) return '🥉';
+/** Podio por tramos de puntos: 1.º/2.º/3.º grupo de puntuación (no salta el bronce si hay empate arriba). */
+function computePodiumTiers(entries) {
+  const tiers = [];
+  let tier = 0;
+  let lastPts = null;
+  for (let i = 0; i < entries.length; i++) {
+    const pts = entries[i].points || 0;
+    if (lastPts === null || pts !== lastPts) {
+      tier++;
+      lastPts = pts;
+    }
+    tiers.push(tier <= 3 ? tier : 0);
+  }
+  return tiers;
+}
+
+const PODIUM_PRIZE_POOL = { 1: 60, 2: 30, 3: 10 };
+
+function analyzePodiumPrize(entries) {
+  const tiers = computePodiumTiers(entries);
+  const competitionRanks = computeCompetitionRanks(entries);
+  const prizeShares = computePodiumPrizeShares(tiers);
+  const groups = [];
+  for (let i = 0; i < entries.length; i++) {
+    const tier = tiers[i];
+    if (!tier || tier > 3) continue;
+    const pts = entries[i].points || 0;
+    const last = groups[groups.length - 1];
+    if (!last || last.tier !== tier || last.points !== pts) {
+      groups.push({ tier, points: pts, poolPct: PODIUM_PRIZE_POOL[tier], names: [] });
+    }
+    groups[groups.length - 1].names.push(entries[i].name);
+  }
+  groups.forEach(g => {
+    g.count = g.names.length;
+    g.sharePct = g.poolPct / g.count;
+  });
+  const allocatedPct = groups.reduce((sum, g) => sum + g.poolPct, 0);
+  return {
+    tiers,
+    competitionRanks,
+    prizeShares,
+    groups,
+    allocatedPct,
+    unallocatedPct: Math.max(0, 100 - allocatedPct)
+  };
+}
+
+function computePodiumPrizeShares(tiers) {
+  const counts = { 1: 0, 2: 0, 3: 0 };
+  tiers.forEach(t => { if (t >= 1 && t <= 3) counts[t]++; });
+  return tiers.map(t => {
+    if (!t || t > 3 || !counts[t]) return null;
+    return PODIUM_PRIZE_POOL[t] / counts[t];
+  });
+}
+
+function formatPrizeSharePct(pct) {
+  if (pct == null) return '';
+  const rounded = Math.round(pct * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function getDisplayRank(sorted, index) {
+  const tiers = computePodiumTiers(sorted);
+  const tier = tiers[index];
+  if (tier >= 1 && tier <= 3) return tier;
+  return computeCompetitionRanks(sorted)[index];
+}
+
+function leaderboardMedalForTier(tier) {
+  if (tier === 1) return '🥇';
+  if (tier === 2) return '🥈';
+  if (tier === 3) return '🥉';
   return '';
 }
 
-function leaderboardRankCell(competitionRank) {
-  const medal = leaderboardMedalForRank(competitionRank);
+function leaderboardRankCell(tier, competitionRank) {
+  const medal = leaderboardMedalForTier(tier);
   if (medal) {
-    return `<span class="leaderboard-medal" aria-label="${competitionRank}º">${medal}</span>`;
+    return `<span class="leaderboard-medal" aria-label="${tier}º">${medal}</span>`;
   }
   return String(competitionRank);
+}
+
+function buildLeaderboardPrizeSummaryHTML(analysis, hasOfficial) {
+  const { groups, unallocatedPct } = analysis;
+  if (!groups.length) return '';
+  const lines = groups.map(g => {
+    const medal = leaderboardMedalForTier(g.tier);
+    const names = g.names.map(n => escapeHtml(n)).join(', ');
+    const share = formatPrizeSharePct(g.sharePct);
+    const splitNote = g.count > 1
+      ? `<span class="leaderboard-prize-split">${g.poolPct}% ÷ ${g.count} = <strong>${share}%</strong> c/u</span>`
+      : `<span class="leaderboard-prize-split"><strong>${share}%</strong> del bote</span>`;
+    return `<li class="leaderboard-prize-item">
+      <span class="leaderboard-prize-tier">${medal} ${g.tier}.º tramo · ${g.points} pts</span>
+      <span class="leaderboard-prize-names">${names}</span>
+      <span class="leaderboard-prize-amount">${splitNote}</span>
+    </li>`;
+  }).join('');
+  let foot = '';
+  if (unallocatedPct > 0) {
+    const missing = [];
+    if (!groups.some(g => g.tier === 2)) missing.push('plata (30%)');
+    if (!groups.some(g => g.tier === 3)) missing.push('bronce (10%)');
+    const detail = missing.length ? missing.join(' y ') : `${unallocatedPct}%`;
+    foot = `<p class="leaderboard-prize-foot">ℹ️ En esta clasificación no hay tramo para ${detail}: <strong>${unallocatedPct}%</strong> del bote no se reparte aquí.</p>`;
+  }
+  const title = hasOfficial ? '💰 Reparto del bote por tramos de puntos' : '💰 Reparto orientativo (mismas reglas)';
+  return `<div class="leaderboard-prize-summary" role="region" aria-label="Reparto del bote">
+    <p class="leaderboard-prize-title">${title}</p>
+    <ul class="leaderboard-prize-list">${lines}</ul>
+    <p class="leaderboard-prize-rule">Cada <strong>tramo de puntuación</strong> es un puesto del podio (oro 60%, plata 30%, bronce 10%). Si varios empatan a puntos en el mismo tramo, comparten medalla y se reparten ese porcentaje a partes iguales.</p>
+    ${foot}
+  </div>`;
 }
 
 function renderLeaderboard() {
@@ -661,19 +764,30 @@ function renderLeaderboard() {
     ? official.slice().sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'))
     : getLeaderboardEntries();
   const myName = getPlayerDisplayName().toLowerCase();
+  const prizeSummaryEl = document.getElementById('leaderboardPrizeSummary');
   if (!entries.length) {
     tbody.innerHTML = '';
+    if (prizeSummaryEl) { prizeSummaryEl.innerHTML = ''; prizeSummaryEl.classList.add('hidden'); }
     if (empty) empty.classList.remove('hidden');
     return;
   }
   if (empty) empty.classList.add('hidden');
-  const ranks = computeCompetitionRanks(entries);
+  const podium = analyzePodiumPrize(entries);
   tbody.innerHTML = entries.map((e, i) => {
     const isMe = e.name.toLowerCase() === myName;
     const suffix = !hasOfficial && e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
-    const rankCell = leaderboardRankCell(ranks[i]);
-    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td></tr>`;
+    const rankCell = leaderboardRankCell(podium.tiers[i], podium.competitionRanks[i]);
+    const share = podium.prizeShares[i];
+    const prizeCol = share != null
+      ? `<span class="leaderboard-prize-col">${formatPrizeSharePct(share)}%</span>`
+      : '<span class="leaderboard-prize-col leaderboard-prize-col--empty">—</span>';
+    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td><td class="leaderboard-prize-cell">${prizeCol}</td></tr>`;
   }).join('');
+  if (prizeSummaryEl) {
+    const html = buildLeaderboardPrizeSummaryHTML(podium, hasOfficial);
+    prizeSummaryEl.innerHTML = html;
+    prizeSummaryEl.classList.toggle('hidden', !html);
+  }
 }
 
 async function loadOfficialLeaderboard() {
@@ -1117,8 +1231,7 @@ function getOfficialGroupStats(participantName) {
   const sorted = entries.slice().sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
   const idx = sorted.findIndex(e => e.name.toLowerCase() === participantName.toLowerCase());
   if (idx < 0) return null;
-  const ranks = computeCompetitionRanks(sorted);
-  return { rank: ranks[idx], total: sorted.length, points: sorted[idx].points || 0 };
+  return { rank: getDisplayRank(sorted, idx), total: sorted.length, points: sorted[idx].points || 0 };
 }
 
 function setHeaderAciertos(correct, played) {

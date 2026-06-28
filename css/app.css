@@ -240,12 +240,25 @@ input,select,textarea{color:#fff;}
 .leaderboard-table th,.leaderboard-table td{padding:.55rem .5rem;text-align:left;border-bottom:1px solid #1f2937;}
 .leaderboard-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;font-weight:700;}
 .leaderboard-table th.leaderboard-points-col,.leaderboard-table td.leaderboard-points{text-align:right;}
+.leaderboard-table th.leaderboard-prize-col,.leaderboard-table td.leaderboard-prize-cell{text-align:right;width:4.25rem;}
+.leaderboard-prize-col{font-size:.78rem;font-weight:700;color:#86efac;}
+.leaderboard-prize-col--empty{color:#4b5563;font-weight:500;}
+.leaderboard-prize-summary{margin-top:1rem;padding:.85rem 1rem;background:rgba(15,23,42,.85);border:1px solid #334155;border-radius:12px;}
+.leaderboard-prize-title{font-size:.8rem;font-weight:700;color:#facc15;margin:0 0 .5rem;}
+.leaderboard-prize-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem;}
+.leaderboard-prize-item{display:grid;grid-template-columns:minmax(6.5rem,auto) 1fr auto;gap:.35rem .65rem;align-items:baseline;font-size:.75rem;line-height:1.35;}
+.leaderboard-prize-tier{color:#e5e7eb;font-weight:600;white-space:nowrap;}
+.leaderboard-prize-names{color:#d1d5db;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.leaderboard-prize-amount{color:#86efac;text-align:right;white-space:nowrap;}
+.leaderboard-prize-split strong{color:#bbf7d0;}
+.leaderboard-prize-rule,.leaderboard-prize-foot{font-size:.68rem;color:#9ca3af;margin:.55rem 0 0;line-height:1.45;}
+.leaderboard-prize-foot strong{color:#d1d5db;}
 .leaderboard-table tr.leaderboard-me td{background:rgba(37,99,235,.12);}
 .leaderboard-table tbody tr:nth-child(even) td{background:rgba(59,130,246,.07);}
 .leaderboard-table tbody tr.leaderboard-me:nth-child(even) td{background:rgba(37,99,235,.18);}
 .leaderboard-rank{width:2.5rem;color:#9ca3af;font-weight:700;text-align:center;}
 .leaderboard-medal{font-size:1.15rem;line-height:1;}
-.leaderboard-points{font-weight:800;color:#facc15;width:3.5rem;white-space:nowrap;}
+.leaderboard-points{font-weight:800;color:#facc15;white-space:nowrap;text-align:right;}
 .leaderboard-table td:nth-child(2){max-width:14rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .leaderboard-scroll{-webkit-overflow-scrolling:touch;margin:0 -.15rem;padding:0 .15rem;}
 .my-score-card{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:.85rem 1rem;margin:1rem 0;}
