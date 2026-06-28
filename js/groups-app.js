@@ -2,7 +2,7 @@
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 /** Sincronizar ?v= en porra-mundial-2026.html y manifest start_url al desplegar */
-const APP_BUILD = '111';
+const APP_BUILD = '112';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
@@ -401,18 +401,20 @@ function renderScheduleBanner() {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Fase de grupos cerrada</strong> desde el 11 jun, 21:00. Ya no se pueden cambiar los pronósticos de grupos.</div>';
   } else if (typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular)</div>';
-  } else if (typeof isKoRoundPickable === 'function' && isKoRoundPickable('r16')
-    && ((typeof isKoR16EarlyWindow === 'function' && isKoR16EarlyWindow())
-      || (typeof isKnockoutPreviewUnlocked === 'function' && isKnockoutPreviewUnlocked()))) {
+  } else if (typeof isKoDieciseisavosClosed === 'function' && isKoDieciseisavosClosed()
+    && typeof canViewOctavosBracket === 'function' && !canViewOctavosBracket()) {
+    const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r16') : '4 jul, 10:00';
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Dieciseisavos cerrados</strong> (28 jun, 21:00). Los octavos abren el <strong>' + opens + '</strong>. Organizadores: <strong>🔑 Código</strong> para probar antes.</div>';
+  } else if (typeof isKoOctavosPreviewOnly === 'function' && isKoOctavosPreviewOnly()) {
+    const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r16') : '4 jul, 19:00';
+    el.innerHTML = '<div class="schedule-banner schedule-open">🧪 <strong>Octavos en prueba</strong> (código) — el público los verá el <strong>4 jul, 10:00</strong> · cierran <strong>' + closeLabel + '</strong></div>';
+  } else if (typeof isKoOctavosPhase === 'function' && isKoOctavosPhase()
+    && typeof isKoRoundOfficiallyOpen === 'function' && isKoRoundOfficiallyOpen('r16')) {
     const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r16') : '4 jul, 19:00';
     el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Octavos de final abiertos</strong> — elige participante y marca octavos · cierran <strong>' + closeLabel + '</strong></div>';
-  } else if (typeof isKoRoundPickable === 'function' && isKoRoundPickable('r32')
-    && !(typeof isKoR16EarlyWindow === 'function' && isKoR16EarlyWindow())) {
+  } else if (typeof isKoRoundPickable === 'function' && isKoRoundPickable('r32')) {
     const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r32') : '28 jun, 21:00';
     el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Plazo abierto (10:00–21:00)</strong> — elige participante, rellena <strong>especiales + dieciseisavos</strong> y exporta antes del <strong>' + closeLabel + '</strong></div>';
-  } else if (typeof isKoRoundClosed === 'function' && isKoRoundClosed('r32')
-    && !(typeof isKoR16EarlyWindow === 'function' && isKoR16EarlyWindow())) {
-    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Dieciseisavos cerrados</strong> (28 jun, 21:00). Octavos abren el <strong>4 jul, 10:00</strong>.</div>';
   } else if (typeof isKnockoutAccessible === 'function' && isKnockoutAccessible()) {
     el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Eliminatorias</strong> — plazo único el 28 jun, <strong>10:00–21:00</strong> (participante, especiales y dieciseisavos)</div>';
   } else {
@@ -1358,7 +1360,8 @@ function renderQualifiedSummary() {
 
   const koEl = document.getElementById('koQualifiedSummary');
   if (koEl) {
-    if (typeof isKoOctavosPhase === 'function' && isKoOctavosPhase()) {
+    if ((typeof isKoDieciseisavosClosed === 'function' && isKoDieciseisavosClosed())
+      || (typeof isKoOctavosPhase === 'function' && isKoOctavosPhase())) {
       koEl.classList.add('hidden');
       koEl.innerHTML = '';
     } else {
