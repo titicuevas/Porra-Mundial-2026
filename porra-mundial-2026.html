@@ -262,11 +262,12 @@ input,select,textarea{color:#fff;}
 .leaderboard-table{width:100%;border-collapse:collapse;font-size:.85rem;margin:1rem 0;}
 .leaderboard-table th,.leaderboard-table td{padding:.55rem .5rem;text-align:left;border-bottom:1px solid #1f2937;}
 .leaderboard-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;font-weight:700;}
+.leaderboard-table th.leaderboard-points-col,.leaderboard-table td.leaderboard-points{text-align:right;}
 .leaderboard-table tr.leaderboard-me td{background:rgba(37,99,235,.12);}
 .leaderboard-table tbody tr:nth-child(even) td{background:rgba(59,130,246,.07);}
 .leaderboard-table tbody tr.leaderboard-me:nth-child(even) td{background:rgba(37,99,235,.18);}
 .leaderboard-rank{width:2rem;color:#9ca3af;font-weight:700;}
-.leaderboard-points{font-weight:800;color:#facc15;text-align:right;}
+.leaderboard-points{font-weight:800;color:#facc15;width:3.5rem;}
 .my-score-card{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:.85rem 1rem;margin:1rem 0;}
 .score-form{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;margin-top:1rem;}
 .score-form label{font-size:.72rem;color:#9ca3af;display:block;margin-bottom:.2rem;}
@@ -923,20 +924,20 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
     </div>
     <div class="header-actions">
       <div class="header-stat">
-        <p class="header-stat-label" id="headerStatGroupsLabel">Grupos</p>
-        <p class="header-stat-value"><span id="totalSelected" class="text-yellow-400">0</span><span class="text-gray-500">/<span id="totalMax">72</span></span></p>
+        <p class="header-stat-label" id="headerStatGroupsLabel">Puesto</p>
+        <p class="header-stat-value"><span id="totalSelected" class="text-yellow-400">—</span><span class="text-gray-500">/<span id="totalMax">—</span></span></p>
       </div>
-      <div id="scoreHeader" class="header-stat" style="display:none">
+      <div id="scoreHeader" class="header-stat">
         <p class="header-stat-label">Aciertos</p>
-        <p class="header-stat-value text-green-400"><span id="totalCorrect">0</span><span class="text-gray-500">/<span id="totalPlayed">0</span></span></p>
+        <p class="header-stat-value text-green-400"><span id="totalCorrect">—</span><span class="text-gray-500">/<span id="totalPlayed">72</span></span></p>
       </div>
       <a href="#exportSection" class="header-export-link" title="Ir a exportar PDF">📄 Exportar ↓</a>
       <button onclick="clearAll()" class="btn-ghost hidden sm:block" type="button">Borrar</button>
     </div>
   </div>
   <div class="mobile-stats-bar max-w-6xl mx-auto">
-    <span class="stat-pill"><span id="headerMobileGroupsLabel">Grupos</span> <span id="totalSelectedMobile">0</span>/<span id="totalMaxMobile">72</span></span>
-    <span id="scoreHeaderMobile" class="stat-pill" style="display:none">Aciertos <span id="totalCorrectMobile">0</span>/<span id="totalPlayedMobile">0</span></span>
+    <span class="stat-pill"><span id="headerMobileGroupsLabel">Puesto</span> <span id="totalSelectedMobile">—</span>/<span id="totalMaxMobile">—</span></span>
+    <span id="scoreHeaderMobile" class="stat-pill">Aciertos <span id="totalCorrectMobile">—</span>/<span id="totalPlayedMobile">72</span></span>
     <button onclick="clearAll()" class="btn-ghost sm:hidden" type="button" style="margin-left:auto">Borrar</button>
   </div>
   <div class="max-w-6xl mx-auto px-4 pb-2">
@@ -1239,7 +1240,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
       </div>
       <div class="overflow-x-auto">
         <table class="leaderboard-table" id="leaderboardTable" aria-label="Clasificación">
-          <thead><tr><th>#</th><th>Nombre</th><th style="text-align:right">Puntos</th></tr></thead>
+          <thead><tr><th>#</th><th>Nombre</th><th class="leaderboard-points-col">Puntos</th></tr></thead>
           <tbody id="leaderboardBody"></tbody>
         </table>
       </div>
@@ -1259,7 +1260,6 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 
 <footer class="site-footer max-w-6xl mx-auto">
   <p class="footer-title">🍻 Porra entre colegas · Mundial 2026</p>
-  <p>Plan express de <strong style="color:#93c5fd">Manolin</strong> — que gane el más listo (o el más cabrón).</p>
   <p class="text-xs">Tus pronósticos se guardan solo en tu móvil o PC. No hace falta cuenta ni registro.</p>
 </footer>
 
@@ -1958,6 +1958,11 @@ function getLeaderboardEntries() {
   return shared.sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
 }
 
+function leaderboardMedal(rankIndex) {
+  if (rankIndex === 0) return ' 🥇';
+  return '';
+}
+
 function renderLeaderboard() {
   if (!isLeaderboardOpen()) return;
   const tbody = document.getElementById('leaderboardBody');
@@ -2020,7 +2025,8 @@ function renderLeaderboard() {
   tbody.innerHTML = entries.map((e, i) => {
     const isMe = e.name.toLowerCase() === myName;
     const suffix = !hasOfficial && e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
-    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${i + 1}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td></tr>`;
+    const medal = hasOfficial ? leaderboardMedal(i) : '';
+    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${i + 1}</td><td>${e.name}${suffix}${medal}</td><td class="leaderboard-points">${e.points}</td></tr>`;
   }).join('');
 }
 
@@ -2470,59 +2476,39 @@ function getOfficialGroupStats(participantName) {
   return { rank: idx + 1, total: sorted.length, points: sorted[idx].points || 0 };
 }
 
-function setHeaderAciertos(correct, played, visible) {
-  const el = document.getElementById('scoreHeader');
-  const elM = document.getElementById('scoreHeaderMobile');
-  if (visible) {
-    if (el) el.style.display = '';
-    if (elM) elM.style.display = '';
-    const c = document.getElementById('totalCorrect');
-    const p = document.getElementById('totalPlayed');
-    const cm = document.getElementById('totalCorrectMobile');
-    const pm = document.getElementById('totalPlayedMobile');
-    if (c) c.textContent = correct;
-    if (p) p.textContent = played;
-    if (cm) cm.textContent = correct;
-    if (pm) pm.textContent = played;
-  } else {
-    if (el) el.style.display = 'none';
-    if (elM) elM.style.display = 'none';
-  }
+function setHeaderAciertos(correct, played) {
+  const c = document.getElementById('totalCorrect');
+  const p = document.getElementById('totalPlayed');
+  const cm = document.getElementById('totalCorrectMobile');
+  const pm = document.getElementById('totalPlayedMobile');
+  if (c) c.textContent = correct;
+  if (p) p.textContent = played;
+  if (cm) cm.textContent = correct;
+  if (pm) pm.textContent = played;
+}
+
+function setHeaderPuesto(rank, total) {
+  document.getElementById('totalSelected').textContent = rank;
+  const maxEl = document.getElementById('totalMax');
+  if (maxEl) maxEl.textContent = total;
+  const sm = document.getElementById('totalSelectedMobile');
+  const smm = document.getElementById('totalMaxMobile');
+  if (sm) sm.textContent = rank;
+  if (smm) smm.textContent = total;
 }
 
 function updateHeaderStats() {
   const koUser = typeof getActiveKoUser === 'function' ? getActiveKoUser() : '';
   const official = koUser ? getOfficialGroupStats(koUser) : null;
-  const groupsLabel = document.getElementById('headerStatGroupsLabel');
-  const groupsLabelMobile = document.getElementById('headerMobileGroupsLabel');
 
   if (official) {
-    if (groupsLabel) groupsLabel.textContent = 'Puesto';
-    if (groupsLabelMobile) groupsLabelMobile.textContent = 'Puesto';
-    document.getElementById('totalSelected').textContent = String(official.rank);
-    const maxEl = document.getElementById('totalMax');
-    if (maxEl) maxEl.textContent = String(official.total);
-    const sm = document.getElementById('totalSelectedMobile');
-    const smm = document.getElementById('totalMaxMobile');
-    if (sm) sm.textContent = String(official.rank);
-    if (smm) smm.textContent = String(official.total);
-    setHeaderAciertos(official.points, 72, true);
+    setHeaderPuesto(String(official.rank), String(official.total));
+    setHeaderAciertos(String(official.points), '72');
     return;
   }
 
-  if (groupsLabel) groupsLabel.textContent = 'Grupos';
-  if (groupsLabelMobile) groupsLabelMobile.textContent = 'Grupos';
-  const total = progressTotal();
-  const allDone = totalDoneCount();
-  document.getElementById('totalSelected').textContent = String(allDone);
-  const maxEl = document.getElementById('totalMax');
-  if (maxEl) maxEl.textContent = String(total);
-  const sm = document.getElementById('totalSelectedMobile');
-  const smm = document.getElementById('totalMaxMobile');
-  if (sm) sm.textContent = String(allDone);
-  if (smm) smm.textContent = String(total);
-  const { played, correct } = scoreStats();
-  setHeaderAciertos(correct, played, played > 0);
+  setHeaderPuesto('—', '—');
+  setHeaderAciertos('—', '72');
 }
 
 window.updateHeaderStats = updateHeaderStats;
