@@ -258,6 +258,7 @@ input,select,textarea{color:#fff;}
 .leaderboard-table tbody tr.leaderboard-me:nth-child(even) td{background:rgba(37,99,235,.18);}
 .leaderboard-rank{width:2.5rem;color:#9ca3af;font-weight:700;text-align:center;}
 .leaderboard-medal{font-size:1.15rem;line-height:1;}
+.leaderboard-crown{font-size:1.2rem;line-height:1;display:inline-block;filter:drop-shadow(0 0 6px rgba(250,204,21,.45));}
 .leaderboard-points{font-weight:800;color:#facc15;white-space:nowrap;text-align:right;}
 .leaderboard-table td:nth-child(2){max-width:14rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .leaderboard-scroll{-webkit-overflow-scrolling:touch;margin:0 -.15rem;padding:0 .15rem;}

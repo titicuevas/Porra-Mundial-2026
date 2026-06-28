@@ -634,19 +634,9 @@ function getDisplayRank(sorted, index) {
   return index + 1;
 }
 
-function leaderboardMedalForRank(rank) {
-  if (rank === 1) return '🥇';
-  if (rank === 2) return '🥈';
-  if (rank === 3) return '🥉';
-  return '';
-}
-
-function leaderboardRankCell(rank, showMedals) {
-  if (showMedals) {
-    const medal = leaderboardMedalForRank(rank);
-    if (medal) {
-      return `<span class="leaderboard-medal" aria-label="${rank}º">${medal}</span>`;
-    }
+function leaderboardRankCell(rank) {
+  if (rank === 1) {
+    return '<span class="leaderboard-crown" aria-label="1º">👑</span>';
   }
   return String(rank);
 }
@@ -655,10 +645,10 @@ function buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) {
   const lines = [1, 2, 3].map(pos => {
     const e = sorted[pos - 1];
     if (!e || prizeShares[pos - 1] == null) return '';
-    const medal = leaderboardMedalForRank(pos);
+    const tierLabel = pos === 1 ? '👑 1.º' : `${pos}.º`;
     const share = formatPrizeSharePct(prizeShares[pos - 1]);
     return `<li class="leaderboard-prize-item">
-      <span class="leaderboard-prize-tier">${medal} ${pos}.º</span>
+      <span class="leaderboard-prize-tier">${tierLabel}</span>
       <span class="leaderboard-prize-names">${escapeHtml(e.name)}</span>
       <span class="leaderboard-prize-amount"><strong>${share}%</strong> del bote</span>
     </li>`;
@@ -741,7 +731,7 @@ function renderLeaderboard() {
   tbody.innerHTML = sorted.map((e, i) => {
     const isMe = e.name.toLowerCase() === myName;
     const suffix = !hasOfficial && e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
-    const rankCell = leaderboardRankCell(ranks[i], isPrizePhase);
+    const rankCell = leaderboardRankCell(ranks[i]);
     const prizeCol = isPrizePhase
       ? (prizeShares[i] != null
         ? `<td class="leaderboard-prize-cell"><span class="leaderboard-prize-col">${formatPrizeSharePct(prizeShares[i])}%</span></td>`
