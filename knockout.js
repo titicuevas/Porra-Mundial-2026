@@ -4,10 +4,9 @@
  */
 (function () {
   const KO_PASSWORD = 'Españita';
-  /** Prueba local: true = eliminatorias + dieciseisavos abiertos. Volver a false antes del 28 jun 10:00. */
+  /** Prueba local: true = plazo dieciseisavos abierto (como 10:00–21:00). Volver a false antes del deploy. */
   const KO_TEST_MODE = false;
   const KO_EXTRAS_TOTAL = 7;
-  const KO_EXTRAS_LOCK_AT = '2026-06-28T10:00:00+02:00'; // cierre especiales = apertura quiniela dieciseisavos
   const KO_ROUND_ORDER = ['r32', 'r16', 'r8', 'r4', 'r2'];
 
   const PARTICIPANTS = [
@@ -38,6 +37,15 @@
     r2: '2026-07-19T07:00:00+02:00'
   };
 
+  function koRoundFirstKickoffIso(matches) {
+    let best = null;
+    (matches || []).forEach(m => {
+      if (!m || !m.sortAt) return;
+      if (!best || m.sortAt < best) best = m.sortAt;
+    });
+    return best;
+  }
+
   // Terceros posibles por partido R32 (Anexo FIFA — hueco 3P)
   const KO_3P_MATCH_ELIGIBLE = {
     0: ['C', 'E', 'F', 'H', 'I'],
@@ -51,10 +59,10 @@
   };
 
   const KO_R32_SEEDS = [
-    ['mx', 'se'], ['za', 'ca'], ['br', 'jp'], ['de', 'ba'],
-    ['us', 'dz'], ['ch', 'be'], ['es', 'at'], ['fr', 'py'],
-    ['gb-eng', 'cv'], ['co', 'tbd'], ['pt', 'gh'], ['eg', 'kr'],
-    ['ar', 'uy'], ['nl', 'ma'], ['au', 'ir'], ['ci', 'no']
+    ['mx', 'ec'], ['za', 'ca'], ['br', 'jp'], ['de', 'py'],
+    ['us', 'ba'], ['ch', 'dz'], ['es', 'at'], ['fr', 'se'],
+    ['gb-eng', 'cd'], ['co', 'gh'], ['pt', 'hr'], ['be', 'sn'],
+    ['ar', 'cv'], ['nl', 'ma'], ['au', 'eg'], ['ci', 'no']
   ];
 
   // Plantilla de cruces R32 (bracket FIFA) — 3P = mejor tercero (se define al cerrar grupos)
@@ -173,6 +181,14 @@
     r2: { key: 'r2', label: 'Final', short: 'Final', matches: KO_FINAL_MATCHES }
   };
 
+  /** Cierre de pronósticos = pitido del primer partido de la ronda (solo r32 por ahora). */
+  const KO_ROUND_CLOSES = {
+    r32: koRoundFirstKickoffIso(KO_R32_MATCHES) || '2026-06-28T21:00:00+02:00'
+  };
+
+  /** Especiales y dieciseisavos comparten plazo: 10:00–21:00 del 28 jun. */
+  const KO_EXTRAS_LOCK_AT = KO_ROUND_CLOSES.r32;
+
   const koMatchMap = new Map();
   KO_ROUND_ORDER.forEach(k => KO_ROUNDS[k].matches.forEach(m => koMatchMap.set(m.id, m)));
 
@@ -216,6 +232,7 @@
   rebuildKoR32CornerSets();
 
   function compareKoThirdEntry(a, b) {
+    if (typeof window.compareThirdPlaceEntry === 'function') return window.compareThirdPlaceEntry(a, b);
     return b.p - a.p || b.gd - a.gd || b.gf - a.gf || (a.name || '').localeCompare(b.name || '', 'es');
   }
 
@@ -417,10 +434,25 @@
     return isKnockoutPublicOpen() || isKnockoutPreviewUnlocked();
   }
 
-  function isKoRoundOpen(key) {
+  function isKoRoundStarted(key) {
     if (!isKnockoutAccessible()) return false;
     if (KO_TEST_MODE && key === 'r32') return true;
     return Date.now() >= new Date(KO_ROUND_OPENS[key]).getTime();
+  }
+
+  function isKoRoundClosed(key) {
+    const closeAt = KO_ROUND_CLOSES[key];
+    if (!closeAt) return false;
+    if (KO_TEST_MODE && key === 'r32') return false;
+    return Date.now() >= new Date(closeAt).getTime();
+  }
+
+  function isKoRoundPickable(key) {
+    return isKoRoundStarted(key) && !isKoRoundClosed(key);
+  }
+
+  function isKoRoundOpen(key) {
+    return isKoRoundPickable(key);
   }
 
   function formatKoOpensAtShort(key) {
@@ -428,6 +460,29 @@
     const date = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' });
     const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
     return date + ' · ' + time;
+  }
+
+  function formatKoRoundCloseShort(key) {
+    const closeAt = KO_ROUND_CLOSES[key];
+    if (!closeAt) return '';
+    const d = new Date(closeAt);
+    const date = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' });
+    const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+    return date + ' · ' + time;
+  }
+
+  function getCountdownToKoRoundClose(key) {
+    const closeAt = KO_ROUND_CLOSES[key];
+    if (!closeAt || !isKoRoundPickable(key)) return null;
+    const ms = new Date(closeAt).getTime() - Date.now();
+    if (ms <= 0) return null;
+    const total = Math.floor(ms / 1000);
+    return {
+      h: Math.floor(total / 3600),
+      m: Math.floor((total % 3600) / 60),
+      s: total % 60,
+      ms
+    };
   }
 
   function tryUnlockKnockout(password) {
@@ -632,10 +687,10 @@
     return isValidKoPick(p) ? p : null;
   }
 
-  function getPlayableMatches() {
+  function getQuinielaMatchPool() {
     const out = [];
     KO_ROUND_ORDER.forEach(key => {
-      if (!isKoRoundOpen(key)) return;
+      if (!isKoRoundStarted(key)) return;
       KO_ROUNDS[key].matches.forEach(m => {
         if (isMatchReady(m)) out.push(m);
       });
@@ -643,8 +698,27 @@
     return out;
   }
 
+  function getPickableMatches() {
+    const out = [];
+    KO_ROUND_ORDER.forEach(key => {
+      if (!isKoRoundPickable(key)) return;
+      KO_ROUNDS[key].matches.forEach(m => {
+        if (isMatchReady(m)) out.push(m);
+      });
+    });
+    return out;
+  }
+
+  function getPlayableMatches() {
+    return getQuinielaMatchPool();
+  }
+
+  function getExportRounds() {
+    return KO_ROUND_ORDER.filter(isKoRoundStarted).map(k => KO_ROUNDS[k]);
+  }
+
   function getOpenRounds() {
-    return KO_ROUND_ORDER.filter(isKoRoundOpen).map(k => KO_ROUNDS[k]);
+    return KO_ROUND_ORDER.filter(isKoRoundPickable).map(k => KO_ROUNDS[k]);
   }
 
   function koMatchesRequired() {
@@ -680,13 +754,20 @@
     const req = koMatchesRequired();
     const md = koMatchesDone();
     if (req === 0) {
-      if (!isKoRoundOpen('r32')) {
+      if (!isKoRoundStarted('r32')) {
         blockers.push(`Quiniela dieciseisavos: abre el ${formatKoOpensAtShort('r32')} — el PDF se activará al completar especiales y partidos.`);
       } else {
         blockers.push('Quiniela: aún no hay cruces completos para marcar (faltan equipos por clasificar).');
       }
     } else if (md < req) {
-      blockers.push(`Partidos: ${md}/${req} ganadores marcados.`);
+      const r32Closed = isKoRoundClosed('r32');
+      const r32Total = KO_R32_MATCHES.filter(isMatchReady).length;
+      const r32Done = KO_R32_MATCHES.filter(m => isMatchReady(m) && getKoPick(m.id)).length;
+      if (r32Closed && r32Total > 0 && r32Done < r32Total) {
+        blockers.push(`Dieciseisavos cerrados (${formatKoRoundCloseShort('r32')}) — faltan ${r32Total - r32Done} pronóstico(s) (${r32Done}/${r32Total}).`);
+      } else {
+        blockers.push(`Partidos: ${md}/${req} ganadores marcados.`);
+      }
     }
     return blockers;
   }
@@ -986,7 +1067,7 @@
     const slot = side === 'home' ? m.homeSlot : m.awaySlot;
     const pick = getKoPick(m.id);
     const rKey = getRoundKeyForMatch(m.id);
-    const roundOpen = rKey ? isKoRoundOpen(rKey) : false;
+    const roundOpen = rKey ? isKoRoundPickable(rKey) : false;
     const ready = isMatchReady(m);
     if (!code || code === 'tbd') {
       return `<button type="button" class="ko-team-pick ko-team-pick--slot tbd" disabled>${koSlotDisplayLabel(slot)}</button>`;
@@ -1056,10 +1137,16 @@
     const complete = total > 0 && done === total;
     const pendingTeams = !allDefined;
     const preview = !!opts.preview;
-    const previewBar = preview
-      ? `<div class="ko-round-preview-banner">🔒 Vista previa de cruces — podrás marcar ganadores desde el <strong>${formatKoOpensAtShort(round.key)}</strong>.</div>`
-      : '';
-    return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}" id="ko-round-${round.key}">
+    const locked = !!opts.locked;
+    let statusBanner = '';
+    if (preview) {
+      statusBanner = `<div class="ko-round-preview-banner">🔒 Vista previa de cruces — podrás marcar ganadores desde el <strong>${formatKoOpensAtShort(round.key)}</strong> hasta el <strong>${formatKoRoundCloseShort(round.key) || 'cierre'}</strong>.</div>`;
+    } else if (locked) {
+      statusBanner = `<div class="ko-round-preview-banner">🔒 ${round.label} cerrados — plazo finalizado a las <strong>${formatKoRoundCloseShort(round.key)}</strong> (inicio del primer partido).</div>`;
+    }
+    const countLabel = preview ? 'Vista previa' : locked ? (complete ? '✓ Completo · cerrado' : `${done}/${total} · cerrado`) : (total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—');
+    const countClass = preview ? 'text-blue-300 font-semibold text-xs' : locked ? (complete ? 'text-green-400 font-semibold text-xs' : 'text-gray-400 font-semibold text-xs') : (complete ? 'text-green-400 font-semibold text-xs' : 'text-yellow-500 font-semibold text-xs');
+    return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}${locked ? ' ko-round-card--locked' : ''}" id="ko-round-${round.key}">
       <div class="group-header px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2 flex-shrink-0">
           <span class="text-xs font-black text-yellow-300 tracking-widest">RONDA</span>
@@ -1067,11 +1154,11 @@
         </div>
         <span class="ko-round-status text-xs text-gray-500">${round.matches.length} partido${round.matches.length === 1 ? '' : 's'} · toca al ganador</span>
       </div>
-      ${previewBar}
+      ${statusBanner}
       <div>${koRoundMatchesHTML(round.matches)}</div>
       <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-xs text-gray-600">${pendingTeams ? 'Algunos equipos aún por definir' : 'Quiniela ' + round.label.toLowerCase()}</span>
-        <span id="koMatchCount-${round.key}" class="text-yellow-500 font-semibold text-xs">${preview ? 'Vista previa' : (total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—')}</span>
+        <span class="text-xs text-gray-600">${pendingTeams ? 'Algunos equipos aún por definir' : locked ? 'Pronósticos bloqueados' : 'Quiniela ' + round.label.toLowerCase()}</span>
+        <span id="koMatchCount-${round.key}" class="${countClass}">${countLabel}</span>
       </div>
     </div>`;
   }
@@ -1112,7 +1199,7 @@
     if (!isKnockoutAccessible() || !getActiveKoUser() || !isValidKoPick(side)) return;
     const m = koMatchMap.get(matchId);
     const rKey = getRoundKeyForMatch(matchId);
-    if (!m || !rKey || !isKoRoundOpen(rKey) || !isMatchReady(m)) return;
+    if (!m || !rKey || !isKoRoundPickable(rKey) || !isMatchReady(m)) return;
     const data = getActiveKoData();
     data.picks[matchId] = side;
     saveKnockoutStore();
@@ -1133,18 +1220,25 @@
   function updateKoRoundCounts() {
     KO_ROUND_ORDER.forEach(key => {
       const round = KO_ROUNDS[key];
-      if (!isKoRoundOpen(key) && key !== 'r32') return;
+      if (key !== 'r32' && !isKoRoundPickable(key) && !isKoRoundStarted(key)) return;
       const el = document.getElementById('koMatchCount-' + round.key);
       const card = document.getElementById('ko-round-' + round.key);
       if (!el) return;
-      if (!isKoRoundOpen(key)) {
+      const playable = round.matches.filter(isMatchReady);
+      const done = playable.filter(m => getKoPick(m.id)).length;
+      const complete = playable.length > 0 && done === playable.length;
+      if (!isKoRoundStarted(key)) {
         el.textContent = 'Vista previa';
         el.className = 'text-blue-300 font-semibold text-xs';
         return;
       }
-      const playable = round.matches.filter(isMatchReady);
-      const done = playable.filter(m => getKoPick(m.id)).length;
-      const complete = playable.length > 0 && done === playable.length;
+      if (isKoRoundClosed(key)) {
+        el.textContent = complete ? '✓ Completo · cerrado' : `${done}/${playable.length} · cerrado`;
+        el.className = complete ? 'text-green-400 font-semibold text-xs' : 'text-gray-400 font-semibold text-xs';
+        if (card) card.classList.toggle('group-complete', complete);
+        return;
+      }
+      if (!isKoRoundPickable(key)) return;
       el.textContent = playable.length ? (complete ? '✓ Completo' : `${done}/${playable.length}`) : '—';
       el.className = complete ? 'text-green-400 font-semibold text-xs' : 'text-yellow-500 font-semibold text-xs';
       if (card) card.classList.toggle('group-complete', complete);
@@ -1157,10 +1251,18 @@
       alert('Elige un participante antes de limpiar.');
       return;
     }
-    if (!confirm(`¿Borrar los partidos de eliminatorias de ${user}?\n\n✓ La quiniela de GRUPOS no se toca (queda guardada).\n✓ Los especiales (SEMI, FINAL, CAMPEÓN) no se tocan.`)) {
+    const pickableIds = new Set(getPickableMatches().map(m => m.id));
+    if (!pickableIds.size) {
+      alert('No hay partidos editables ahora mismo (la ronda puede estar cerrada).');
       return;
     }
-    koStore.users[user].picks = {};
+    if (!confirm(`¿Borrar los partidos editables de eliminatorias de ${user}?\n\n✓ La quiniela de GRUPOS no se toca (queda guardada).\n✓ Los especiales (SEMI, FINAL, CAMPEÓN) no se tocan.\n✓ Las rondas cerradas no se modifican.`)) {
+      return;
+    }
+    const picks = koStore.users[user].picks;
+    Object.keys(picks).forEach(id => {
+      if (pickableIds.has(id)) delete picks[id];
+    });
     saveKnockoutStore();
     renderKnockoutMatches();
     updateKnockoutStatus();
@@ -1225,12 +1327,16 @@
     const lockedRounds = [];
     KO_ROUND_ORDER.forEach(key => {
       if (key === 'r32') return;
-      if (!isKoRoundOpen(key)) lockedRounds.push(KO_ROUNDS[key]);
+      if (!isKoRoundPickable(key)) lockedRounds.push(KO_ROUNDS[key]);
     });
 
     if (!getActiveKoUser()) {
-      parts.push(koRoundCardHTML(KO_ROUNDS.r32, { preview: true }));
-      parts.push('<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba para poder marcar ganadores cuando abra la ronda (28 jun, 10:00).</p>');
+      parts.push(koRoundCardHTML(KO_ROUNDS.r32, { preview: !isKoRoundStarted('r32'), locked: isKoRoundClosed('r32') }));
+      if (!isKoRoundStarted('r32')) {
+        parts.push('<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba para poder marcar ganadores cuando abra la ronda (28 jun, 10:00–21:00).</p>');
+      } else if (isKoRoundPickable('r32')) {
+        parts.push(`<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba · dieciseisavos abiertos hasta el <strong>${formatKoRoundCloseShort('r32')}</strong>.</p>`);
+      }
       if (lockedRounds.length) parts.push(koUpcomingRoundsHTML(lockedRounds));
       el.innerHTML = parts.join('');
       updateKoRoundCounts();
@@ -1239,12 +1345,18 @@
 
     KO_ROUND_ORDER.forEach(key => {
       const round = KO_ROUNDS[key];
-      if (!isKoRoundOpen(key)) {
-        if (key === 'r32') {
+      if (key === 'r32') {
+        if (!isKoRoundStarted('r32')) {
           parts.push(koRoundCardHTML(round, { preview: true }));
-        } else {
-          lockedRounds.push(round);
+        } else if (isKoRoundPickable('r32')) {
+          parts.push(koRoundCardHTML(round));
+        } else if (isKoRoundClosed('r32')) {
+          parts.push(koRoundCardHTML(round, { locked: true }));
         }
+        return;
+      }
+      if (!isKoRoundPickable(key)) {
+        lockedRounds.push(round);
         return;
       }
       parts.push(koRoundCardHTML(round));
@@ -1422,7 +1534,7 @@
   function koExtrasSummaryHTML(ex) {
     const complete = koExtrasDone() >= KO_EXTRAS_TOTAL;
     const msg = complete
-      ? '🔒 Pronósticos especiales cerrados — ya empezaron los dieciseisavos.'
+      ? '🔒 Plazo cerrado — tus pronósticos especiales quedaron guardados.'
       : '🔒 Plazo cerrado — faltan pronósticos especiales y ya no se pueden marcar.';
     return `
       <p class="ko-extras-done-msg">${msg}</p>
@@ -1460,7 +1572,7 @@
     return `
       ${koExtraWarn ? `<p class="ko-extra-warn" role="alert">${koExtraWarn}</p>` : ''}
       ${!getActiveKoUser() ? `<p class="ko-pick-user-first" role="status">👆 <strong>Elige participante</strong> en el desplegable de arriba antes de tocar equipos.</p>` : ''}
-      <p class="ko-extras-deadline-hint">Puedes cambiarlos hasta el <strong>${formatKoExtrasLockShort()}</strong> (inicio de dieciseisavos).</p>
+      <p class="ko-extras-deadline-hint">Plazo conjunto con dieciseisavos: del <strong>${formatKoOpensAtShort('r32')}</strong> al <strong>${formatKoExtrasLockShort()}</strong> (inicio del primer partido).</p>
       <div class="ko-extras-progress-wrap">
         <div class="ko-extras-progress"><div class="ko-extras-progress-fill" style="width:${pct}%"></div></div>
         <span class="ko-extras-progress-label">${done}/${KO_EXTRAS_TOTAL} completados</span>
@@ -1817,7 +1929,7 @@
       if (typeof fireConfetti === 'function') fireConfetti();
       showKoToast('koChampionToast', 5500);
       requestAnimationFrame(() => {
-        const target = isKoRoundOpen('r32') ? document.getElementById('koBracket') : document.getElementById('koExtrasSection');
+        const target = isKoRoundPickable('r32') || isKoRoundClosed('r32') ? document.getElementById('koBracket') : document.getElementById('koExtrasSection');
         target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
@@ -1837,11 +1949,14 @@
     } else if (complete) {
       st.textContent = '✓ Todo listo — puedes exportar el PDF';
     } else if (ed >= KO_EXTRAS_TOTAL && req === 0) {
-      st.textContent = isKoRoundOpen('r32')
+      st.textContent = isKoRoundPickable('r32')
         ? 'Campeón elegido ✓ — esperando cruces completos para marcar partidos'
-        : `Campeón elegido ✓ — dieciseisavos abren el ${formatKoOpensAtShort('r32')} · PDF bloqueado hasta completar`;
+        : isKoRoundClosed('r32')
+          ? 'Campeón elegido ✓ — dieciseisavos cerrados · PDF bloqueado hasta completar'
+          : `Campeón elegido ✓ — dieciseisavos abren el ${formatKoOpensAtShort('r32')} · PDF bloqueado hasta completar`;
     } else if (ed >= KO_EXTRAS_TOTAL) {
-      st.textContent = `Campeón elegido ✓ — quiniela: ${md}/${req} partidos · PDF al completar todo`;
+      const closeHint = isKoRoundPickable('r32') ? ` · cierra ${formatKoRoundCloseShort('r32')}` : isKoRoundClosed('r32') ? ' · dieciseisavos cerrados' : '';
+      st.textContent = `Campeón elegido ✓ — quiniela: ${md}/${req} partidos${closeHint} · PDF al completar todo`;
     } else if (isKoExtrasLocked() && ed < KO_EXTRAS_TOTAL) {
       st.textContent = `Partidos (${req} activos): ${md}/${req} · Especiales cerrados (${ed}/${KO_EXTRAS_TOTAL})`;
     } else {
@@ -1888,10 +2003,14 @@
     if (subtitle) {
       if (!isKnockoutAccessible()) {
         subtitle.textContent = 'Apertura oficial el 28 jun, 10:00 (hora peninsular).';
-      } else if (!isKoRoundOpen('r32')) {
-        subtitle.textContent = 'Completa los especiales ahora · la quiniela de partidos se activa el 28 jun, 10:00.';
-      } else {
-        subtitle.textContent = 'Especiales hasta el 28 jun, 10:00 · dieciseisavos abajo · cada ronda en su fecha.';
+      } else if (!isKoRoundStarted('r32')) {
+        subtitle.textContent = 'Vista anticipada · plazo oficial el 28 jun, 10:00–21:00 (participante, especiales y dieciseisavos).';
+      } else if (isKoRoundPickable('r32')) {
+        subtitle.textContent = `Plazo abierto (10:00–21:00): elige participante, completa especiales y dieciseisavos · cierra ${formatKoRoundCloseShort('r32')}.`;
+      } else if (isKoRoundClosed('r32')) {
+        subtitle.textContent = 'Plazo cerrado (28 jun, 21:00) · octavos y siguientes rondas se activan en su fecha.';
+      } else if (isKnockoutAccessible()) {
+        subtitle.textContent = 'Eliminatorias abren el 28 jun, 10:00 · plazo único hasta las 21:00 (especiales + dieciseisavos).';
       }
     }
     refreshKnockoutUI();
@@ -2379,7 +2498,7 @@
     y = koPdfDrawExtrasCard(pdf, data, cache, M, y, cardW);
     y = koPdfDrawSectionTitle(pdf, M, y + 1, cardW, 'TUS PARTIDOS', 'Verde = ganador  ·  Rojo = eliminado');
 
-    const openPlayable = getOpenRounds().map(r => ({
+    const openPlayable = getExportRounds().map(r => ({
       round: r,
       matches: r.matches.filter(isMatchReady)
     })).filter(x => x.matches.length);
@@ -2475,6 +2594,13 @@
   window.requestKnockoutAccess = requestKnockoutAccess;
   window.KO_ROUNDS = KO_ROUNDS;
   window.KO_ROUND_OPENS = KO_ROUND_OPENS;
+  window.KO_ROUND_CLOSES = KO_ROUND_CLOSES;
+  window.isKoRoundStarted = isKoRoundStarted;
+  window.isKoRoundClosed = isKoRoundClosed;
+  window.isKoRoundPickable = isKoRoundPickable;
+  window.isKoRoundOpen = isKoRoundOpen;
+  window.getCountdownToKoRoundClose = getCountdownToKoRoundClose;
+  window.formatKoRoundCloseShort = formatKoRoundCloseShort;
 
   bindKoViewportResize();
   loadKnockoutStore();

@@ -322,7 +322,7 @@ input,select,textarea{color:#fff;}
 .ko-semi-zone-status--done{color:#bbf7d0;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);}
 .ko-semi-zone-status strong{color:#fde68a;font-weight:900;}
 .ko-semi-zone-divider{display:flex;align-items:center;justify-content:center;margin:.6rem 0;padding:.45rem 0;border-top:2px dashed rgba(250,204,21,.55);border-bottom:2px dashed rgba(250,204,21,.55);background:rgba(30,41,59,.7);}
-.ko-semi-zone-divider span{font-size:.78rem;font-weight:900;color:#fde68a;text-align:center;line-height:1.35;padding:0 .4rem;}
+.ko-semi-zone-divider span{font-size:.78rem;font-weight:900;color:#fff;text-align:center;line-height:1.35;padding:0 .4rem;}
 .ko-semi-side-progress{margin:0 0 .55rem;padding:.55rem .65rem;border-radius:10px;background:rgba(250,204,21,.18);border:2px solid rgba(250,204,21,.45);font-size:.82rem;font-weight:800;color:#fff;text-align:center;line-height:1.4;}
 .ko-semi-side-progress--done{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4);color:#bbf7d0;}
 .ko-section-picker-grid--semis-zone{grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem;}
@@ -1069,7 +1069,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
     </div>
     <p class="text-xs text-gray-500 mt-4 border-t border-gray-700 pt-3">
       <strong class="text-gray-400">Plazos:</strong> fase de grupos cierra el <strong class="text-gray-300">11 de junio a las 21:00</strong> (primer partido).
-      Eliminatorias <strong class="text-green-400">abiertas</strong>; cada ronda de quiniela se activa en su fecha. Horario peninsular español.
+      Dieciseisavos: <strong class="text-gray-300">28 jun, 10:00–21:00</strong> — participante, especiales y quiniela en el mismo plazo. Horario peninsular español.
     </p>
   </div>
 </div>
@@ -1135,7 +1135,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
         <h2 class="text-lg font-bold text-white mb-0">🏅 Fase final — Eliminatorias</h2>
         <span id="koPreviewBadge" class="ko-preview-badge hidden">Modo prueba</span>
       </div>
-      <p id="koSubtitle" class="text-xs text-gray-500 mb-3">Especiales hasta el 28 jun, 10:00 · dieciseisavos abajo · cada ronda en su fecha.</p>
+      <p id="koSubtitle" class="text-xs text-gray-500 mb-3">Plazo dieciseisavos: 28 jun, 10:00–21:00 (especiales + quiniela).</p>
       <div id="koCountdownBox" class="ko-countdown-box hidden" aria-live="polite"></div>
 
       <div id="koReadFirst" class="ko-read-first" aria-label="Instrucciones eliminatorias">
@@ -1180,7 +1180,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
 
       <div class="ko-matches-section" id="koBracketSection">
         <h3 class="text-sm font-bold text-white mb-1">⚽ Quiniela — dieciseisavos (16 cruces)</h3>
-        <p class="text-xs text-gray-500 mb-3">Los <strong>16 partidos</strong> en orden cronológico. <strong>Marcar ganadores desde el 28 jun, 10:00</strong> (antes solo vista previa).</p>
+        <p class="text-xs text-gray-500 mb-3">Los <strong>16 partidos</strong> en orden cronológico. <strong>Marcar ganadores del 28 jun, 10:00 al 28 jun, 21:00</strong> (inicio del primer partido).</p>
         <div id="koBracket"></div>
       </div>
 
@@ -1407,7 +1407,7 @@ const groups = [
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 /** Sincronizar con knockout.js?v= y manifest start_url al desplegar */
-const APP_BUILD = '88';
+const APP_BUILD = '94';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
@@ -1435,8 +1435,31 @@ const SCHEDULE = {
   groupsClose: '2026-06-11T21:00:00+02:00', // cierre pronósticos fase de grupos
   leaderboardOpen: '2026-06-27T23:59:00+02:00', // fin partidos fase de grupos
   extrasOpen:  '2026-06-01T00:00:00+02:00',
-  koLockAt: '2026-06-28T10:00:00+02:00' // cierre especiales + apertura quiniela dieciseisavos
+  koOpenAt: '2026-06-28T10:00:00+02:00', // apertura eliminatorias (especiales + dieciseisavos)
+  koCloseAt: '2026-06-28T21:00:00+02:00' // cierre plazo dieciseisavos (primer partido)
 };
+
+function getKoOpenAt() {
+  return (typeof window.KO_ROUND_OPENS === 'object' && window.KO_ROUND_OPENS.r32) || SCHEDULE.koOpenAt;
+}
+
+function getKoPlazoCloseAt() {
+  return (typeof window.KO_EXTRAS_LOCK_AT === 'string' && window.KO_EXTRAS_LOCK_AT)
+    || (typeof window.KO_ROUND_CLOSES === 'object' && window.KO_ROUND_CLOSES.r32)
+    || SCHEDULE.koCloseAt;
+}
+
+function getCountdownToKoOpen() {
+  const ms = new Date(getKoOpenAt()).getTime() - Date.now();
+  if (ms <= 0) return null;
+  const total = Math.floor(ms / 1000);
+  return {
+    h: Math.floor(total / 3600),
+    m: Math.floor((total % 3600) / 60),
+    s: total % 60,
+    ms
+  };
+}
 
 function isGroupsOpen() { return Date.now() < new Date(SCHEDULE.groupsClose).getTime(); }
 function isLeaderboardOpen() { return Date.now() >= new Date(SCHEDULE.leaderboardOpen).getTime(); }
@@ -1680,42 +1703,42 @@ function initExportDock() {
 }
 
 function getCountdownToKoLock() {
-  const at = (typeof window.KO_EXTRAS_LOCK_AT === 'string' && window.KO_EXTRAS_LOCK_AT) || SCHEDULE.koLockAt;
-  const ms = new Date(at).getTime() - Date.now();
-  if (ms <= 0) return null;
-  const total = Math.floor(ms / 1000);
-  return {
-    h: Math.floor(total / 3600),
-    m: Math.floor((total % 3600) / 60),
-    s: total % 60,
-    ms
-  };
+  return getCountdownToKoOpen();
 }
 
 function renderKoCountdown() {
   const box = document.getElementById('koCountdownBox');
   if (!box) return;
-  const c = getCountdownToKoLock();
+  const closeC = typeof getCountdownToKoRoundClose === 'function' ? getCountdownToKoRoundClose('r32') : null;
+  const openC = getCountdownToKoOpen();
+  const c = closeC || openC;
   if (!c) {
     box.classList.add('hidden');
     box.innerHTML = '';
     return;
   }
   const urgent = c.ms < 3600000 ? ' urgent' : '';
-  const accessible = typeof isKnockoutAccessible === 'function' && isKnockoutAccessible();
-  const label = accessible
-    ? '⏳ Cierran especiales y abre la quiniela en:'
-    : '⏳ Abren eliminatorias en:';
+  let label;
+  let when;
+  if (closeC) {
+    label = '⏳ Cierra el plazo (especiales + dieciseisavos) en:';
+    when = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r32') : '28 jun, 21:00';
+  } else {
+    label = '⏳ Abren eliminatorias en:';
+    when = '28 jun, 10:00';
+  }
   box.classList.remove('hidden');
-  box.innerHTML = `<span class="ko-countdown-label">${label} <strong>28 jun, 10:00</strong></span>` +
+  box.innerHTML = `<span class="ko-countdown-label">${label} <strong>${when}</strong></span>` +
     `<span id="koCountdownTimer" class="ko-countdown-digits${urgent}">${formatCountdown(c)}</span>`;
 }
 
 function updateKoCountdownDisplay() {
-  if (getCountdownToKoLock()) {
+  const closeC = typeof getCountdownToKoRoundClose === 'function' ? getCountdownToKoRoundClose('r32') : null;
+  const openC = getCountdownToKoOpen();
+  const c = closeC || openC;
+  if (c) {
     const el = document.getElementById('koCountdownTimer');
-    const c = getCountdownToKoLock();
-    if (!el || !c) { renderKoCountdown(); return; }
+    if (!el) { renderKoCountdown(); return; }
     el.textContent = formatCountdown(c);
     el.classList.toggle('urgent', c.ms < 3600000);
     return;
@@ -1757,8 +1780,15 @@ function renderScheduleBanner() {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Fase de grupos cerrada</strong> desde el 11 jun, 21:00. Ya no se pueden cambiar los pronósticos de grupos.</div>';
   } else if (typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular)</div>';
+  } else if (typeof isKoRoundPickable === 'function' && isKoRoundPickable('r32')) {
+    const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r32') : '28 jun, 21:00';
+    el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Plazo abierto (10:00–21:00)</strong> — elige participante, rellena <strong>especiales + dieciseisavos</strong> y exporta antes del <strong>' + closeLabel + '</strong></div>';
+  } else if (typeof isKoRoundClosed === 'function' && isKoRoundClosed('r32')) {
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Plazo cerrado</strong> desde las 21:00 del 28 jun. Octavos y siguientes rondas se activan en su fecha.</div>';
+  } else if (typeof isKnockoutAccessible === 'function' && isKnockoutAccessible()) {
+    el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Eliminatorias</strong> — plazo único el 28 jun, <strong>10:00–21:00</strong> (participante, especiales y dieciseisavos)</div>';
   } else {
-    el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Fase final abierta</strong> — especiales, cruces de dieciseisavos y quiniela por rondas (PDF al completar cada fase)</div>';
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular)</div>';
   }
 }
 
@@ -1774,16 +1804,20 @@ function updateCountdownDisplay() {
 function tickSchedule() {
   const g = isGroupsOpen(), e = isExtrasOpen(), lb = isLeaderboardOpen();
   const ko = typeof isKnockoutAccessible === 'function' ? isKnockoutAccessible() : e;
-  const koLockDone = !!window._schedKoLock;
-  const koLockNow = !getCountdownToKoLock();
+  const koOpenNow = typeof isKnockoutPublicOpen === 'function' ? isKnockoutPublicOpen() : ko;
+  const koOpenDone = !!window._schedKoOpen;
+  const r32Pickable = typeof isKoRoundPickable === 'function' ? isKoRoundPickable('r32') : false;
+  const r32Closed = typeof isKoRoundClosed === 'function' ? isKoRoundClosed('r32') : false;
   updateCountdownDisplay();
   updateKoCountdownDisplay();
-  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard || ko !== window._schedKo || koLockNow !== koLockDone) {
+  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard || ko !== window._schedKo || koOpenNow !== koOpenDone || r32Pickable !== window._schedR32Pickable || r32Closed !== window._schedR32Closed) {
     window._schedGroups = g;
     window._schedExtras = e;
     window._schedLeaderboard = lb;
     window._schedKo = ko;
-    window._schedKoLock = koLockNow;
+    window._schedKoOpen = koOpenNow;
+    window._schedR32Pickable = r32Pickable;
+    window._schedR32Closed = r32Closed;
     renderScheduleBanner();
     renderGroups();
     if (typeof renderKnockout === 'function') renderKnockout();
@@ -2568,6 +2602,7 @@ function isGroupComplete(group) {
 const BEST_THIRD_SLOTS = 8;
 
 function compareBestThird(a, b) {
+  if (typeof window.compareThirdPlaceEntry === 'function') return window.compareThirdPlaceEntry(a, b);
   return b.p - a.p || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name, 'es');
 }
 
@@ -2689,7 +2724,7 @@ function buildGroupsQualifiedSummaryHTML(data) {
     thirdsBlock = `<div class="qualified-thirds-block">
       <p class="qualified-summary-title qualified-summary-title--thirds">🥉 Mejores terceros que clasifican (${qualifying.length} de ${BEST_THIRD_SLOTS})</p>
       <div class="qualified-thirds-list">${rows}</div>
-      <p class="qualified-summary-hint">De los 12 terceros, pasan los 8 mejores (puntos, diferencia de goles, goles a favor). ${provHint}</p>
+      <p class="qualified-summary-hint">De los 12 terceros, pasan los 8 mejores (puntos, diferencia, goles a favor, fair play y ranking FIFA). ${provHint}</p>
     </div>`;
   }
 
@@ -3121,7 +3156,7 @@ function bootApp() {
   window._schedExtras = isExtrasOpen();
   window._schedLeaderboard = isLeaderboardOpen();
   window._schedKo = typeof isKnockoutAccessible === 'function' ? isKnockoutAccessible() : false;
-  window._schedKoLock = !getCountdownToKoLock();
+  window._schedKoOpen = typeof isKnockoutPublicOpen === 'function' ? isKnockoutPublicOpen() : false;
 
   try { renderScheduleBanner(); } catch (e) { console.warn(e); }
   try { if (typeof renderKnockout === 'function') renderKnockout(); } catch (e) { console.warn(e); }
@@ -3157,7 +3192,8 @@ if (document.readyState === 'loading') {
 }
 </script>
 <script src="annex-c-data.js?v=85"></script>
-<script src="knockout.js?v=88"></script>
+<script src="team-fifa-meta.js?v=90"></script>
+<script src="knockout.js?v=94"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
