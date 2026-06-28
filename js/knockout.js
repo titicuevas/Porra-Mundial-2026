@@ -342,22 +342,23 @@
     return null;
   }
 
+  /** Ganador de un dieciseisavo: resultado oficial primero; pronóstico del usuario si aplica. */
+  function winnerFromR32Feeder(r32Index, allowUserFallback) {
+    const official = winnerFromKoMatchIndex(r32Index);
+    if (official) return official;
+    if (!allowUserFallback) return null;
+    return winnerFromUserKoPick(KO_R32_MATCHES[r32Index]);
+  }
+
   function syncKnockoutBracketFromResults() {
-    const useUserR32Preview = !!getActiveKoUser() && !allKoR32ResultsComplete() && (
+    const allowUserFallback = !!getActiveKoUser() && !allKoR32ResultsComplete() && (
       canViewOctavosBracket() || isKoR16PreviewActive() || isKoLabEnabled()
     );
     KO_R16_FEEDERS.forEach((feeders, i) => {
       const match = KO_R16_MATCHES[i];
       if (!match) return;
-      let home;
-      let away;
-      if (useUserR32Preview) {
-        home = winnerFromUserKoPick(KO_R32_MATCHES[feeders[0]]);
-        away = winnerFromUserKoPick(KO_R32_MATCHES[feeders[1]]);
-      } else {
-        home = winnerFromKoMatchIndex(feeders[0]);
-        away = winnerFromKoMatchIndex(feeders[1]);
-      }
+      const home = winnerFromR32Feeder(feeders[0], allowUserFallback);
+      const away = winnerFromR32Feeder(feeders[1], allowUserFallback);
       match.home = home || 'tbd';
       match.away = away || 'tbd';
     });
@@ -441,6 +442,9 @@
   }
 
   function refreshKnockoutUI() {
+    if (typeof buildOfficialGroupStandings === 'function' && typeof syncKnockoutGroupSeeds === 'function') {
+      syncKnockoutGroupSeeds(buildOfficialGroupStandings());
+    }
     syncKnockoutBracketFromResults();
     renderKnockoutUserBar();
     renderKnockoutExtras();
@@ -1616,7 +1620,7 @@
     const el = document.getElementById('koBracket');
     if (!el) return;
     bindKoMatchClicks();
-    if (isKnockoutAccessible() && getActiveKoUser()) syncKnockoutBracketFromResults();
+    if (isKnockoutAccessible()) syncKnockoutBracketFromResults();
     if (!isKnockoutAccessible()) {
       el.innerHTML = `<div class="extras-locked">
         <p class="text-gray-400 text-sm">🔒 Las eliminatorias abren el <strong>28 de junio a las 10:00</strong> (hora peninsular).</p>
@@ -1656,7 +1660,7 @@
       } else {
         const r16Ready = KO_R16_MATCHES.filter(isMatchReady).length;
         if (r16Ready < KO_R16_MATCHES.length) {
-          parts.push('<p class="ko-hint-callout" style="margin:0 0 .75rem">Algunos cruces salen «por definir» — elige el <strong>mismo participante</strong> con el que rellenaste dieciseisavos en este móvil.</p>');
+          parts.push('<p class="ko-hint-callout" style="margin:0 0 .75rem">Los cruces se rellenan con <strong>resultados oficiales</strong> y, si faltan, con tus dieciseisavos guardados en este móvil.</p>');
         }
       }
       const upcoming = getUpcomingKoRounds();

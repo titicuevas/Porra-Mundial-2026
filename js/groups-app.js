@@ -2,7 +2,7 @@
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
 /** Sincronizar ?v= en porra-mundial-2026.html y manifest start_url al desplegar */
-const APP_BUILD = '112';
+const APP_BUILD = '113';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
