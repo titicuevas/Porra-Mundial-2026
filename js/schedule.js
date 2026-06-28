@@ -1,5 +1,11 @@
-/* FIFA WC26 — calendario eliminatorias (hora peninsular CEST) y cableado del cuadro */
+/* Calendario único — fase de grupos + eliminatorias FIFA (CEST, peninsular) */
 (function () {
+  window.PORRA_SCHEDULE = {
+    groupsClose: '2026-06-11T21:00:00+02:00',
+    leaderboardOpen: '2026-06-27T00:00:00+02:00',
+    extrasOpen: '2026-06-01T00:00:00+02:00'
+  };
+
   /** Apertura de pronósticos por ronda (cierra al pitido del 1er partido de la ronda). */
   const ROUND_OPENS = {
     r32: '2026-06-28T10:00:00+02:00',

@@ -1,8 +1,7 @@
 /* Lógica fase de grupos — Porra Mundial 2026 */
 const MATCH_TOTAL = 72;
 const IS_ADMIN = new URLSearchParams(location.search).get('admin') === '1';
-/** Sincronizar ?v= en porra-mundial-2026.html y manifest start_url al desplegar */
-const APP_BUILD = '113';
+const APP_BUILD = (typeof window !== 'undefined' && window.PORRA_BUILD) || '0';
 
 function showAppReloadBannerIfNeeded() {
   if (!window.__appNeedsReload) return;
@@ -25,23 +24,21 @@ function showAppReloadBannerIfNeeded() {
   } catch (e) { /* */ }
 })();
 
-// Horarios peninsulares (CEST, UTC+2)
-const SCHEDULE = {
-  groupsClose: '2026-06-11T21:00:00+02:00', // cierre pronósticos fase de grupos
-  leaderboardOpen: '2026-06-27T00:00:00+02:00', // clasificación fase de grupos
-  extrasOpen:  '2026-06-01T00:00:00+02:00',
-  koOpenAt: '2026-06-28T10:00:00+02:00', // apertura eliminatorias (especiales + dieciseisavos)
-  koCloseAt: '2026-06-28T21:00:00+02:00' // cierre plazo dieciseisavos (primer partido)
+const SCHEDULE = (typeof window !== 'undefined' && window.PORRA_SCHEDULE) || {
+  groupsClose: '2026-06-11T21:00:00+02:00',
+  leaderboardOpen: '2026-06-27T00:00:00+02:00',
+  extrasOpen: '2026-06-01T00:00:00+02:00'
 };
 
 function getKoOpenAt() {
-  return (typeof window.KO_ROUND_OPENS === 'object' && window.KO_ROUND_OPENS.r32) || SCHEDULE.koOpenAt;
+  const ro = window.FIFA_KO_SCHEDULE && window.FIFA_KO_SCHEDULE.ROUND_OPENS;
+  return (ro && ro.r32) || '2026-06-28T10:00:00+02:00';
 }
 
 function getKoPlazoCloseAt() {
   return (typeof window.KO_EXTRAS_LOCK_AT === 'string' && window.KO_EXTRAS_LOCK_AT)
     || (typeof window.KO_ROUND_CLOSES === 'object' && window.KO_ROUND_CLOSES.r32)
-    || SCHEDULE.koCloseAt;
+    || '2026-06-28T21:00:00+02:00';
 }
 
 function getCountdownToKoOpen() {
@@ -585,17 +582,30 @@ function getLeaderboardEntries() {
   return shared.sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
 }
 
-function leaderboardMedal(rankIndex) {
-  if (rankIndex === 0) return '🥇';
-  if (rankIndex === 1) return '🥈';
-  if (rankIndex === 2) return '🥉';
+function computeCompetitionRanks(entries) {
+  if (!entries.length) return [];
+  const ranks = [1];
+  for (let i = 1; i < entries.length; i++) {
+    const pts = entries[i].points || 0;
+    const prev = entries[i - 1].points || 0;
+    ranks.push(pts === prev ? ranks[i - 1] : i + 1);
+  }
+  return ranks;
+}
+
+function leaderboardMedalForRank(rank) {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
   return '';
 }
 
-function leaderboardRankCell(rankIndex, hasOfficial) {
-  const medal = hasOfficial ? leaderboardMedal(rankIndex) : '';
-  if (medal) return `<span class="leaderboard-medal" aria-label="${rankIndex + 1}º">${medal}</span>`;
-  return String(rankIndex + 1);
+function leaderboardRankCell(competitionRank) {
+  const medal = leaderboardMedalForRank(competitionRank);
+  if (medal) {
+    return `<span class="leaderboard-medal" aria-label="${competitionRank}º">${medal}</span>`;
+  }
+  return String(competitionRank);
 }
 
 function renderLeaderboard() {
@@ -657,10 +667,11 @@ function renderLeaderboard() {
     return;
   }
   if (empty) empty.classList.add('hidden');
+  const ranks = computeCompetitionRanks(entries);
   tbody.innerHTML = entries.map((e, i) => {
     const isMe = e.name.toLowerCase() === myName;
     const suffix = !hasOfficial && e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
-    const rankCell = leaderboardRankCell(i, hasOfficial);
+    const rankCell = leaderboardRankCell(ranks[i]);
     return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td></tr>`;
   }).join('');
 }
@@ -805,9 +816,7 @@ async function loadImageAsDataUrl(path, w, h) {
 async function loadTrophyDataUrl() {
   if (trophyCache) return trophyCache;
   const sources = [
-    { path: '/assets/wc2026-logo.png', w: 260, h: 260 },
-    { path: '/assets/wc-trophy-photo.jpg', w: 200, h: 260 },
-    { path: '/assets/wc-trophy-photo.png', w: 200, h: 260 }
+    { path: '/assets/wc2026-logo.png', w: 260, h: 260 }
   ];
   for (const src of sources) {
     try {
@@ -1108,7 +1117,8 @@ function getOfficialGroupStats(participantName) {
   const sorted = entries.slice().sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
   const idx = sorted.findIndex(e => e.name.toLowerCase() === participantName.toLowerCase());
   if (idx < 0) return null;
-  return { rank: idx + 1, total: sorted.length, points: sorted[idx].points || 0 };
+  const ranks = computeCompetitionRanks(sorted);
+  return { rank: ranks[idx], total: sorted.length, points: sorted[idx].points || 0 };
 }
 
 function setHeaderAciertos(correct, played) {

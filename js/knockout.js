@@ -1,7 +1,6 @@
 /* Eliminatorias — Porra Mundial 2026
  * Participantes: edita PARTICIPANTS más abajo (ver README.md).
- * Tras cambios: sync-html.bat → preparar-deploy.bat → git push
- * Fichero: js/knockout.js
+ * Tras cambios: node scripts/sync-version.js → preparar-deploy.bat → git push
  */
 (function () {
   const KO_PASSWORD = 'Españita';
@@ -1591,10 +1590,6 @@
     renderKnockout();
   }
 
-  function clearKnockoutPicks() {
-    clearKnockoutAll();
-  }
-
   function renderKnockoutUserBar() {
     const bar = document.getElementById('koPlayerBar');
     const sel = document.getElementById('koUserSelect');
@@ -3047,7 +3042,6 @@
   window.hideKoPasswordModal = hideKoPasswordModal;
   window.clearKnockoutMatches = clearKnockoutMatches;
   window.clearKnockoutAll = clearKnockoutAll;
-  window.clearKnockoutPicks = clearKnockoutPicks;
   window.exportKnockoutPDF = exportKnockoutPDF;
   window.syncKnockoutGroupSeeds = syncKnockoutGroupSeeds;
   window.syncKnockoutBracketFromResults = syncKnockoutBracketFromResults;

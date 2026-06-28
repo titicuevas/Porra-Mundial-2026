@@ -53,7 +53,7 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
   - Semifinalistas: **1 por esquina** → `G1 ↖`, `G2 ↗`, `G3 ↙`, `G4 ↘`
   - Finalistas: **1 de arriba** + **1 de abajo**
   - Campeón: entre tus 2 finalistas  
-  *(editables hasta 28 jun, 7:00)*
+  *(editables hasta 28 jun, 21:00)*
 - **Quiniela:** ganador de cada partido (16avos → final)
 - **Verde** = ganador · **Rojo** = eliminado · etiquetas SEMI / FINAL / CAMPEÓN
 - **Limpiar partidos** no borra la quiniela de grupos
@@ -93,9 +93,9 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 | Hito | Fecha |
 |------|--------|
 | 🔒 Cierre pronósticos **grupos** | 11 jun 2026, 21:00 |
-| 🔒 Cierre **especiales** KO | 28 jun 2026, 7:00 |
-| 🏅 Apertura **quiniela dieciseisavos** | 28 jun 2026, 7:00 |
-| 🏅 Octavos / cuartos / semis / final | 4, 9, 14 y 19 jul 2026, 7:00 |
+| 🔒 Cierre **especiales** KO | 28 jun 2026, 21:00 |
+| 🏅 Apertura **quiniela dieciseisavos** | 28 jun 2026, 10:00 |
+| 🏅 Octavos / cuartos / semis / final | 4, 9, 14 y 19 jul 2026 |
 | 📊 Clasificación provisional | Tras grupos (27 jun+) |
 
 ---
@@ -105,17 +105,16 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 | Script | Qué hace |
 |--------|----------|
 | `iniciar.bat` | Servidor [localhost:8765](http://localhost:8765) |
-| `sync-html.bat` | Copia `porra-mundial-2026.html` → `index.html` |
-| `preparar-deploy.bat` | Sync + verificación antes de subir a Vercel |
-| `node scripts/verify.js` | Comprueba HTML, knockout y JSON |
+| `preparar-deploy.bat` | Sincroniza versión + verificación antes de subir a Vercel |
+| `node scripts/sync-version.js` | Propaga `js/version.js` → `?v=` en HTML y `manifest.json` |
+| `node scripts/verify.js` | Comprueba estructura, versión y cuadro FIFA |
 
 ```bash
 python -m http.server 8765          # alternativa manual
-./sync-html.sh                      # Linux/Mac
+preparar-deploy.bat                 # Windows, antes de cada push
 ```
 
-> ⚠️ No uses `file://`. Tras editar HTML, **siempre** `sync-html.bat`.  
-> Al cambiar archivos en `js/` o `css/`, sube `?v=` en `porra-mundial-2026.html` y `APP_BUILD` en `js/groups-app.js`.
+> ⚠️ No uses `file://`. Tras cambiar JS/CSS, sube el número en **`js/version.js`** y ejecuta **`node scripts/sync-version.js`** (o `preparar-deploy.bat`).
 
 ---
 
@@ -136,11 +135,11 @@ Vercel despliega solo. Repo: [github.com/titicuevas/Porra-Mundial-2026](https://
 </details>
 
 <details>
-<summary><strong>Editar HTML</strong></summary>
+<summary><strong>Editar HTML o JS</strong></summary>
 
-1. Cambia **`porra-mundial-2026.html`** (copia de trabajo)
-2. Ejecuta **`sync-html.bat`**
-3. Vercel sirve **`index.html`**
+1. **`index.html`** — única página de la app
+2. **`js/version.js`** — sube `PORRA_BUILD` al cambiar assets
+3. **`preparar-deploy.bat`** — sincroniza versión y verifica
 
 </details>
 
@@ -172,27 +171,30 @@ Array `PARTICIPANTS` en `js/knockout.js` → sync → push.
 ## 📁 Estructura
 
 ```
-├── porra-mundial-2026.html    ← Fuente HTML (solo marcado + enlaces)
-├── index.html                 ← Copia de despliegue (sync-html.bat)
-├── css/
-│   └── app.css                ← Estilos (responsive, grupos, KO)
+├── index.html                 ← Única página (HTML + enlaces a JS/CSS)
+├── css/app.css                ← Estilos
 ├── js/
+│   ├── version.js             ← Versión única (PORRA_BUILD)
+│   ├── schedule.js            ← Calendario grupos + FIFA KO (P73–P104)
 │   ├── groups-data.js         ← 12 grupos, equipos y partidos
-│   ├── groups-app.js          ← Lógica fase de grupos, PDF, clasificación
+│   ├── groups-app.js          ← Fase de grupos, PDF, clasificación
 │   ├── knockout.js            ← Eliminatorias + PDF KO
 │   ├── annex-c-data.js        ← Anexo FIFA (cruces 3º)
 │   └── team-fifa-meta.js      ← Metadatos equipos FIFA
 ├── results.json               ← Marcadores oficiales
+├── results.example.json       ← Plantilla de resultados
 ├── leaderboard.json           ← Clasificación participantes
 ├── manifest.json              ← PWA
-├── scripts/verify.js          ← Comprobaciones pre-deploy
-├── sync-html.bat / .sh
+├── scripts/
+│   ├── sync-version.js        ← Propaga versión al HTML
+│   └── verify.js              ← Comprobaciones pre-deploy
+├── iniciar.bat / preparar-deploy.bat
 └── assets/
 ```
 
 **CDN:** Tailwind, jsPDF, flagcdn.com — sin `npm install`.
 
-Al cambiar CSS o JS, sube `?v=` en `porra-mundial-2026.html` y `APP_BUILD` en `js/groups-app.js`, luego `sync-html.bat`.
+Al cambiar CSS o JS: edita **`js/version.js`** → `node scripts/sync-version.js` → `preparar-deploy.bat`.
 
 ---
 
@@ -200,7 +202,8 @@ Al cambiar CSS o JS, sube `?v=` en `porra-mundial-2026.html` y `APP_BUILD` en `j
 
 | Idea | Estado |
 |------|--------|
-| Sync HTML automático | ✅ `sync-html.bat` + `verify.js` |
+| Sync HTML automático | ✅ Un solo `index.html` |
+| Versión centralizada | ✅ `js/version.js` + `sync-version.js` |
 | `results.json` en repo | ✅ `{}` + `results.example.json` |
 | PWA / añadir a inicio | ✅ `manifest.json` |
 | QR + WhatsApp | ✅ En README y botón en web |
