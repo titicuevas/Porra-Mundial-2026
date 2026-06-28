@@ -582,72 +582,46 @@ function getLeaderboardEntries() {
   return shared.sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
 }
 
-function computeCompetitionRanks(entries) {
-  if (!entries.length) return [];
-  const ranks = [1];
-  for (let i = 1; i < entries.length; i++) {
-    const pts = entries[i].points || 0;
-    const prev = entries[i - 1].points || 0;
-    ranks.push(pts === prev ? ranks[i - 1] : i + 1);
-  }
-  return ranks;
-}
-
-/** Podio por tramos de puntos: 1.º/2.º/3.º grupo de puntuación (no salta el bronce si hay empate arriba). */
-function computePodiumTiers(entries) {
-  const tiers = [];
-  let tier = 0;
-  let lastPts = null;
-  for (let i = 0; i < entries.length; i++) {
-    const pts = entries[i].points || 0;
-    if (lastPts === null || pts !== lastPts) {
-      tier++;
-      lastPts = pts;
-    }
-    tiers.push(tier <= 3 ? tier : 0);
-  }
-  return tiers;
-}
-
 const PODIUM_PRIZE_POOL = { 1: 60, 2: 30, 3: 10 };
 
-function analyzePodiumPrize(entries) {
-  const tiers = computePodiumTiers(entries);
-  const competitionRanks = computeCompetitionRanks(entries);
-  const prizeShares = computePodiumPrizeShares(tiers);
-  const groups = [];
-  for (let i = 0; i < entries.length; i++) {
-    const tier = tiers[i];
-    if (!tier || tier > 3) continue;
-    const pts = entries[i].points || 0;
-    const last = groups[groups.length - 1];
-    if (!last || last.tier !== tier || last.points !== pts) {
-      groups.push({ tier, points: pts, poolPct: PODIUM_PRIZE_POOL[tier], names: [] });
-    }
-    groups[groups.length - 1].names.push(entries[i].name);
-  }
-  groups.forEach(g => {
-    g.count = g.names.length;
-    g.sharePct = g.poolPct / g.count;
-  });
-  const allocatedPct = groups.reduce((sum, g) => sum + g.poolPct, 0);
-  return {
-    tiers,
-    competitionRanks,
-    prizeShares,
-    groups,
-    allocatedPct,
-    unallocatedPct: Math.max(0, 100 - allocatedPct)
-  };
+/** Desempate oficial: campeón → finalistas → semifinalistas (entry.tiebreak). */
+function compareTiebreak(a, b) {
+  const sa = a.tiebreak || {};
+  const sb = b.tiebreak || {};
+  if ((sb.champion || 0) !== (sa.champion || 0)) return (sb.champion || 0) - (sa.champion || 0);
+  if ((sb.finalists || 0) !== (sa.finalists || 0)) return (sb.finalists || 0) - (sa.finalists || 0);
+  if ((sb.semis || 0) !== (sa.semis || 0)) return (sb.semis || 0) - (sa.semis || 0);
+  return 0;
 }
 
-function computePodiumPrizeShares(tiers) {
-  const counts = { 1: 0, 2: 0, 3: 0 };
-  tiers.forEach(t => { if (t >= 1 && t <= 3) counts[t]++; });
-  return tiers.map(t => {
-    if (!t || t > 3 || !counts[t]) return null;
-    return PODIUM_PRIZE_POOL[t] / counts[t];
+function sortLeaderboardEntries(entries, useTiebreak) {
+  return entries.slice().sort((a, b) => {
+    const pd = (b.points || 0) - (a.points || 0);
+    if (pd) return pd;
+    if (useTiebreak) {
+      const tb = compareTiebreak(a, b);
+      if (tb) return tb;
+    }
+    return (a.name || '').localeCompare(b.name || '', 'es');
   });
+}
+
+/** Siempre 1, 2, 3… sin empates en el puesto (el desempate va en el orden previo). */
+function computeUniqueRanks(sorted) {
+  return sorted.map((_, i) => i + 1);
+}
+
+function computePrizeShares(ranks) {
+  return ranks.map(r => {
+    if (r === 1) return PODIUM_PRIZE_POOL[1];
+    if (r === 2) return PODIUM_PRIZE_POOL[2];
+    if (r === 3) return PODIUM_PRIZE_POOL[3];
+    return null;
+  });
+}
+
+function isKoPrizeLeaderboard(data) {
+  return !!(data && data.phase === 'eliminatorias');
 }
 
 function formatPrizeSharePct(pct) {
@@ -657,57 +631,43 @@ function formatPrizeSharePct(pct) {
 }
 
 function getDisplayRank(sorted, index) {
-  const tiers = computePodiumTiers(sorted);
-  const tier = tiers[index];
-  if (tier >= 1 && tier <= 3) return tier;
-  return computeCompetitionRanks(sorted)[index];
+  return index + 1;
 }
 
-function leaderboardMedalForTier(tier) {
-  if (tier === 1) return '🥇';
-  if (tier === 2) return '🥈';
-  if (tier === 3) return '🥉';
+function leaderboardMedalForRank(rank) {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
   return '';
 }
 
-function leaderboardRankCell(tier, competitionRank) {
-  const medal = leaderboardMedalForTier(tier);
-  if (medal) {
-    return `<span class="leaderboard-medal" aria-label="${tier}º">${medal}</span>`;
+function leaderboardRankCell(rank, showMedals) {
+  if (showMedals) {
+    const medal = leaderboardMedalForRank(rank);
+    if (medal) {
+      return `<span class="leaderboard-medal" aria-label="${rank}º">${medal}</span>`;
+    }
   }
-  return String(competitionRank);
+  return String(rank);
 }
 
-function buildLeaderboardPrizeSummaryHTML(analysis, hasOfficial) {
-  const { groups, unallocatedPct } = analysis;
-  if (!groups.length) return '';
-  const lines = groups.map(g => {
-    const medal = leaderboardMedalForTier(g.tier);
-    const names = g.names.map(n => escapeHtml(n)).join(', ');
-    const share = formatPrizeSharePct(g.sharePct);
-    const splitNote = g.count > 1
-      ? `<span class="leaderboard-prize-split">${g.poolPct}% ÷ ${g.count} = <strong>${share}%</strong> c/u</span>`
-      : `<span class="leaderboard-prize-split"><strong>${share}%</strong> del bote</span>`;
+function buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) {
+  const lines = [1, 2, 3].map(pos => {
+    const e = sorted[pos - 1];
+    if (!e || prizeShares[pos - 1] == null) return '';
+    const medal = leaderboardMedalForRank(pos);
+    const share = formatPrizeSharePct(prizeShares[pos - 1]);
     return `<li class="leaderboard-prize-item">
-      <span class="leaderboard-prize-tier">${medal} ${g.tier}.º tramo · ${g.points} pts</span>
-      <span class="leaderboard-prize-names">${names}</span>
-      <span class="leaderboard-prize-amount">${splitNote}</span>
+      <span class="leaderboard-prize-tier">${medal} ${pos}.º</span>
+      <span class="leaderboard-prize-names">${escapeHtml(e.name)}</span>
+      <span class="leaderboard-prize-amount"><strong>${share}%</strong> del bote</span>
     </li>`;
-  }).join('');
-  let foot = '';
-  if (unallocatedPct > 0) {
-    const missing = [];
-    if (!groups.some(g => g.tier === 2)) missing.push('plata (30%)');
-    if (!groups.some(g => g.tier === 3)) missing.push('bronce (10%)');
-    const detail = missing.length ? missing.join(' y ') : `${unallocatedPct}%`;
-    foot = `<p class="leaderboard-prize-foot">ℹ️ En esta clasificación no hay tramo para ${detail}: <strong>${unallocatedPct}%</strong> del bote no se reparte aquí.</p>`;
-  }
-  const title = hasOfficial ? '💰 Reparto del bote por tramos de puntos' : '💰 Reparto orientativo (mismas reglas)';
+  }).filter(Boolean).join('');
+  if (!lines) return '';
   return `<div class="leaderboard-prize-summary" role="region" aria-label="Reparto del bote">
-    <p class="leaderboard-prize-title">${title}</p>
+    <p class="leaderboard-prize-title">💰 Reparto del bote (eliminatorias)</p>
     <ul class="leaderboard-prize-list">${lines}</ul>
-    <p class="leaderboard-prize-rule">Cada <strong>tramo de puntuación</strong> es un puesto del podio (oro 60%, plata 30%, bronce 10%). Si varios empatan a puntos en el mismo tramo, comparten medalla y se reparten ese porcentaje a partes iguales.</p>
-    ${foot}
+    <p class="leaderboard-prize-rule">Un solo ganador por premio (60 % · 30 % · 10 %). Empate a puntos: desempate por aciertos en campeón, finalistas y semifinalistas (en ese orden).</p>
   </div>`;
 }
 
@@ -765,6 +725,9 @@ function renderLeaderboard() {
     : getLeaderboardEntries();
   const myName = getPlayerDisplayName().toLowerCase();
   const prizeSummaryEl = document.getElementById('leaderboardPrizeSummary');
+  const prizeColHeader = document.querySelector('.leaderboard-prize-col-header');
+  const isPrizePhase = isKoPrizeLeaderboard(leaderboardData);
+  if (prizeColHeader) prizeColHeader.classList.toggle('hidden', !isPrizePhase);
   if (!entries.length) {
     tbody.innerHTML = '';
     if (prizeSummaryEl) { prizeSummaryEl.innerHTML = ''; prizeSummaryEl.classList.add('hidden'); }
@@ -772,19 +735,22 @@ function renderLeaderboard() {
     return;
   }
   if (empty) empty.classList.add('hidden');
-  const podium = analyzePodiumPrize(entries);
-  tbody.innerHTML = entries.map((e, i) => {
+  const sorted = sortLeaderboardEntries(entries, isPrizePhase);
+  const ranks = computeUniqueRanks(sorted);
+  const prizeShares = isPrizePhase ? computePrizeShares(ranks) : null;
+  tbody.innerHTML = sorted.map((e, i) => {
     const isMe = e.name.toLowerCase() === myName;
     const suffix = !hasOfficial && e.local ? ' <span style="color:#9ca3af;font-size:.7rem">(tu registro)</span>' : '';
-    const rankCell = leaderboardRankCell(podium.tiers[i], podium.competitionRanks[i]);
-    const share = podium.prizeShares[i];
-    const prizeCol = share != null
-      ? `<span class="leaderboard-prize-col">${formatPrizeSharePct(share)}%</span>`
-      : '<span class="leaderboard-prize-col leaderboard-prize-col--empty">—</span>';
-    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td><td class="leaderboard-prize-cell">${prizeCol}</td></tr>`;
+    const rankCell = leaderboardRankCell(ranks[i], isPrizePhase);
+    const prizeCol = isPrizePhase
+      ? (prizeShares[i] != null
+        ? `<td class="leaderboard-prize-cell"><span class="leaderboard-prize-col">${formatPrizeSharePct(prizeShares[i])}%</span></td>`
+        : '<td class="leaderboard-prize-cell"><span class="leaderboard-prize-col leaderboard-prize-col--empty">—</span></td>')
+      : '';
+    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td>${prizeCol}</tr>`;
   }).join('');
   if (prizeSummaryEl) {
-    const html = buildLeaderboardPrizeSummaryHTML(podium, hasOfficial);
+    const html = isPrizePhase ? buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) : '';
     prizeSummaryEl.innerHTML = html;
     prizeSummaryEl.classList.toggle('hidden', !html);
   }
@@ -1228,7 +1194,7 @@ function updateGroupCount(groupId, matches) {
 function getOfficialGroupStats(participantName) {
   const entries = (leaderboardData.entries || []).filter(e => e && e.name);
   if (!entries.length || !participantName) return null;
-  const sorted = entries.slice().sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'));
+  const sorted = sortLeaderboardEntries(entries, false);
   const idx = sorted.findIndex(e => e.name.toLowerCase() === participantName.toLowerCase());
   if (idx < 0) return null;
   return { rank: getDisplayRank(sorted, idx), total: sorted.length, points: sorted[idx].points || 0 };

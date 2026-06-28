@@ -20,7 +20,7 @@
 <title>Porra Mundial 2026 🏆</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link rel="stylesheet" href="css/app.css?v=118"/>
+<link rel="stylesheet" href="css/app.css?v=120"/>
 </head>
 <body class="min-h-screen text-white">
 <noscript><div style="background:#7f1d1d;color:#fff;padding:1rem;text-align:center">Activa JavaScript para usar la porra.</div></noscript>
@@ -176,12 +176,11 @@
       <div>
         <p class="font-semibold text-yellow-400 mb-1">Premios (reparto del bote)</p>
         <ul class="space-y-0.5 text-gray-400">
-          <li>🥇 <strong class="text-white">1.er tramo de puntos</strong> — 60 % del bote (repuesto entre empatados)</li>
-          <li>🥈 <strong class="text-white">2.º tramo</strong> — 30 %</li>
-          <li>🥉 <strong class="text-white">3.er tramo</strong> — 10 %</li>
-          <li class="text-gray-500 text-xs mt-1">Ejemplo: dos en 2.º tramo → 15 % cada uno. Dos en 3.er tramo → 5 % cada uno.</li>
+          <li>🥇 <strong class="text-white">1.º</strong> — 60 % del bote</li>
+          <li>🥈 <strong class="text-white">2.º</strong> — 30 % del bote</li>
+          <li>🥉 <strong class="text-white">3.º</strong> — 10 % del bote</li>
         </ul>
-        <p class="text-xs text-gray-500 mt-2"><strong class="text-gray-400">Eliminatorias:</strong> si hay empate a puntos en la clasificación final, desempate por aciertos en campeón, finalistas y semifinalistas (en ese orden).</p>
+        <p class="text-xs text-gray-500 mt-2">Solo hay <strong class="text-gray-300">un 1.º, un 2.º y un 3.º</strong> (60 % · 30 % · 10 %). Si hay empate a puntos en la clasificación final, <strong class="text-gray-300">desempate</strong> por aciertos en campeón, finalistas y semifinalistas (en ese orden).</p>
       </div>
     </div>
     <p class="text-xs text-gray-500 mt-4 border-t border-gray-700 pt-3">
@@ -347,7 +346,7 @@
   <div class="max-w-6xl mx-auto px-4 py-5">
     <div class="leaderboard-card p-5 sm:p-6">
       <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación — fase de grupos</h2>
-      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Resultado oficial tras los 72 partidos. <strong class="text-gray-400">1 punto por acierto</strong>. El podio son <strong class="text-gray-300">3 tramos de puntuación</strong> (oro 60%, plata 30%, bronce 10%); si empatan, reparten ese % entre ellos. Orientativo: el bote final cuenta eliminatorias.</p>
+      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Resultado oficial tras los 72 partidos. <strong class="text-gray-400">1 punto por acierto</strong>. <strong class="text-gray-300">No cuenta para el bote</strong> — orientativo. El premio (un 1.º, un 2.º, un 3.º con 60/30/10 %) se decide en la clasificación final de eliminatorias con desempate por campeón, finalistas y semifinalistas.</p>
       <p id="leaderboardUpdated" class="text-xs text-gray-600 mb-2 hidden"></p>
       <div id="myScoreCard" class="my-score-card hidden">
         <p class="text-xs text-gray-500 mb-1">Tu registro en este dispositivo</p>
@@ -355,7 +354,7 @@
       </div>
       <div class="leaderboard-scroll overflow-x-auto">
         <table class="leaderboard-table" id="leaderboardTable" aria-label="Clasificación">
-          <thead><tr><th>#</th><th>Nombre</th><th class="leaderboard-points-col">Pts</th><th class="leaderboard-prize-col">Premio</th></tr></thead>
+          <thead><tr><th>#</th><th>Nombre</th><th class="leaderboard-points-col">Puntos</th><th class="leaderboard-prize-col leaderboard-prize-col-header hidden">Premio</th></tr></thead>
           <tbody id="leaderboardBody"></tbody>
         </table>
       </div>
@@ -396,13 +395,13 @@
   <button type="button" id="btnExportDock" class="btn-export-dock is-locked" onclick="handleExportDockClick()" aria-disabled="true">📄 Exportar PDF</button>
 </div>
 
-<script src="js/version.js?v=118"></script>
-<script src="js/schedule.js?v=118"></script>
-<script src="js/groups-data.js?v=118"></script>
-<script src="js/annex-c-data.js?v=118"></script>
-<script src="js/team-fifa-meta.js?v=118"></script>
-<script src="js/groups-app.js?v=118"></script>
-<script src="js/knockout.js?v=118"></script>
+<script src="js/version.js?v=120"></script>
+<script src="js/schedule.js?v=120"></script>
+<script src="js/groups-data.js?v=120"></script>
+<script src="js/annex-c-data.js?v=120"></script>
+<script src="js/team-fifa-meta.js?v=120"></script>
+<script src="js/groups-app.js?v=120"></script>
+<script src="js/knockout.js?v=120"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
