@@ -22,6 +22,10 @@ function read(file) {
   return fs.readFileSync(path.join(root, file), 'utf8');
 }
 
+function exists(file) {
+  return fs.existsSync(path.join(root, file));
+}
+
 // 1. HTML sincronizados
 const index = read('index.html');
 const porra = read('porra-mundial-2026.html');
@@ -31,17 +35,43 @@ if (index === porra) {
   fail('index.html y porra-mundial-2026.html NO coinciden — ejecuta sync-html.bat');
 }
 
-// 2. Misma versión de knockout.js en ambos HTML
-const vIndex = index.match(/knockout\.js\?v=(\d+)/);
-const vPorra = porra.match(/knockout\.js\?v=(\d+)/);
-if (vIndex && vPorra && vIndex[1] === vPorra[1]) {
-  pass(`knockout.js?v=${vIndex[1]} en ambos HTML`);
+// 2. Sin CSS/JS embebido en el HTML (estructura modular)
+if (porra.includes('<style>')) fail('porra-mundial-2026.html aún tiene <style> embebido');
+else pass('CSS externo (sin <style> en HTML)');
+if (/<script>\s*(\/\/|const|let|function)/.test(porra)) {
+  fail('porra-mundial-2026.html tiene bloques <script> con lógica embebida');
+} else pass('JS principal en ficheros externos');
+
+// 3. Assets estáticos
+const assets = [
+  'css/app.css',
+  'js/groups-data.js',
+  'js/groups-app.js',
+  'js/annex-c-data.js',
+  'js/team-fifa-meta.js',
+  'js/fifa-ko-schedule.js',
+  'js/knockout.js'
+];
+assets.forEach((file) => {
+  if (exists(file)) pass(`Existe ${file}`);
+  else fail(`Falta ${file}`);
+});
+
+// 4. Misma versión ?v= en HTML y APP_BUILD
+const vMatches = [...porra.matchAll(/\?v=(\d+)/g)].map(m => m[1]);
+const uniqueV = [...new Set(vMatches)];
+if (uniqueV.length === 1) pass(`Versión de assets unificada (?v=${uniqueV[0]})`);
+else fail(`Versiones ?v= distintas en HTML: ${uniqueV.join(', ')}`);
+
+const appBuild = read('js/groups-app.js').match(/const APP_BUILD = '(\d+)'/);
+if (appBuild && appBuild[1] === uniqueV[0]) {
+  pass(`APP_BUILD coincide con ?v=${uniqueV[0]}`);
 } else {
-  fail('Versión de knockout.js distinta entre index.html y porra-mundial-2026.html');
+  fail(`APP_BUILD (${appBuild?.[1] || '?'}) no coincide con ?v=${uniqueV[0] || '?'}`);
 }
 
-// 3. knockout.js — funciones críticas
-const ko = read('knockout.js');
+// 5. knockout.js — funciones críticas
+const ko = read('js/knockout.js');
 const requiredFns = [
   'koPdfFinalistsForDisplay',
   'exportKnockoutPDF',
@@ -50,13 +80,13 @@ const requiredFns = [
 ];
 requiredFns.forEach((fn) => {
   if (ko.includes(`function ${fn}`) || ko.includes(`${fn} =`)) {
-    pass(`knockout.js incluye ${fn}`);
+    pass(`js/knockout.js incluye ${fn}`);
   } else {
-    fail(`knockout.js falta ${fn}`);
+    fail(`js/knockout.js falta ${fn}`);
   }
 });
 
-// 4. JSON válidos
+// 6. JSON válidos
 ['results.json', 'leaderboard.json', 'manifest.json'].forEach((file) => {
   try {
     JSON.parse(read(file));
@@ -66,17 +96,14 @@ requiredFns.forEach((fn) => {
   }
 });
 
-// 5. Assets referenciados
+// 7. Assets referenciados
 ['assets/wc2026-logo.png', 'assets/wc-trophy.svg'].forEach((file) => {
-  if (fs.existsSync(path.join(root, file))) {
-    pass(`Existe ${file}`);
-  } else {
-    fail(`Falta ${file}`);
-  }
+  if (exists(file)) pass(`Existe ${file}`);
+  else fail(`Falta ${file}`);
 });
 
 if (!ok) {
   console.error('\nVerificación fallida. Corrige los puntos anteriores antes de desplegar.');
   process.exit(1);
 }
-console.log('\nTodo OK — listo para commit y push a Vercel.');
+console.log('\nTodo listo para desplegar.');

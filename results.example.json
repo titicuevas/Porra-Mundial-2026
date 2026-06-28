@@ -1,6 +1,7 @@
 {
-  "_comentario": "Copia este archivo como results.json o pega entradas en el editor ?admin=1",
+  "_comentario": "Copia entradas en results.json (?admin=1). Grupos: A1, B2… Eliminatorias: KO32-1…KO32-16, KO16-1…KO16-8",
   "A1": { "home": 2, "away": 1 },
-  "A2": { "home": 0, "away": 0 },
-  "B1": { "home": 1, "away": 1 }
+  "KO32-1": { "home": 1, "away": 0 },
+  "KO32-16": { "home": 2, "away": 1, "winner": "home" },
+  "KO16-1": { "home": 1, "away": 0 }
 }

@@ -115,7 +115,7 @@ python -m http.server 8765          # alternativa manual
 ```
 
 > ⚠️ No uses `file://`. Tras editar HTML, **siempre** `sync-html.bat`.  
-> Al cambiar `knockout.js`, sube `?v=35` (o siguiente) en ambos HTML.
+> Al cambiar archivos en `js/` o `css/`, sube `?v=` en `porra-mundial-2026.html` y `APP_BUILD` en `js/groups-app.js`.
 
 ---
 
@@ -147,7 +147,7 @@ Vercel despliega solo. Repo: [github.com/titicuevas/Porra-Mundial-2026](https://
 <details>
 <summary><strong>Participantes (eliminatorias)</strong></summary>
 
-Array `PARTICIPANTS` en `knockout.js` → sync → push.
+Array `PARTICIPANTS` en `js/knockout.js` → sync → push.
 
 </details>
 
@@ -172,28 +172,27 @@ Array `PARTICIPANTS` en `knockout.js` → sync → push.
 ## 📁 Estructura
 
 ```
-├── porra-mundial-2026.html    ← Fuente principal (editar aquí)
-├── index.html                 ← Copia de despliegue (la sirve Vercel)
-├── knockout.js                ← Lógica eliminatorias + PDF KO
-├── manifest.json              ← PWA / añadir a inicio
-├── results.json               ← Marcadores ({})
-├── results.example.json       ← Plantilla de ejemplo
-├── leaderboard.json           ← Clasificación
+├── porra-mundial-2026.html    ← Fuente HTML (solo marcado + enlaces)
+├── index.html                 ← Copia de despliegue (sync-html.bat)
+├── css/
+│   └── app.css                ← Estilos (responsive, grupos, KO)
+├── js/
+│   ├── groups-data.js         ← 12 grupos, equipos y partidos
+│   ├── groups-app.js          ← Lógica fase de grupos, PDF, clasificación
+│   ├── knockout.js            ← Eliminatorias + PDF KO
+│   ├── annex-c-data.js        ← Anexo FIFA (cruces 3º)
+│   └── team-fifa-meta.js      ← Metadatos equipos FIFA
+├── results.json               ← Marcadores oficiales
+├── leaderboard.json           ← Clasificación participantes
+├── manifest.json              ← PWA
 ├── scripts/verify.js          ← Comprobaciones pre-deploy
 ├── sync-html.bat / .sh
-├── preparar-deploy.bat
-├── assets/
-├── vercel.json
-└── iniciar.bat
+└── assets/
 ```
 
 **CDN:** Tailwind, jsPDF, flagcdn.com — sin `npm install`.
 
-### Estructura mental rápida (KISS)
-
-- `porra-mundial-2026.html`: UI general (grupos, tabs, estilos globales).
-- `knockout.js`: todo lo de eliminatorias (reglas, validaciones, export PDF KO).
-- `index.html`: solo artefacto final para Vercel (se regenera con `sync-html.bat`).
+Al cambiar CSS o JS, sube `?v=` en `porra-mundial-2026.html` y `APP_BUILD` en `js/groups-app.js`, luego `sync-html.bat`.
 
 ---
 

@@ -1,11 +1,33 @@
 /* Eliminatorias — Porra Mundial 2026
  * Participantes: edita PARTICIPANTS más abajo (ver README.md).
  * Tras cambios: sync-html.bat → preparar-deploy.bat → git push
+ * Fichero: js/knockout.js
  */
 (function () {
   const KO_PASSWORD = 'Españita';
-  /** Prueba local: true = plazo dieciseisavos abierto (como 10:00–21:00). Volver a false antes del deploy. */
+  const KO_LAB_KEY = 'porra2026_ko_lab';
+  const KO_PREVIEW_KEY = 'porra2026_ko_preview';
+  /** Prueba local: true = dieciseisavos y octavos siempre abiertos. Volver a false en producción. */
   const KO_TEST_MODE = false;
+
+  function initKoAccess() {
+    try {
+      const q = new URLSearchParams(location.search);
+      if (q.get('ko_lab') === '1') {
+        localStorage.setItem(KO_LAB_KEY, '1');
+        sessionStorage.setItem(KO_PREVIEW_KEY, '1');
+        localStorage.setItem(KO_PREVIEW_KEY, '1');
+      }
+      const koRound = q.get('ko_round');
+      if (koRound === 'octavos' || koRound === 'r16') {
+        sessionStorage.setItem('porra2026_ko_focus', 'r16');
+      }
+      if (localStorage.getItem(KO_LAB_KEY) === '1') {
+        sessionStorage.setItem(KO_PREVIEW_KEY, '1');
+      }
+    } catch (e) { /* */ }
+  }
+  initKoAccess();
   const KO_EXTRAS_TOTAL = 7;
   const KO_ROUND_ORDER = ['r32', 'r16', 'r8', 'r4', 'r2'];
 
@@ -29,9 +51,10 @@
     'Lego'
   ];
 
-  const KO_ROUND_OPENS = {
-    r32: '2026-06-28T10:00:00+02:00', // dieciseisavos — 10:00 peninsular
-    r16: '2026-07-04T07:00:00+02:00',
+  const SK = (typeof window !== 'undefined' && window.FIFA_KO_SCHEDULE) || {};
+  const KO_ROUND_OPENS = SK.ROUND_OPENS || {
+    r32: '2026-06-28T10:00:00+02:00',
+    r16: '2026-07-04T10:00:00+02:00',
     r8: '2026-07-09T07:00:00+02:00',
     r4: '2026-07-14T07:00:00+02:00',
     r2: '2026-07-19T07:00:00+02:00'
@@ -85,50 +108,11 @@
     { home: '2E', away: '2I' }
   ];
 
-  // Horarios peninsulares (CEST, España) — orden FIFA partidos 73-88 por sortAt al mostrar
-  const R32_META = [
-    { fifaNo: 79, date: 'Mié 1 Jul', hour: '03:00', venue: 'Estadio Azteca, Ciudad de México', sortAt: '2026-07-01T03:00:00+02:00' },
-    { fifaNo: 73, date: 'Dom 28 Jun', hour: '21:00', venue: 'SoFi Stadium, Los Ángeles', sortAt: '2026-06-28T21:00:00+02:00' },
-    { fifaNo: 76, date: 'Lun 29 Jun', hour: '19:00', venue: 'NRG Stadium, Houston', sortAt: '2026-06-29T19:00:00+02:00' },
-    { fifaNo: 74, date: 'Lun 29 Jun', hour: '22:30', venue: 'Gillette Stadium, Boston', sortAt: '2026-06-29T22:30:00+02:00' },
-    { fifaNo: 81, date: 'Jue 2 Jul', hour: '02:00', venue: "Levi's Stadium, San Francisco", sortAt: '2026-07-02T02:00:00+02:00' },
-    { fifaNo: 85, date: 'Vie 3 Jul', hour: '05:00', venue: 'BC Place, Vancouver', sortAt: '2026-07-03T05:00:00+02:00' },
-    { fifaNo: 84, date: 'Mié 2 Jul', hour: '21:00', venue: 'SoFi Stadium, Los Ángeles', sortAt: '2026-07-02T21:00:00+02:00' },
-    { fifaNo: 77, date: 'Mar 30 Jun', hour: '23:00', venue: 'MetLife Stadium, Nueva York', sortAt: '2026-06-30T23:00:00+02:00' },
-    { fifaNo: 80, date: 'Mié 1 Jul', hour: '18:00', venue: 'Mercedes-Benz, Atlanta', sortAt: '2026-07-01T18:00:00+02:00' },
-    { fifaNo: 87, date: 'Sáb 4 Jul', hour: '03:30', venue: 'Arrowhead Stadium, Kansas City', sortAt: '2026-07-04T03:30:00+02:00' },
-    { fifaNo: 83, date: 'Vie 3 Jul', hour: '01:00', venue: 'BMO Field, Toronto', sortAt: '2026-07-03T01:00:00+02:00' },
-    { fifaNo: 82, date: 'Mié 1 Jul', hour: '22:00', venue: 'Lumen Field, Seattle', sortAt: '2026-07-01T22:00:00+02:00' },
-    { fifaNo: 86, date: 'Sáb 4 Jul', hour: '00:00', venue: 'Hard Rock Stadium, Miami', sortAt: '2026-07-04T00:00:00+02:00' },
-    { fifaNo: 75, date: 'Mar 30 Jun', hour: '03:00', venue: 'Estadio BBVA, Monterrey', sortAt: '2026-06-30T03:00:00+02:00' },
-    { fifaNo: 88, date: 'Vie 3 Jul', hour: '20:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-07-03T20:00:00+02:00' },
-    { fifaNo: 78, date: 'Mar 30 Jun', hour: '19:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-06-30T19:00:00+02:00' }
-  ];
-
-  const R16_META = [
-    { fifaNo: 90, date: 'Sáb 4 Jul', hour: '19:00', venue: 'NRG Stadium, Houston', sortAt: '2026-07-04T19:00:00+02:00' },
-    { fifaNo: 89, date: 'Sáb 4 Jul', hour: '23:00', venue: 'Lincoln Financial, Filadelfia', sortAt: '2026-07-04T23:00:00+02:00' },
-    { fifaNo: 91, date: 'Dom 5 Jul', hour: '22:00', venue: 'MetLife Stadium, Nueva York', sortAt: '2026-07-05T22:00:00+02:00' },
-    { fifaNo: 92, date: 'Lun 6 Jul', hour: '02:00', venue: 'Estadio Azteca, Ciudad de México', sortAt: '2026-07-06T02:00:00+02:00' },
-    { fifaNo: 93, date: 'Lun 6 Jul', hour: '21:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-07-06T21:00:00+02:00' },
-    { fifaNo: 94, date: 'Mar 7 Jul', hour: '02:00', venue: 'Lumen Field, Seattle', sortAt: '2026-07-07T02:00:00+02:00' },
-    { fifaNo: 95, date: 'Mar 7 Jul', hour: '18:00', venue: 'Mercedes-Benz, Atlanta', sortAt: '2026-07-07T18:00:00+02:00' },
-    { fifaNo: 96, date: 'Mar 7 Jul', hour: '22:00', venue: 'BC Place, Vancouver', sortAt: '2026-07-07T22:00:00+02:00' }
-  ];
-
-  const R8_META = [
-    { fifaNo: 97, date: 'Jue 9 Jul', hour: '22:00', venue: 'Gillette Stadium, Boston', sortAt: '2026-07-09T22:00:00+02:00' },
-    { fifaNo: 98, date: 'Vie 10 Jul', hour: '21:00', venue: 'SoFi Stadium, Los Ángeles', sortAt: '2026-07-10T21:00:00+02:00' },
-    { fifaNo: 99, date: 'Sáb 11 Jul', hour: '23:00', venue: 'Hard Rock Stadium, Miami', sortAt: '2026-07-11T23:00:00+02:00' },
-    { fifaNo: 100, date: 'Dom 12 Jul', hour: '03:00', venue: 'Arrowhead Stadium, Kansas City', sortAt: '2026-07-12T03:00:00+02:00' }
-  ];
-
-  const R4_META = [
-    { fifaNo: 101, date: 'Mar 14 Jul', hour: '21:00', venue: 'AT&T Stadium, Dallas', sortAt: '2026-07-14T21:00:00+02:00' },
-    { fifaNo: 102, date: 'Mié 15 Jul', hour: '21:00', venue: 'Mercedes-Benz, Atlanta', sortAt: '2026-07-15T21:00:00+02:00' }
-  ];
-
-  const FINAL_META = { fifaNo: 104, date: 'Dom 19 Jul', hour: '21:00', venue: 'MetLife Stadium, Nueva York', sortAt: '2026-07-19T21:00:00+02:00' };
+  const R32_META = SK.R32_META || [];
+  const R16_META = SK.R16_META || [];
+  const R8_META = SK.R8_META || [];
+  const R4_META = SK.R4_META || [];
+  const FINAL_META = SK.FINAL_META || { fifaNo: 104, date: '', hour: '', venue: '', sortAt: '' };
 
   function mkKoMatch(id, home, away, meta) {
     return {
@@ -163,6 +147,10 @@
     mkKoMatch('KO16-' + (i + 1), null, null, meta)
   );
 
+  const KO_R16_FEEDERS = SK.R16_FEEDERS || [
+    [3, 7], [1, 13], [2, 15], [0, 8], [10, 6], [4, 11], [12, 14], [5, 9]
+  ];
+
   const KO_R8_MATCHES = R8_META.map((meta, i) =>
     mkKoMatch('KO8-' + (i + 1), null, null, meta)
   );
@@ -175,15 +163,16 @@
 
   const KO_ROUNDS = {
     r32: { key: 'r32', label: 'Dieciseisavos', short: '16avos', matches: KO_R32_MATCHES },
-    r16: { key: 'r16', label: 'Octavos', short: 'Octavos', matches: KO_R16_MATCHES },
+    r16: { key: 'r16', label: 'Octavos de final', short: 'Octavos', matches: KO_R16_MATCHES },
     r8: { key: 'r8', label: 'Cuartos de final', short: 'Cuartos', matches: KO_R8_MATCHES },
     r4: { key: 'r4', label: 'Semifinales', short: 'Semis', matches: KO_R4_MATCHES },
     r2: { key: 'r2', label: 'Final', short: 'Final', matches: KO_FINAL_MATCHES }
   };
 
-  /** Cierre de pronósticos = pitido del primer partido de la ronda (solo r32 por ahora). */
+  /** Cierre de pronósticos = pitido del primer partido de la ronda. */
   const KO_ROUND_CLOSES = {
-    r32: koRoundFirstKickoffIso(KO_R32_MATCHES) || '2026-06-28T21:00:00+02:00'
+    r32: koRoundFirstKickoffIso(KO_R32_MATCHES) || '2026-06-28T21:00:00+02:00',
+    r16: koRoundFirstKickoffIso(KO_R16_MATCHES) || '2026-07-04T19:00:00+02:00'
   };
 
   /** Especiales y dieciseisavos comparten plazo: 10:00–21:00 del 28 jun. */
@@ -316,6 +305,64 @@
     rebuildKoR32CornerSets();
   }
 
+  function getKoOfficialResult(matchId) {
+    if (typeof results === 'undefined' || !results || !matchId) return null;
+    const r = results[matchId];
+    if (!r || r.home === '' || r.away === '' || r.home == null || r.away == null) return null;
+    const h = parseInt(r.home, 10);
+    const a = parseInt(r.away, 10);
+    if (isNaN(h) || isNaN(a)) return null;
+    return { home: h, away: a, winner: r.winner || r.winnerCode || null };
+  }
+
+  function winnerFromKoMatch(m) {
+    if (!m) return null;
+    const r = getKoOfficialResult(m.id);
+    if (!r) return null;
+    if (r.winner && r.winner !== 'tbd') return r.winner;
+    if (r.home > r.away) return m.home;
+    if (r.away > r.home) return m.away;
+    return null;
+  }
+
+  function winnerFromKoMatchIndex(r32Index) {
+    const m = KO_R32_MATCHES[r32Index];
+    return winnerFromKoMatch(m);
+  }
+
+  function allKoR32ResultsComplete() {
+    return KO_R32_MATCHES.every(m => isMatchReady(m) && winnerFromKoMatch(m));
+  }
+
+  function winnerFromUserKoPick(m) {
+    if (!m || !isMatchReady(m)) return null;
+    const pick = getActiveKoData().picks[m.id];
+    if (pick === 'home') return m.home;
+    if (pick === 'away') return m.away;
+    return null;
+  }
+
+  function syncKnockoutBracketFromResults() {
+    const useUserR32Preview = !!getActiveKoUser() && !allKoR32ResultsComplete() && (
+      isKoOctavosPhase() || isKoR16PreviewActive() || isKoR16EarlyWindow() || isKoLabEnabled()
+    );
+    KO_R16_FEEDERS.forEach((feeders, i) => {
+      const match = KO_R16_MATCHES[i];
+      if (!match) return;
+      let home;
+      let away;
+      if (useUserR32Preview) {
+        home = winnerFromUserKoPick(KO_R32_MATCHES[feeders[0]]);
+        away = winnerFromUserKoPick(KO_R32_MATCHES[feeders[1]]);
+      } else {
+        home = winnerFromKoMatchIndex(feeders[0]);
+        away = winnerFromKoMatchIndex(feeders[1]);
+      }
+      match.home = home || 'tbd';
+      match.away = away || 'tbd';
+    });
+  }
+
   const KO_SEMI_SLOT_LABELS = ['SF izq. 1', 'SF der. 1', 'SF izq. 2', 'SF der. 2'];
   const KO_SEMI_CORNER_LABELS = ['Grupo 1 (sup-izq)', 'Grupo 2 (sup-der)', 'Grupo 3 (inf-izq)', 'Grupo 4 (inf-der)'];
   const KO_SEMI_CORNER_KEYS = ['G1', 'G2', 'G3', 'G4'];
@@ -394,11 +441,26 @@
   }
 
   function refreshKnockoutUI() {
+    syncKnockoutBracketFromResults();
     renderKnockoutUserBar();
     renderKnockoutExtras();
     renderKnockoutMatches();
     updateKnockoutStatus();
     if (typeof renderQualifiedSummary === 'function') renderQualifiedSummary();
+    const legend = document.getElementById('koSpecialLegendWrap');
+    if (legend) legend.classList.toggle('hidden', !shouldShowKoExtrasSection() || isKoOctavosPhase());
+    const stepsExtras = document.getElementById('koStepsExtras');
+    if (stepsExtras) {
+      if (isKoOctavosPhase()) {
+        stepsExtras.innerHTML = '<strong>Octavos de final (4–7 jul):</strong> marca el ganador en cada cruce.';
+        stepsExtras.classList.remove('hidden');
+      } else if (isKoRoundClosed('r32')) {
+        stepsExtras.classList.add('hidden');
+      } else {
+        stepsExtras.innerHTML = '<strong>Dieciseisavos (28 jun):</strong> 4 semifinalistas, 2 finalistas, campeón y los 16 partidos.';
+        stepsExtras.classList.remove('hidden');
+      }
+    }
   }
 
   function setActiveKoUser(name) {
@@ -419,9 +481,50 @@
   if (typeof window.updateHeaderStats === 'function') window.updateHeaderStats();
   }
 
-  function isKnockoutPreviewUnlocked() {
+  function isKoLabEnabled() {
+    if (KO_TEST_MODE) return true;
     try {
-      return sessionStorage.getItem('porra2026_ko_preview') === '1';
+      return localStorage.getItem(KO_LAB_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** Entre cierre dieciseisavos (28 jun 21:00) y apertura oficial octavos (4 jul 10:00). */
+  function isKoR16EarlyWindow() {
+    return isKoRoundClosed('r32') && !isKoRoundOfficiallyOpen('r16');
+  }
+
+  function isKoRoundOfficiallyOpen(key) {
+    return Date.now() >= new Date(KO_ROUND_OPENS[key]).getTime();
+  }
+
+  /** Cierre real por calendario (el modo lab/código no puede reabrir dieciseisavos tras el 28 jun, 21:00). */
+  function isKoRoundClosedBySchedule(key) {
+    const closeAt = KO_ROUND_CLOSES[key];
+    if (!closeAt) return false;
+    return Date.now() >= new Date(closeAt).getTime();
+  }
+
+  function isKoR32PreviewActive() {
+    return isKnockoutPreviewUnlocked() && !isKoRoundOfficiallyOpen('r32');
+  }
+
+  function isKoR16PreviewActive() {
+    return isKnockoutPreviewUnlocked() && !isKoRoundOfficiallyOpen('r16');
+  }
+
+  function showKoPreviewBadge() {
+    if (!isKnockoutPreviewUnlocked()) return false;
+    if (!isKnockoutPublicOpen()) return true;
+    return !isKoRoundOfficiallyOpen('r16');
+  }
+
+  function isKnockoutPreviewUnlocked() {
+    if (isKoLabEnabled()) return true;
+    try {
+      return sessionStorage.getItem(KO_PREVIEW_KEY) === '1'
+        || localStorage.getItem(KO_PREVIEW_KEY) === '1';
     } catch (e) {
       return false;
     }
@@ -438,19 +541,36 @@
 
   function isKoRoundStarted(key) {
     if (!isKnockoutAccessible()) return false;
-    if (KO_TEST_MODE && key === 'r32') return true;
-    return Date.now() >= new Date(KO_ROUND_OPENS[key]).getTime();
+    if (KO_TEST_MODE && (key === 'r32' || key === 'r16')) return true;
+    if (key === 'r32') {
+      if (isKoRoundOfficiallyOpen('r32')) return true;
+      if (isKnockoutPreviewUnlocked() && !isKoRoundOfficiallyOpen('r32')) return true;
+      return false;
+    }
+    if (key === 'r16') {
+      if (isKoRoundOfficiallyOpen('r16')) return true;
+      if (isKoOctavosPhase()) return true;
+      if (isKnockoutPreviewUnlocked() && !isKoRoundOfficiallyOpen('r16')) return true;
+      return false;
+    }
+    return isKoRoundOfficiallyOpen(key);
   }
 
   function isKoRoundClosed(key) {
-    const closeAt = KO_ROUND_CLOSES[key];
-    if (!closeAt) return false;
-    if (KO_TEST_MODE && key === 'r32') return false;
-    return Date.now() >= new Date(closeAt).getTime();
+    if (KO_TEST_MODE && (key === 'r32' || key === 'r16')) return false;
+    return isKoRoundClosedBySchedule(key);
   }
 
   function isKoRoundPickable(key) {
-    return isKoRoundStarted(key) && !isKoRoundClosed(key);
+    if (!isKoRoundStarted(key)) return false;
+    if (key === 'r32' && isKoRoundClosedBySchedule('r32')) return false;
+    if (KO_TEST_MODE && (key === 'r32' || key === 'r16')) return true;
+    if (isKoLabEnabled() && (key === 'r32' || key === 'r16')) {
+      return !isKoRoundClosedBySchedule(key);
+    }
+    if (key === 'r16' && isKoOctavosPhase() && !isKoRoundClosedBySchedule('r16')) return true;
+    if (key === 'r16' && isKoR16EarlyWindow()) return true;
+    return !isKoRoundClosed(key);
   }
 
   function isKoRoundOpen(key) {
@@ -487,10 +607,20 @@
     };
   }
 
+  function normalizeKoPasswordInput(password) {
+    return String(password || '').trim().normalize('NFC');
+  }
+
+  function isKoPasswordValid(password) {
+    const p = normalizeKoPasswordInput(password);
+    return p === KO_PASSWORD || p.toLowerCase() === 'espanita';
+  }
+
   function tryUnlockKnockout(password) {
-    if (password !== KO_PASSWORD) return false;
+    if (!isKoPasswordValid(password)) return false;
     try {
-      sessionStorage.setItem('porra2026_ko_preview', '1');
+      sessionStorage.setItem(KO_PREVIEW_KEY, '1');
+      localStorage.setItem(KO_PREVIEW_KEY, '1');
     } catch (e) { /* */ }
     return true;
   }
@@ -498,6 +628,16 @@
   function showKoPasswordModal() {
     const modal = document.getElementById('koPasswordModal');
     if (modal) modal.classList.remove('hidden');
+    const title = document.getElementById('koModalTitle');
+    const hint = document.getElementById('koModalHint');
+    if (title) title.textContent = isKnockoutPublicOpen() ? '🔒 Octavos (prueba)' : '🔒 Eliminatorias';
+    if (hint) {
+      hint.textContent = isKoRoundClosed('r32')
+        ? 'Código para desbloquear octavos en prueba (si no aparecen solos). Oficial: 4 jul, 10:00.'
+        : isKnockoutPublicOpen()
+          ? 'Código para octavos en prueba. Marca dieciseisavos y los cruces de octavos se rellenan solos (oficial 4 jul, 10:00).'
+          : 'Código para probar dieciseisavos y octavos antes del 28 jun, 10:00. Elige participante y marca ganadores.';
+    }
     const inp = document.getElementById('koPasswordInput');
     if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 100); }
     const err = document.getElementById('koPasswordError');
@@ -516,10 +656,11 @@
     const inp = document.getElementById('koPasswordInput');
     const err = document.getElementById('koPasswordError');
     if (!inp) return;
-    if (tryUnlockKnockout(inp.value.trim())) {
+    if (tryUnlockKnockout(inp.value)) {
       koPasswordFails = 0;
       hideKoPasswordModal();
       if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
+      if (typeof renderScheduleBanner === 'function') renderScheduleBanner();
       renderKnockout();
       if (typeof switchPhaseTab === 'function') switchPhaseTab('extras');
     } else if (err) {
@@ -550,13 +691,112 @@
     return date + ' · ' + time;
   }
 
+  /** Tras el 28 jun 21:00 — solo octavos en pantalla (dieciseisavos y especiales fuera). */
+  function isKoOctavosPhase() {
+    return isKnockoutAccessible() && isKoRoundClosedBySchedule('r32');
+  }
+
   function isKoExtrasEditable() {
     if (!shouldShowKoExtrasSection() || isKoExtrasLocked()) return false;
     return true;
   }
 
   function shouldShowKoExtrasSection() {
-    return isKnockoutAccessible();
+    if (isKoOctavosPhase()) return false;
+    if (!isKnockoutAccessible() || isKoExtrasLocked()) return false;
+    if (isKoR32PreviewActive()) return true;
+    return isKoRoundPickable('r32') && !isKoRoundClosed('r32');
+  }
+
+  function extrasRequiredForExport() {
+    return shouldShowKoExtrasSection();
+  }
+
+  /** Octavos arriba: tras cerrar dieciseisavos o en modo prueba con octavos activos. */
+  function shouldPrioritizeOctavos() {
+    if (isKoOctavosPhase()) return true;
+    if (!isKoRoundStarted('r16')) return false;
+    return isKoLabEnabled() || isKnockoutPreviewUnlocked();
+  }
+
+  function shouldHideR32Bracket() {
+    return isKoOctavosPhase();
+  }
+
+  function getKoBracketRenderOrder() {
+    if (shouldPrioritizeOctavos()) return ['r16', 'r8', 'r4', 'r2'];
+    return KO_ROUND_ORDER.slice();
+  }
+
+  function getUpcomingKoRounds() {
+    if (isKoOctavosPhase()) {
+      return ['r8', 'r4', 'r2']
+        .filter(key => !isKoRoundPickable(key) && !isKoRoundClosed(key))
+        .map(key => KO_ROUNDS[key]);
+    }
+    const seen = new Set();
+    const out = [];
+    KO_ROUND_ORDER.forEach(key => {
+      if (seen.has(key)) return;
+      if (key === 'r32' && shouldHideR32Bracket()) return;
+      if (key === 'r16' && shouldPrioritizeOctavos()) return;
+      if (isKoRoundPickable(key)) return;
+      if (isKoRoundClosed(key)) return;
+      if (!isKoRoundStarted(key)) {
+        seen.add(key);
+        out.push(KO_ROUNDS[key]);
+        return;
+      }
+      if (isKoRoundStarted(key) && !isKoRoundClosed(key)) {
+        seen.add(key);
+        out.push(KO_ROUNDS[key]);
+      }
+    });
+    return out;
+  }
+
+  function getActiveQuinielaRoundKey() {
+    if (isKoOctavosPhase()) return 'r16';
+    if (shouldPrioritizeOctavos() && isKoRoundStarted('r16')) return 'r16';
+    if (!shouldHideR32Bracket() && (isKoRoundPickable('r32') || isKoRoundStarted('r32'))) return 'r32';
+    const open = KO_ROUND_ORDER.find(k => isKoRoundPickable(k));
+    return open || null;
+  }
+
+  function koMatchesRequiredCount() {
+    if (isKoOctavosPhase()) {
+      const ready = KO_R16_MATCHES.filter(isMatchReady).length;
+      return ready || KO_R16_MATCHES.length;
+    }
+    return getQuinielaMatchPool().length;
+  }
+
+  function koMatchesDoneCount() {
+    if (isKoOctavosPhase()) {
+      return KO_R16_MATCHES.filter(m => getKoPick(m.id)).length;
+    }
+    return getQuinielaMatchPool().filter(m => getKoPick(m.id)).length;
+  }
+
+  function scrollToKoRound(key) {
+    if (typeof switchPhaseTab === 'function') switchPhaseTab('extras');
+    window.setTimeout(() => {
+      const el = document.getElementById('ko-round-' + key);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  }
+
+  function focusKoRoundIfNeeded() {
+    try {
+      if (!isKoRoundStarted('r16')) return;
+      const urlFocus = sessionStorage.getItem('porra2026_ko_focus') === 'r16';
+      const autoKey = 'porra2026_ko_octavos_autoscroll';
+      const shouldAuto = shouldPrioritizeOctavos() && isKoRoundPickable('r16') && !sessionStorage.getItem(autoKey);
+      if (!urlFocus && !shouldAuto) return;
+      if (urlFocus) sessionStorage.removeItem('porra2026_ko_focus');
+      if (shouldAuto) sessionStorage.setItem(autoKey, '1');
+      scrollToKoRound('r16');
+    } catch (e) { /* */ }
   }
 
   function showKoExtraBadges() {
@@ -690,9 +930,14 @@
   }
 
   function getQuinielaMatchPool() {
+    const active = getActiveQuinielaRoundKey();
+    if (active) {
+      return KO_ROUNDS[active].matches.filter(m => isMatchReady(m));
+    }
     const out = [];
     KO_ROUND_ORDER.forEach(key => {
       if (!isKoRoundStarted(key)) return;
+      if (!isKoRoundPickable(key) && !isKoRoundClosed(key)) return;
       KO_ROUNDS[key].matches.forEach(m => {
         if (isMatchReady(m)) out.push(m);
       });
@@ -716,7 +961,9 @@
   }
 
   function getExportRounds() {
-    return KO_ROUND_ORDER.filter(isKoRoundStarted).map(k => KO_ROUNDS[k]);
+    return KO_ROUND_ORDER
+      .filter(k => isKoRoundStarted(k) && (isKoRoundPickable(k) || isKoRoundClosed(k)))
+      .map(k => KO_ROUNDS[k]);
   }
 
   function getOpenRounds() {
@@ -724,11 +971,11 @@
   }
 
   function koMatchesRequired() {
-    return getPlayableMatches().length;
+    return koMatchesRequiredCount();
   }
 
   function koMatchesDone() {
-    return getPlayableMatches().filter(m => getKoPick(m.id)).length;
+    return koMatchesDoneCount();
   }
 
   function koExtrasDone() {
@@ -748,9 +995,15 @@
       blockers.push('Elige un participante arriba.');
       return blockers;
     }
+    if (isKoOctavosPhase()) {
+      const req = koMatchesRequired();
+      const md = koMatchesDone();
+      if (md < req) blockers.push(`Octavos: ${md}/${req} cruces marcados.`);
+      return blockers;
+    }
     const ex = getActiveKoData().extras;
     const extrasDone = koExtrasDone();
-    if (extrasDone < KO_EXTRAS_TOTAL) {
+    if (extrasRequiredForExport() && extrasDone < KO_EXTRAS_TOTAL) {
       blockers.push(`Especiales: ${extrasDone}/${KO_EXTRAS_TOTAL} (semis por esquinas, finalistas y campeón).`);
     }
     const req = koMatchesRequired();
@@ -783,7 +1036,7 @@
       document.getElementById('koUserSelect')?.focus();
       return;
     }
-    if (koExtrasDone() < KO_EXTRAS_TOTAL) {
+    if (extrasRequiredForExport() && koExtrasDone() < KO_EXTRAS_TOTAL) {
       document.getElementById('koExtrasSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
@@ -1140,15 +1393,23 @@
     const pendingTeams = !allDefined;
     const preview = !!opts.preview;
     const locked = !!opts.locked;
+    const focus = !!opts.focus;
+    const secondary = !!opts.secondary;
     let statusBanner = '';
     if (preview) {
       statusBanner = `<div class="ko-round-preview-banner">🔒 Vista previa de cruces — podrás marcar ganadores desde el <strong>${formatKoOpensAtShort(round.key)}</strong> hasta el <strong>${formatKoRoundCloseShort(round.key) || 'cierre'}</strong>.</div>`;
+    } else if (round.key === 'r32' && isKoR32PreviewActive()) {
+      statusBanner = '<div class="ko-round-preview-banner">🧪 <strong>Dieciseisavos en prueba</strong> — marca ganadores y los octavos se rellenan abajo. Oficial: <strong>28 jun, 10:00–21:00</strong>.</div>';
+    } else if (round.key === 'r16' && isKoR16EarlyWindow()) {
+      statusBanner = '<div class="ko-round-preview-banner">🏅 <strong>Octavos anticipados</strong> — plazo hasta el <strong>4 jul, 19:00</strong>. Cruces según tus dieciseisavos.</div>';
+    } else if (round.key === 'r16' && isKoR16PreviewActive()) {
+      statusBanner = '<div class="ko-round-preview-banner">🧪 <strong>Octavos en prueba</strong> — cruces según tus dieciseisavos. Plazo oficial: <strong>4 jul, 10:00–19:00</strong>.</div>';
     } else if (locked) {
       statusBanner = `<div class="ko-round-preview-banner">🔒 ${round.label} cerrados — plazo finalizado a las <strong>${formatKoRoundCloseShort(round.key)}</strong> (inicio del primer partido).</div>`;
     }
     const countLabel = preview ? 'Vista previa' : locked ? (complete ? '✓ Completo · cerrado' : `${done}/${total} · cerrado`) : (total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—');
     const countClass = preview ? 'text-blue-300 font-semibold text-xs' : locked ? (complete ? 'text-green-400 font-semibold text-xs' : 'text-gray-400 font-semibold text-xs') : (complete ? 'text-green-400 font-semibold text-xs' : 'text-yellow-500 font-semibold text-xs');
-    return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}${locked ? ' ko-round-card--locked' : ''}" id="ko-round-${round.key}">
+    return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}${locked ? ' ko-round-card--locked' : ''}${focus ? ' ko-round-card--focus' : ''}${secondary ? ' ko-round-card--secondary' : ''}" id="ko-round-${round.key}">
       <div class="group-header px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2 flex-shrink-0">
           <span class="text-xs font-black text-yellow-300 tracking-widest">RONDA</span>
@@ -1176,10 +1437,19 @@
   }
 
   function koUpcomingRoundsHTML(rounds) {
-    if (!rounds.length) return '';
+    const seen = new Set();
+    const unique = (rounds || []).filter(r => {
+      if (!r || seen.has(r.key)) return false;
+      if (r.key === 'r16' && shouldPrioritizeOctavos()) return false;
+      if (r.key === 'r32' && shouldHideR32Bracket()) return false;
+      if (isKoRoundPickable(r.key)) return false;
+      seen.add(r.key);
+      return true;
+    });
+    if (!unique.length) return '';
     return `<div class="ko-upcoming-rounds" aria-label="Rondas próximas">
       <p class="ko-upcoming-title">Próximas rondas</p>
-      ${rounds.map(r => `<div class="ko-upcoming-row"><span>🔒 ${r.label}</span><span class="ko-upcoming-date">${formatKoOpensAtShort(r.key)}</span></div>`).join('')}
+      ${unique.map(r => `<div class="ko-upcoming-row"><span>🔒 ${r.label}</span><span class="ko-upcoming-date">${formatKoOpensAtShort(r.key)}</span></div>`).join('')}
     </div>`;
   }
 
@@ -1206,6 +1476,10 @@
     data.picks[matchId] = side;
     saveKnockoutStore();
     renderKoMatchRow(matchId);
+    if (rKey === 'r32' && (isKoR16PreviewActive() || isKoR16EarlyWindow() || isKoLabEnabled())) {
+      syncKnockoutBracketFromResults();
+      KO_R16_MATCHES.forEach(m => renderKoMatchRow(m.id));
+    }
     updateKoRoundCounts();
     updateKnockoutStatus();
   }
@@ -1315,6 +1589,7 @@
     const el = document.getElementById('koBracket');
     if (!el) return;
     bindKoMatchClicks();
+    if (isKnockoutAccessible() && getActiveKoUser()) syncKnockoutBracketFromResults();
     if (!isKnockoutAccessible()) {
       el.innerHTML = `<div class="extras-locked">
         <p class="text-gray-400 text-sm">🔒 Las eliminatorias abren el <strong>28 de junio a las 10:00</strong> (hora peninsular).</p>
@@ -1324,49 +1599,114 @@
     }
     const parts = [];
     if (KO_TEST_MODE) {
-      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>🧪 <strong>Modo prueba</strong> — dieciseisavos y especiales abiertos. Desactiva <code>KO_TEST_MODE</code> en knockout.js antes del 28 jun, 10:00.</p></div>');
+      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>🧪 <strong>Modo prueba</strong> — dieciseisavos y octavos abiertos. Desactiva <code>KO_TEST_MODE</code> en knockout.js antes del despliegue.</p></div>');
     }
-    const lockedRounds = [];
-    KO_ROUND_ORDER.forEach(key => {
-      if (key === 'r32') return;
-      if (!isKoRoundPickable(key)) lockedRounds.push(KO_ROUNDS[key]);
-    });
-
-    if (!getActiveKoUser()) {
-      parts.push(koRoundCardHTML(KO_ROUNDS.r32, { preview: !isKoRoundStarted('r32'), locked: isKoRoundClosed('r32') }));
-      if (!isKoRoundStarted('r32')) {
-        parts.push('<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba para poder marcar ganadores cuando abra la ronda (28 jun, 10:00–21:00).</p>');
-      } else if (isKoRoundPickable('r32')) {
-        parts.push(`<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba · dieciseisavos abiertos hasta el <strong>${formatKoRoundCloseShort('r32')}</strong>.</p>`);
+    if (isKoR16PreviewActive() || isKoR16EarlyWindow() || (isKoR32PreviewActive() && !shouldHideR32Bracket())) {
+      const earlyHint = isKoOctavosPhase()
+        ? '🏅 <strong>Octavos de final</strong> — elige participante y marca tus cruces · plazo hasta el <strong>4 jul, 19:00</strong>.'
+        : isKoR16EarlyWindow()
+          ? '🏅 <strong>Octavos de final</strong> — elige participante y marca tus cruces · plazo hasta el <strong>4 jul, 19:00</strong>.'
+          : isKoRoundClosed('r32')
+            ? '🧪 <strong>Octavos en prueba</strong> (código) — cruces según tus dieciseisavos guardados.'
+            : '🧪 <strong>Modo prueba</strong> — con código puedes ver la siguiente ronda (octavos). Completa dieciseisavos antes del 28 jun, 21:00.';
+      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>' + earlyHint + '</p></div>');
+    }
+    if (isKoOctavosPhase()) {
+      parts.push(koRoundCardHTML(KO_ROUNDS.r16, {
+        preview: !isKoRoundPickable('r16'),
+        focus: true,
+        locked: isKoRoundClosed('r16') && !isKoRoundPickable('r16')
+      }));
+      if (!getActiveKoUser()) {
+        parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:0 0 .75rem">👆 Elige <strong>participante</strong> arriba para marcar octavos de final.</p>');
+      } else {
+        const r16Ready = KO_R16_MATCHES.filter(isMatchReady).length;
+        if (r16Ready < KO_R16_MATCHES.length) {
+          parts.push('<p class="ko-hint-callout" style="margin:0 0 .75rem">Algunos cruces salen «por definir» — elige el <strong>mismo participante</strong> con el que rellenaste dieciseisavos en este móvil.</p>');
+        }
       }
-      if (lockedRounds.length) parts.push(koUpcomingRoundsHTML(lockedRounds));
+      const upcoming = getUpcomingKoRounds();
+      if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));
       el.innerHTML = parts.join('');
       updateKoRoundCounts();
+      focusKoRoundIfNeeded();
+      return;
+    }
+    if (!getActiveKoUser()) {
+      const showOctavosFirst = shouldPrioritizeOctavos();
+      if (showOctavosFirst) {
+        parts.push(koRoundCardHTML(KO_ROUNDS.r16, {
+          preview: !isKoRoundPickable('r16'),
+          focus: true
+        }));
+        parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:0 0 .75rem">👆 Elige <strong>participante</strong> arriba para marcar octavos de final.</p>');
+      }
+      if (!shouldHideR32Bracket()) {
+        parts.push(koRoundCardHTML(KO_ROUNDS.r32, {
+          preview: !isKoRoundStarted('r32'),
+          locked: isKoRoundClosed('r32') && !isKoRoundPickable('r32'),
+          secondary: showOctavosFirst
+        }));
+      }
+      if (!showOctavosFirst) {
+        if (!isKoRoundStarted('r32')) {
+          parts.push('<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba para poder marcar ganadores cuando abra la ronda (28 jun, 10:00–21:00).</p>');
+        } else if (isKoRoundPickable('r32')) {
+          parts.push(`<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba · dieciseisavos abiertos hasta el <strong>${formatKoRoundCloseShort('r32')}</strong>.</p>`);
+        }
+        if (isKoRoundStarted('r16')) {
+          parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:.5rem 0 .75rem"><button type="button" class="ko-jump-round-btn" onclick="scrollToKoRound(\'r16\')">↓ Octavos de final</button> — elige participante para marcar</p>');
+        }
+      }
+      const upcoming = getUpcomingKoRounds();
+      if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));
+      el.innerHTML = parts.join('');
+      updateKoRoundCounts();
+      focusKoRoundIfNeeded();
       return;
     }
 
-    KO_ROUND_ORDER.forEach(key => {
+    const octavosFirst = shouldPrioritizeOctavos();
+    getKoBracketRenderOrder().forEach(key => {
       const round = KO_ROUNDS[key];
       if (key === 'r32') {
+        if (shouldHideR32Bracket()) return;
         if (!isKoRoundStarted('r32')) {
           parts.push(koRoundCardHTML(round, { preview: true }));
         } else if (isKoRoundPickable('r32')) {
-          parts.push(koRoundCardHTML(round));
+          parts.push(koRoundCardHTML(round, {}));
         } else if (isKoRoundClosed('r32')) {
           parts.push(koRoundCardHTML(round, { locked: true }));
         }
+        if (isKoRoundStarted('r16') && getActiveKoUser() && !octavosFirst) {
+          const r16Ready = KO_R16_MATCHES.filter(isMatchReady).length;
+          if (r16Ready > 0) {
+            parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:.5rem 0 .75rem"><button type="button" class="ko-jump-round-btn" onclick="scrollToKoRound(\'r16\')">↓ Ir a octavos de final</button> (' + r16Ready + ' de ' + KO_R16_MATCHES.length + ' cruces listos)</p>');
+          } else {
+            parts.push('<p class="ko-hint-callout" style="margin:.5rem 0 .75rem">Marca ganadores en <strong>dieciseisavos</strong> para rellenar los octavos abajo.</p>');
+          }
+        }
+        return;
+      }
+      if (!isKoRoundStarted(key)) {
+        return;
+      }
+      if (isKoRoundClosed(key)) {
+        parts.push(koRoundCardHTML(round, { locked: true, focus: key === 'r16' && octavosFirst }));
         return;
       }
       if (!isKoRoundPickable(key)) {
-        lockedRounds.push(round);
+        parts.push(koRoundCardHTML(round, { preview: true, focus: key === 'r16' && octavosFirst }));
         return;
       }
-      parts.push(koRoundCardHTML(round));
+      parts.push(koRoundCardHTML(round, { focus: key === 'r16' && octavosFirst }));
     });
 
-    if (lockedRounds.length) parts.push(koUpcomingRoundsHTML(lockedRounds));
+    const upcoming = getUpcomingKoRounds();
+    if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));
     el.innerHTML = parts.join('') || '<p class="text-xs text-gray-500 text-center">Todas las rondas se abrirán según el calendario del Mundial.</p>';
     updateKoRoundCounts();
+    focusKoRoundIfNeeded();
   }
 
   function isKoExtraDuplicate(ex, field, index, code) {
@@ -1875,7 +2215,7 @@
     const section = document.getElementById('koExtrasSection');
     const grid = document.getElementById('koExtrasGrid');
     if (!grid) return;
-    if (!shouldShowKoExtrasSection()) {
+    if (!shouldShowKoExtrasSection() || isKoOctavosPhase()) {
       if (section) section.classList.add('hidden');
       koActiveExtraSlot = null;
       koExtraWarn = '';
@@ -1946,6 +2286,34 @@
     const req = koMatchesRequired();
     const ed = koExtrasDone();
     const complete = isKnockoutComplete();
+    if (isKoOctavosPhase()) {
+      if (!getActiveKoUser()) {
+        st.textContent = 'Elige un participante arriba para marcar octavos de final.';
+      } else if (complete) {
+        st.textContent = '✓ Octavos completos — puedes exportar el PDF';
+      } else {
+        const closeHint = isKoRoundPickable('r16') ? ` · cierran ${formatKoRoundCloseShort('r16')}` : '';
+        st.textContent = `Octavos: ${md}/${req}${closeHint} · PDF al completar los 8 cruces`;
+      }
+      st.className = complete
+        ? 'text-xs text-green-400 font-medium mt-3'
+        : 'text-xs text-yellow-500 font-medium mt-3';
+      if (btn) {
+        btn.classList.toggle('is-locked', !complete);
+        btn.classList.toggle('btn-export-ko-ready', complete);
+        btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
+      }
+      const clearBtn = document.getElementById('btnClearKo');
+      const clearMatchesBtn = document.getElementById('btnClearKoMatches');
+      const canClear = !!getActiveKoUser();
+      [clearBtn, clearMatchesBtn].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = !canClear;
+        btn.style.opacity = canClear ? '1' : '.45';
+        btn.style.pointerEvents = canClear ? '' : 'none';
+      });
+      return;
+    }
     if (!getActiveKoUser()) {
       st.textContent = 'Elige un participante arriba para empezar.';
     } else if (complete) {
@@ -1954,13 +2322,24 @@
       st.textContent = isKoRoundPickable('r32')
         ? 'Campeón elegido ✓ — esperando cruces completos para marcar partidos'
         : isKoRoundClosed('r32')
-          ? 'Campeón elegido ✓ — dieciseisavos cerrados · PDF bloqueado hasta completar'
-          : `Campeón elegido ✓ — dieciseisavos abren el ${formatKoOpensAtShort('r32')} · PDF bloqueado hasta completar`;
-    } else if (ed >= KO_EXTRAS_TOTAL) {
-      const closeHint = isKoRoundPickable('r32') ? ` · cierra ${formatKoRoundCloseShort('r32')}` : isKoRoundClosed('r32') ? ' · dieciseisavos cerrados' : '';
-      st.textContent = `Campeón elegido ✓ — quiniela: ${md}/${req} partidos${closeHint} · PDF al completar todo`;
+          ? (isKoRoundPickable('r16')
+            ? 'Dieciseisavos cerrados ✓ — marca tus octavos'
+            : 'Dieciseisavos cerrados · octavos abren el 4 jul (o al cargar todos los resultados)')
+          : `Campeón elegido ✓ — dieciseisavos abren el ${formatKoOpensAtShort('r32')}`;
+    } else if (ed >= KO_EXTRAS_TOTAL || !extrasRequiredForExport()) {
+      const closeHint = isKoR16EarlyWindow() && isKoRoundPickable('r16')
+        ? ` · octavos cierran ${formatKoRoundCloseShort('r16')}`
+        : isKoRoundPickable('r32') && !isKoR16EarlyWindow()
+          ? ` · cierra ${formatKoRoundCloseShort('r32')}`
+          : isKoRoundClosed('r32')
+            ? (isKoRoundPickable('r16') ? ` · octavos cierran ${formatKoRoundCloseShort('r16')}` : ' · dieciseisavos cerrados')
+            : '';
+      const extrasNote = extrasRequiredForExport() ? 'Campeón elegido ✓ — ' : '';
+      st.textContent = `${extrasNote}Quiniela: ${md}/${req} partidos${closeHint} · PDF al completar todo`;
     } else if (isKoExtrasLocked() && ed < KO_EXTRAS_TOTAL) {
-      st.textContent = `Partidos (${req} activos): ${md}/${req} · Especiales cerrados (${ed}/${KO_EXTRAS_TOTAL})`;
+      const activeKey = getActiveQuinielaRoundKey();
+      const activeLabel = activeKey === 'r16' ? 'octavos' : activeKey === 'r32' ? 'dieciseisavos' : 'partidos';
+      st.textContent = `${activeLabel.charAt(0).toUpperCase() + activeLabel.slice(1)} (${req} activos): ${md}/${req} · Especiales cerrados (${ed}/${KO_EXTRAS_TOTAL})`;
     } else {
       st.textContent = `Especiales: ${ed}/${KO_EXTRAS_TOTAL} · Partidos (${req} activos): ${md}/${req} · PDF bloqueado hasta completar`;
     }
@@ -2000,7 +2379,10 @@
   function renderKnockout() {
     loadKnockoutStore();
     const preview = document.getElementById('koPreviewBadge');
-    if (preview) preview.classList.toggle('hidden', !isKnockoutPreviewUnlocked() || isKnockoutPublicOpen());
+    if (preview) {
+      preview.classList.toggle('hidden', !showKoPreviewBadge());
+      preview.textContent = isKoR16PreviewActive() ? 'Octavos · prueba' : 'Modo prueba';
+    }
     const subtitle = document.getElementById('koSubtitle');
     if (subtitle) {
       if (!isKnockoutAccessible()) {
@@ -2010,7 +2392,19 @@
       } else if (isKoRoundPickable('r32')) {
         subtitle.textContent = `Plazo abierto (10:00–21:00): elige participante, completa especiales y dieciseisavos · cierra ${formatKoRoundCloseShort('r32')}.`;
       } else if (isKoRoundClosed('r32')) {
-        subtitle.textContent = 'Plazo cerrado (28 jun, 21:00) · octavos y siguientes rondas se activan en su fecha.';
+        if (isKoR16EarlyWindow() && isKoRoundPickable('r16')) {
+          subtitle.textContent = `Dieciseisavos cerrados · octavos de final abiertos (anticipado) · plazo hasta ${formatKoRoundCloseShort('r16')}. Apertura oficial: ${formatKoOpensAtShort('r16')}.`;
+        } else if (isKoR16PreviewActive()) {
+          subtitle.textContent = 'Octavos en prueba (código) · cruces según tus dieciseisavos · oficial 4 jul, 10:00–19:00.';
+        } else if (isKoRoundPickable('r16')) {
+          subtitle.textContent = `Dieciseisavos cerrados · plazo octavos abierto hasta ${formatKoRoundCloseShort('r16')}.`;
+        } else if (isKoRoundStarted('r16')) {
+          subtitle.textContent = 'Dieciseisavos cerrados · octavos cerrados o completos.';
+        } else if (allKoR32ResultsComplete()) {
+          subtitle.textContent = `Clasificados listos · octavos abren el ${formatKoOpensAtShort('r16')}.`;
+        } else {
+          subtitle.textContent = 'Dieciseisavos cerrados · octavos: 4–7 jul (abren 4 jul, 10:00) o con código de prueba.';
+        }
       } else if (isKnockoutAccessible()) {
         subtitle.textContent = 'Eliminatorias abren el 28 jun, 10:00 · plazo único hasta las 21:00 (especiales + dieciseisavos).';
       }
@@ -2497,7 +2891,9 @@
 
     koPdfBg(pdf, PW, PH);
     let y = koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, M);
-    y = koPdfDrawExtrasCard(pdf, data, cache, M, y, cardW);
+    if (koExtrasDone() > 0) {
+      y = koPdfDrawExtrasCard(pdf, data, cache, M, y, cardW);
+    }
     y = koPdfDrawSectionTitle(pdf, M, y + 1, cardW, 'TUS PARTIDOS', 'Verde = ganador  ·  Rojo = eliminado');
 
     const openPlayable = getExportRounds().map(r => ({
@@ -2567,14 +2963,20 @@
   }
 
   function requestKnockoutAccess() {
-    if (isKnockoutAccessible()) {
-      if (typeof switchPhaseTab === 'function') switchPhaseTab('extras');
+    if (!isKnockoutAccessible()) {
+      showKoPasswordModal();
       return;
     }
-    showKoPasswordModal();
+    if (typeof switchPhaseTab === 'function') switchPhaseTab('extras');
   }
 
   window.KO_TEST_MODE = KO_TEST_MODE;
+  window.isKoOctavosPhase = isKoOctavosPhase;
+  window.isKoRoundClosedBySchedule = isKoRoundClosedBySchedule;
+  window.shouldHideR32Bracket = shouldHideR32Bracket;
+  window.isKoR16EarlyWindow = isKoR16EarlyWindow;
+  window.shouldPrioritizeOctavos = shouldPrioritizeOctavos;
+  window.isKoLabEnabled = isKoLabEnabled;
   window.isKnockoutAccessible = isKnockoutAccessible;
   window.isKnockoutPublicOpen = isKnockoutPublicOpen;
   window.KO_EXTRAS_LOCK_AT = KO_EXTRAS_LOCK_AT;
@@ -2588,12 +2990,16 @@
   window.pickKoResult = pickKoResult;
   window.setKoExtra = setKoExtra;
   window.submitKoPassword = submitKoPassword;
+  window.showKoPasswordModal = showKoPasswordModal;
   window.hideKoPasswordModal = hideKoPasswordModal;
   window.clearKnockoutMatches = clearKnockoutMatches;
   window.clearKnockoutAll = clearKnockoutAll;
   window.clearKnockoutPicks = clearKnockoutPicks;
   window.exportKnockoutPDF = exportKnockoutPDF;
   window.syncKnockoutGroupSeeds = syncKnockoutGroupSeeds;
+  window.syncKnockoutBracketFromResults = syncKnockoutBracketFromResults;
+  window.scrollToKoRound = scrollToKoRound;
+  window.focusKoRoundIfNeeded = focusKoRoundIfNeeded;
   window.requestKnockoutAccess = requestKnockoutAccess;
   window.KO_ROUNDS = KO_ROUNDS;
   window.KO_ROUND_OPENS = KO_ROUND_OPENS;
