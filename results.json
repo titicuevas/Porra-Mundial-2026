@@ -71,5 +71,7 @@
   "L4": { "home": 1, "away": 0 },
   "L5": { "home": 0, "away": 2 },
   "L6": { "home": 1, "away": 2 },
-  "KO32-2": { "home": 0, "away": 1 }
+  "KO32-2": { "home": 0, "away": 1 },
+  "KO32-3": { "home": 2, "away": 1 },
+  "KO32-4": { "home": 1, "away": 1, "winner": "py" }
 }
