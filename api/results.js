@@ -11,6 +11,31 @@ const {
 
 const ROOT = path.join(__dirname, '..');
 
+/** En Vercel el fs del serverless no ve results.json; require o fetch estático. */
+async function loadBaseResults(req) {
+  try {
+    const bundled = require('../results.json');
+    if (bundled && Object.keys(bundled).length) return bundled;
+  } catch (e) { /* no empaquetado */ }
+
+  const local = readLocalResults(ROOT);
+  if (local && Object.keys(local).length) return local;
+
+  try {
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const res = await fetch(`${proto}://${host}/results.json`, {
+      headers: { 'User-Agent': 'Porra-Mundial-2026/api-results' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data === 'object' && Object.keys(data).length) return data;
+    }
+  } catch (e) { /* siguiente intento */ }
+
+  return {};
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.statusCode = 405;
@@ -18,7 +43,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  let base = readLocalResults(ROOT);
+  let base = await loadBaseResults(req);
   let meta = { source: 'results.json', synced: [], footballData: false };
 
   const token = process.env.FOOTBALL_DATA_TOKEN;

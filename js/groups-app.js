@@ -1903,6 +1903,7 @@ async function loadOfficialResults() {
       const data = JSON.parse(text);
       if (data && typeof data === 'object' && !Array.isArray(data)) {
         delete data._meta;
+        if (!Object.keys(data).length) continue;
         results = data;
         break;
       }
