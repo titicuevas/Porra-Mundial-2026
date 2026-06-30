@@ -1892,18 +1892,22 @@ async function exportPDFInner() {
 // RESULTADOS OFICIALES (results.json — compartido en Vercel)
 // ============================================================
 async function loadOfficialResults() {
-  try {
-    const res = await fetch('results.json?t=' + Date.now());
-    if (res.ok) {
+  const urls = ['/api/results', 'results.json'];
+  results = {};
+  for (const url of urls) {
+    try {
+      const res = await fetch(url + '?t=' + Date.now());
+      if (!res.ok) continue;
       const text = await res.text();
-      if (text && text.trim()) {
-        const data = JSON.parse(text);
-        results = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
-      } else {
-        results = {};
+      if (!text || !text.trim()) continue;
+      const data = JSON.parse(text);
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        delete data._meta;
+        results = data;
+        break;
       }
-    }
-  } catch (e) { results = {}; }
+    } catch (e) { /* probar siguiente fuente */ }
+  }
   renderGroups();
   updateScoreHeader();
   refreshGroupStandingsAndKnockout();
@@ -1955,9 +1959,10 @@ function bootApp() {
   openDefaultPhaseTab();
   initExportDock();
 
-  loadOfficialResults().then(() => { updateScoreHeader(); renderLeaderboard(); }).catch(e => console.warn('results.json', e));
+  loadOfficialResults().then(() => { updateScoreHeader(); renderLeaderboard(); }).catch(e => console.warn('results', e));
   loadOfficialLeaderboard().catch(e => console.warn('leaderboard.json', e));
   try { setInterval(tickSchedule, 1000); } catch (e) {}
+  try { setInterval(() => loadOfficialResults(), 5 * 60 * 1000); } catch (e) {}
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', bootApp);
