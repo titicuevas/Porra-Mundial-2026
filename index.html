@@ -20,7 +20,7 @@
 <title>Porra Mundial 2026 🏆</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link rel="stylesheet" href="css/app.css?v=123"/>
+<link rel="stylesheet" href="css/app.css?v=127"/>
 </head>
 <body class="min-h-screen text-white">
 <noscript><div style="background:#7f1d1d;color:#fff;padding:1rem;text-align:center">Activa JavaScript para usar la porra.</div></noscript>
@@ -345,8 +345,8 @@
 <div id="panelLeaderboard" class="phase-panel hidden">
   <div class="max-w-6xl mx-auto px-4 py-5">
     <div class="leaderboard-card p-5 sm:p-6">
-      <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación — fase de grupos</h2>
-      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Resultado oficial tras los 72 partidos. <strong class="text-gray-400">1 punto por acierto</strong>. <strong class="text-gray-300">No cuenta para el bote</strong> — orientativo. El premio (un 1.º, un 2.º, un 3.º con 60/30/10 %) se decide en la clasificación final de eliminatorias con desempate por campeón, finalistas y semifinalistas.</p>
+      <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación</h2>
+      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Puntos oficiales: <strong class="text-gray-400">grupos + dieciseisavos</strong> (1 punto por acierto). <strong class="text-gray-300">No cuenta para el bote</strong> — orientativo. El premio (un 1.º, un 2.º, un 3.º con 60/30/10 %) se decide en la clasificación final de eliminatorias con desempate por campeón, finalistas y semifinalistas.</p>
       <p id="leaderboardUpdated" class="text-xs text-gray-600 mb-2 hidden"></p>
       <div id="myScoreCard" class="my-score-card hidden">
         <p class="text-xs text-gray-500 mb-1">Tu registro en este dispositivo</p>
@@ -354,7 +354,7 @@
       </div>
       <div class="leaderboard-scroll overflow-x-auto">
         <table class="leaderboard-table" id="leaderboardTable" aria-label="Clasificación">
-          <thead><tr><th>#</th><th>Nombre</th><th class="leaderboard-points-col">Puntos</th><th class="leaderboard-prize-col leaderboard-prize-col-header hidden">Premio</th></tr></thead>
+          <thead><tr><th>#</th><th>Nombre</th><th class="leaderboard-breakdown-col">Grupos</th><th class="leaderboard-breakdown-col">16avos</th><th class="leaderboard-points-col">Total</th><th class="leaderboard-prize-col leaderboard-prize-col-header hidden">Premio</th></tr></thead>
           <tbody id="leaderboardBody"></tbody>
         </table>
       </div>

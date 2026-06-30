@@ -661,6 +661,32 @@ function buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) {
   </div>`;
 }
 
+function leaderboardHasBreakdown(entries) {
+  return (entries || []).some(e => {
+    const b = e.breakdown;
+    return b && (b.grupos != null || b.r32 != null || b.r16 != null);
+  });
+}
+
+function leaderboardBreakdownSubHTML(e) {
+  const b = e.breakdown;
+  if (!b) return '';
+  const parts = [];
+  if (b.grupos != null) parts.push('Gr. ' + b.grupos);
+  if (b.r32 != null) parts.push('16 ' + b.r32);
+  if (b.r16 != null) parts.push('8 ' + b.r16);
+  if (!parts.length) return '';
+  return '<span class="leaderboard-name-sub">' + parts.join(' · ') + '</span>';
+}
+
+function leaderboardBreakdownCells(e, showCols) {
+  if (!showCols) return '';
+  const b = e.breakdown || {};
+  const g = b.grupos != null ? b.grupos : '—';
+  const r32 = b.r32 != null ? b.r32 : '—';
+  return '<td class="leaderboard-breakdown-col">' + g + '</td><td class="leaderboard-breakdown-col">' + r32 + '</td>';
+}
+
 function renderLeaderboard() {
   if (!isLeaderboardOpen()) return;
   const tbody = document.getElementById('leaderboardBody');
@@ -714,6 +740,13 @@ function renderLeaderboard() {
     ? official.slice().sort((a, b) => (b.points || 0) - (a.points || 0) || a.name.localeCompare(b.name, 'es'))
     : getLeaderboardEntries();
   const myName = getPlayerDisplayName().toLowerCase();
+  const showBreakdown = hasOfficial && leaderboardHasBreakdown(entries);
+  const table = document.getElementById('leaderboardTable');
+  if (table) {
+    table.classList.toggle('leaderboard-table--breakdown', showBreakdown);
+    const ptsHeader = table.querySelector('th.leaderboard-points-col');
+    if (ptsHeader) ptsHeader.textContent = showBreakdown ? 'Total' : 'Puntos';
+  }
   const prizeSummaryEl = document.getElementById('leaderboardPrizeSummary');
   const prizeColHeader = document.querySelector('.leaderboard-prize-col-header');
   const isPrizePhase = isKoPrizeLeaderboard(leaderboardData);
@@ -737,7 +770,9 @@ function renderLeaderboard() {
         ? `<td class="leaderboard-prize-cell"><span class="leaderboard-prize-col">${formatPrizeSharePct(prizeShares[i])}%</span></td>`
         : '<td class="leaderboard-prize-cell"><span class="leaderboard-prize-col leaderboard-prize-col--empty">—</span></td>')
       : '';
-    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td>${e.name}${suffix}</td><td class="leaderboard-points">${e.points}</td>${prizeCol}</tr>`;
+    const nameCell = `${e.name}${suffix}${showBreakdown ? leaderboardBreakdownSubHTML(e) : ''}`;
+    const breakdownCols = showBreakdown ? leaderboardBreakdownCells(e, true) : '';
+    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td class="leaderboard-name">${nameCell}</td>${breakdownCols}<td class="leaderboard-points">${e.points}</td>${prizeCol}</tr>`;
   }).join('');
   if (prizeSummaryEl) {
     const html = isPrizePhase ? buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) : '';
