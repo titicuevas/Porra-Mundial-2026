@@ -1704,7 +1704,7 @@ async function exportPDFInner() {
   };
   const PW = 210, PH = 297, M = 10, GAP = 3, CW = (PW - M * 2 - GAP) / 2;
   const FLAG_W = 2.8, FLAG_H = 2.1;
-  const PAGE_TOP = 10, PAGE_BOTTOM = PH - 11;
+  const PAGE_TOP = 16, PAGE_BOTTOM = PH - 11;
   const counts = { 1: 0, X: 0, 2: 0 };
   Object.values(picks).forEach(p => { if (counts[p] !== undefined) counts[p]++; });
   const total3 = counts['1'] + counts['X'] + counts['2'] || 1;
@@ -1717,7 +1717,7 @@ async function exportPDFInner() {
   groups.forEach(g => { g.teams.forEach(t => codes.add(t.code)); });
   await Promise.all([...codes].map(c => loadFlagDataUrl(c)).concat(loadTrophyDataUrl()));
 
-  let y = M;
+  let y = PAGE_TOP;
 
   // ---- Portada PDF (logo FIFA + nombre + quesito 1/X/2) ----
   const cardW = PW - M * 2, cardX = M, pad = 5;

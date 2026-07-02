@@ -107,6 +107,7 @@ Pásalo por WhatsApp al grupo (botón en la web) o con el QR de arriba.
 | `iniciar.bat` | Servidor [localhost:8765](http://localhost:8765) |
 | `preparar-deploy.bat` | Sincroniza versión + verificación antes de subir a Vercel |
 | `node scripts/sync-version.js` | Propaga `js/version.js` → `?v=` en HTML y `manifest.json` |
+| `node scripts/sync-football-data.cjs` | Sincroniza dieciseisavos (`KO32-*`) desde football-data.org a `results.json` |
 | `node scripts/verify.js` | Comprueba estructura, versión y cuadro FIFA |
 
 ```bash
@@ -115,6 +116,29 @@ preparar-deploy.bat                 # Windows, antes de cada push
 ```
 
 > ⚠️ No uses `file://`. Tras cambiar JS/CSS, sube el número en **`js/version.js`** y ejecuta **`node scripts/sync-version.js`** (o `preparar-deploy.bat`).
+
+---
+
+## 🔄 Actualización de resultados (API + local)
+
+La app carga resultados oficiales en este orden:
+
+1. `GET /api/results`
+2. Si falla, `results.json`
+
+### Producción (Vercel)
+- `api/results.js` está activo.
+- Si existe `FOOTBALL_DATA_TOKEN`, fusiona `results.json` con football-data.org.
+- Cabecera útil para diagnóstico: `X-Porra-Football-Data: synced`.
+
+### Local (`python -m http.server`)
+- `/api/results` no existe (404), por tanto se usa `results.json` local.
+- Para traer nuevos KO en local:
+  - `FOOTBALL_DATA_TOKEN=... node scripts/sync-football-data.cjs`
+
+### Nota sobre octavos
+- Los octavos se rellenan con ganadores de `KO32-*`.
+- Si faltan dieciseisavos por cerrar, algunos cruces saldrán como `tbd` (normal).
 
 ---
 
@@ -156,6 +180,18 @@ Array `PARTICIPANTS` en `js/knockout.js` → sync → push.
 - Vacío listo: `results.json` → `{}`
 - Ejemplo con partidos: `results.example.json`
 - Admin: `?admin=1` → copiar JSON → pegar en `results.json` → push
+- Producción: `/api/results` fusiona automáticamente con football-data.org (si hay token)
+- Local: `node scripts/sync-football-data.cjs` para refrescar `results.json`
+
+</details>
+
+<details>
+<summary><strong>PDF de eliminatorias (ajustes recientes)</strong></summary>
+
+- Se mejoró el espaciado superior de la portada de KO.
+- El bloque `nombre + progreso/fecha` queda dentro del recuadro superior.
+- Se compactaron recuadros de cruces para mejorar lectura.
+- En octavos, el PDF muestra solo cruces realmente disponibles (si faltan ganadores de 16avos, verás `tbd`).
 
 </details>
 
@@ -181,13 +217,16 @@ Array `PARTICIPANTS` en `js/knockout.js` → sync → push.
 │   ├── knockout.js            ← Eliminatorias + PDF KO
 │   ├── annex-c-data.js        ← Anexo FIFA (cruces 3º)
 │   └── team-fifa-meta.js      ← Metadatos equipos FIFA
+├── api/results.js             ← API Vercel (merge results + football-data)
 ├── results.json               ← Marcadores oficiales
 ├── results.example.json       ← Plantilla de resultados
 ├── leaderboard.json           ← Clasificación participantes
 ├── manifest.json              ← PWA
 ├── scripts/
 │   ├── sync-version.js        ← Propaga versión al HTML
-│   └── verify.js              ← Comprobaciones pre-deploy
+│   ├── sync-football-data.cjs ← Sync local KO desde football-data.org
+│   ├── verify.js              ← Comprobaciones pre-deploy
+│   └── lib/football-data-sync.cjs
 ├── iniciar.bat / preparar-deploy.bat
 └── assets/
 ```

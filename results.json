@@ -1,77 +1,340 @@
 {
-  "A1": { "home": 2, "away": 0 },
-  "A2": { "home": 2, "away": 1 },
-  "A3": { "home": 1, "away": 1 },
-  "A4": { "home": 1, "away": 0 },
-  "A5": { "home": 0, "away": 3 },
-  "A6": { "home": 1, "away": 0 },
-  "B1": { "home": 1, "away": 1 },
-  "B2": { "home": 1, "away": 1 },
-  "B3": { "home": 4, "away": 1 },
-  "B4": { "home": 6, "away": 0 },
-  "B5": { "home": 2, "away": 1 },
-  "B6": { "home": 3, "away": 1 },
-  "C1": { "home": 0, "away": 1 },
-  "C2": { "home": 1, "away": 1 },
-  "C3": { "home": 3, "away": 0 },
-  "C4": { "home": 0, "away": 1 },
-  "C5": { "home": 0, "away": 3 },
-  "C6": { "home": 4, "away": 2 },
-  "D1": { "home": 4, "away": 1 },
-  "D2": { "home": 2, "away": 0 },
-  "D3": { "home": 0, "away": 1 },
-  "D4": { "home": 2, "away": 0 },
-  "D5": { "home": 3, "away": 2 },
-  "D6": { "home": 0, "away": 0 },
-  "E1": { "home": 1, "away": 0 },
-  "E2": { "home": 7, "away": 1 },
-  "E3": { "home": 2, "away": 1 },
-  "E4": { "home": 0, "away": 0 },
-  "E5": { "home": 0, "away": 2 },
-  "E6": { "home": 2, "away": 1 },
-  "F1": { "home": 2, "away": 2 },
-  "F2": { "home": 5, "away": 1 },
-  "F3": { "home": 5, "away": 1 },
-  "F4": { "home": 0, "away": 4 },
-  "F5": { "home": 1, "away": 1 },
-  "F6": { "home": 1, "away": 3 },
-  "G1": { "home": 2, "away": 2 },
-  "G2": { "home": 1, "away": 1 },
-  "G3": { "home": 0, "away": 0 },
-  "G4": { "home": 3, "away": 1 },
-  "G5": { "home": 1, "away": 5 },
-  "G6": { "home": 1, "away": 1 },
-  "H1": { "home": 1, "away": 1 },
-  "H2": { "home": 0, "away": 0 },
-  "H3": { "home": 2, "away": 2 },
-  "H4": { "home": 4, "away": 0 },
-  "H5": { "home": 0, "away": 0 },
-  "H6": { "home": 0, "away": 1 },
-  "I1": { "home": 3, "away": 1 },
-  "I2": { "home": 1, "away": 4 },
-  "I3": { "home": 3, "away": 2 },
-  "I4": { "home": 3, "away": 0 },
-  "I5": { "home": 5, "away": 0 },
-  "I6": { "home": 1, "away": 4 },
-  "J1": { "home": 3, "away": 0 },
-  "J2": { "home": 3, "away": 1 },
-  "J3": { "home": 2, "away": 0 },
-  "J4": { "home": 2, "away": 1 },
-  "J5": { "home": 3, "away": 3 },
-  "J6": { "home": 1, "away": 3 },
-  "K1": { "home": 1, "away": 1 },
-  "K2": { "home": 1, "away": 3 },
-  "K3": { "home": 5, "away": 0 },
-  "K4": { "home": 1, "away": 0 },
-  "K5": { "home": 1, "away": 3 },
-  "K6": { "home": 0, "away": 0 },
-  "L1": { "home": 1, "away": 0 },
-  "L2": { "home": 4, "away": 2 },
-  "L3": { "home": 0, "away": 0 },
-  "L4": { "home": 1, "away": 0 },
-  "L5": { "home": 0, "away": 2 },
-  "L6": { "home": 1, "away": 2 },
-  "KO32-2": { "home": 0, "away": 1 },
-  "KO32-3": { "home": 2, "away": 1 },
-  "KO32-4": { "home": 1, "away": 1, "winner": "py" }
+  "A1": {
+    "home": 2,
+    "away": 0
+  },
+  "A2": {
+    "home": 2,
+    "away": 1
+  },
+  "A3": {
+    "home": 1,
+    "away": 1
+  },
+  "A4": {
+    "home": 1,
+    "away": 0
+  },
+  "A5": {
+    "home": 0,
+    "away": 3
+  },
+  "A6": {
+    "home": 1,
+    "away": 0
+  },
+  "B1": {
+    "home": 1,
+    "away": 1
+  },
+  "B2": {
+    "home": 1,
+    "away": 1
+  },
+  "B3": {
+    "home": 4,
+    "away": 1
+  },
+  "B4": {
+    "home": 6,
+    "away": 0
+  },
+  "B5": {
+    "home": 2,
+    "away": 1
+  },
+  "B6": {
+    "home": 3,
+    "away": 1
+  },
+  "C1": {
+    "home": 0,
+    "away": 1
+  },
+  "C2": {
+    "home": 1,
+    "away": 1
+  },
+  "C3": {
+    "home": 3,
+    "away": 0
+  },
+  "C4": {
+    "home": 0,
+    "away": 1
+  },
+  "C5": {
+    "home": 0,
+    "away": 3
+  },
+  "C6": {
+    "home": 4,
+    "away": 2
+  },
+  "D1": {
+    "home": 4,
+    "away": 1
+  },
+  "D2": {
+    "home": 2,
+    "away": 0
+  },
+  "D3": {
+    "home": 0,
+    "away": 1
+  },
+  "D4": {
+    "home": 2,
+    "away": 0
+  },
+  "D5": {
+    "home": 3,
+    "away": 2
+  },
+  "D6": {
+    "home": 0,
+    "away": 0
+  },
+  "E1": {
+    "home": 1,
+    "away": 0
+  },
+  "E2": {
+    "home": 7,
+    "away": 1
+  },
+  "E3": {
+    "home": 2,
+    "away": 1
+  },
+  "E4": {
+    "home": 0,
+    "away": 0
+  },
+  "E5": {
+    "home": 0,
+    "away": 2
+  },
+  "E6": {
+    "home": 2,
+    "away": 1
+  },
+  "F1": {
+    "home": 2,
+    "away": 2
+  },
+  "F2": {
+    "home": 5,
+    "away": 1
+  },
+  "F3": {
+    "home": 5,
+    "away": 1
+  },
+  "F4": {
+    "home": 0,
+    "away": 4
+  },
+  "F5": {
+    "home": 1,
+    "away": 1
+  },
+  "F6": {
+    "home": 1,
+    "away": 3
+  },
+  "G1": {
+    "home": 2,
+    "away": 2
+  },
+  "G2": {
+    "home": 1,
+    "away": 1
+  },
+  "G3": {
+    "home": 0,
+    "away": 0
+  },
+  "G4": {
+    "home": 3,
+    "away": 1
+  },
+  "G5": {
+    "home": 1,
+    "away": 5
+  },
+  "G6": {
+    "home": 1,
+    "away": 1
+  },
+  "H1": {
+    "home": 1,
+    "away": 1
+  },
+  "H2": {
+    "home": 0,
+    "away": 0
+  },
+  "H3": {
+    "home": 2,
+    "away": 2
+  },
+  "H4": {
+    "home": 4,
+    "away": 0
+  },
+  "H5": {
+    "home": 0,
+    "away": 0
+  },
+  "H6": {
+    "home": 0,
+    "away": 1
+  },
+  "I1": {
+    "home": 3,
+    "away": 1
+  },
+  "I2": {
+    "home": 1,
+    "away": 4
+  },
+  "I3": {
+    "home": 3,
+    "away": 2
+  },
+  "I4": {
+    "home": 3,
+    "away": 0
+  },
+  "I5": {
+    "home": 5,
+    "away": 0
+  },
+  "I6": {
+    "home": 1,
+    "away": 4
+  },
+  "J1": {
+    "home": 3,
+    "away": 0
+  },
+  "J2": {
+    "home": 3,
+    "away": 1
+  },
+  "J3": {
+    "home": 2,
+    "away": 0
+  },
+  "J4": {
+    "home": 2,
+    "away": 1
+  },
+  "J5": {
+    "home": 3,
+    "away": 3
+  },
+  "J6": {
+    "home": 1,
+    "away": 3
+  },
+  "K1": {
+    "home": 1,
+    "away": 1
+  },
+  "K2": {
+    "home": 1,
+    "away": 3
+  },
+  "K3": {
+    "home": 5,
+    "away": 0
+  },
+  "K4": {
+    "home": 1,
+    "away": 0
+  },
+  "K5": {
+    "home": 1,
+    "away": 3
+  },
+  "K6": {
+    "home": 0,
+    "away": 0
+  },
+  "L1": {
+    "home": 1,
+    "away": 0
+  },
+  "L2": {
+    "home": 4,
+    "away": 2
+  },
+  "L3": {
+    "home": 0,
+    "away": 0
+  },
+  "L4": {
+    "home": 1,
+    "away": 0
+  },
+  "L5": {
+    "home": 0,
+    "away": 2
+  },
+  "L6": {
+    "home": 1,
+    "away": 2
+  },
+  "KO32-2": {
+    "home": 0,
+    "away": 1,
+    "winner": "ca"
+  },
+  "KO32-3": {
+    "home": 2,
+    "away": 1,
+    "winner": "br"
+  },
+  "KO32-4": {
+    "home": 4,
+    "away": 5,
+    "winner": "py"
+  },
+  "KO32-14": {
+    "home": 3,
+    "away": 4,
+    "winner": "ma"
+  },
+  "KO32-16": {
+    "home": 1,
+    "away": 2,
+    "winner": "no"
+  },
+  "KO32-8": {
+    "home": 3,
+    "away": 0,
+    "winner": "fr"
+  },
+  "KO32-1": {
+    "home": 2,
+    "away": 0,
+    "winner": "mx"
+  },
+  "KO32-9": {
+    "home": 2,
+    "away": 1,
+    "winner": "gb-eng"
+  },
+  "KO32-12": {
+    "home": 3,
+    "away": 2,
+    "winner": "be"
+  },
+  "KO32-5": {
+    "home": 2,
+    "away": 0,
+    "winner": "us"
+  }
 }

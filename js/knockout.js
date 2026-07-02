@@ -2453,10 +2453,10 @@
   };
 
   const KO_PDF = {
-    M: 10, GAP: 3, PAGE_TOP: 10, PAGE_BOTTOM: 287,
-    MATCH_H: 8.5, HEAD_H: 6.5, FOOT_H: 2,
-    FLAG_W: 3.2, FLAG_H: 2.4, RADIUS: 2,
-    MATCH_H_MIN: 8.8, MATCH_H_MAX: 10.6
+    M: 10, GAP: 3, PAGE_TOP: 32, PAGE_BOTTOM: 289,
+    MATCH_H: 7, HEAD_H: 5.5, FOOT_H: 1.5,
+    FLAG_W: 2.6, FLAG_H: 1.9, RADIUS: 2,
+    MATCH_H_MIN: 7, MATCH_H_MAX: 8.2
   };
 
   function koPdfRoleLabel(role) {
@@ -2622,10 +2622,10 @@
 
   function koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, startY, octavosPdf) {
     const C = KO_PDF_C;
-    const pad = 5;
-    const headerH = 11;
+    const pad = 4;
+    const headerH = 9.5;
     const nameLines = pdf.splitTextToSize(displayName, cardW - pad * 2);
-    const introH = headerH + nameLines.length * 4 + 8;
+    const introH = headerH + nameLines.length * 3.5 + 9;
     const y = startY;
     const headerTitle = octavosPdf ? 'PORRA MUNDIAL 2026 — OCTAVOS DE FINAL' : 'PORRA MUNDIAL 2026 — ELIMINATORIAS';
     const progressLabel = octavosPdf ? `${done}/${req} cruces marcadas` : `${done}/${req} partidos marcados`;
@@ -2647,7 +2647,7 @@
     pdf.setTextColor(...C.mut);
     pdf.text('Hora CEST · USA · México · Canadá', M + cardW - pad, y + 5, { align: 'right' });
 
-    const nameY = y + headerH + 3;
+    const nameY = y + headerH + 6;
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(11);
     pdf.setTextColor(...C.txt);
@@ -2657,9 +2657,9 @@
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(5.2);
     pdf.setTextColor(...C.mut);
-    pdf.text(`${progressLabel}  ·  ${today}`, PW / 2, nameEndY + 4, { align: 'center' });
+    pdf.text(`${progressLabel}  ·  ${today}`, PW / 2, nameEndY + 3.8, { align: 'center' });
 
-    return y + introH + 2;
+    return y + introH + 10;
   }
 
   function koPdfDrawExtraListRow(pdf, leftLabel, code, cache, x, y, w, h, opts) {
@@ -2795,7 +2795,7 @@
   function koPdfDrawTeamCell(pdf, code, isWin, isLose, role, x, y, w, h, cache, alignRight) {
     const C = KO_PDF_C;
     const { FLAG_W, FLAG_H } = KO_PDF;
-    const pad = 0.9;
+    const pad = 0.6;
 
     if (isWin) {
       pdf.setFillColor(18, 42, 32);
@@ -2843,15 +2843,15 @@
   }
 
   function koPdfDrawMatchRow(pdf, m, pick, xOff, my, CW, cache, stripe, ex, matchH, showSpecials) {
-    const pad = 1.8;
+    const pad = 1.3;
     const centerX = xOff + CW / 2;
-    const vsW = 5.5;
+    const vsW = 4.5;
     const cellW = (CW - vsW - pad * 2) / 2;
     const cellX1 = xOff + pad;
     const cellX2 = xOff + CW - pad - cellW;
-    const metaY = my + 1.5;
-    const teamY = my + 2.85;
-    const cellH = matchH - 3.35;
+    const metaY = my + 1;
+    const teamY = my + 2.1;
+    const cellH = matchH - 2.6;
 
     if (stripe) {
       pdf.setFillColor(20, 28, 42);
@@ -2933,13 +2933,13 @@
     const cache = typeof flagCache !== 'undefined' ? flagCache : {};
 
     koPdfBg(pdf, PW, PH);
-    let y = koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, M, octavosPdf);
+    let y = koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, PAGE_TOP, octavosPdf);
     if (!octavosPdf && koExtrasDone() > 0) {
-      y = koPdfDrawExtrasCard(pdf, data, cache, M, y, cardW);
+      y = koPdfDrawExtrasCard(pdf, data, cache, M, y + 5, cardW);
     }
     const sectionTitle = octavosPdf ? 'OCTAVOS DE FINAL' : 'TUS PARTIDOS';
     const sectionSub = octavosPdf ? '8 partidos · Verde = ganador  ·  Rojo = eliminado' : 'Verde = ganador  ·  Rojo = eliminado';
-    y = koPdfDrawSectionTitle(pdf, M, y + 1, cardW, sectionTitle, sectionSub);
+    y = koPdfDrawSectionTitle(pdf, M, y + 6, cardW, sectionTitle, sectionSub);
 
     const openPlayable = getExportRounds().map(r => ({
       round: r,
@@ -2981,7 +2981,7 @@
         placeGroup(groupH, fullWidth);
         const xOff = fullWidth ? M : M + col * (CW + GAP);
         const label = round.label + (chunks.length > 1 ? (ci ? ' B' : ' A') : '');
-        colY[col] = koPdfDrawMatchColumn(pdf, chunk, xOff, colY[col], colW, data.picks, cache, label, data.extras, matchH, false) + 2;
+        colY[col] = koPdfDrawMatchColumn(pdf, chunk, xOff, colY[col], colW, data.picks, cache, label, data.extras, matchH, false) + 1.5;
         if (fullWidth) {
           colY = koPdfSyncColumns(colY);
           col = 0;
