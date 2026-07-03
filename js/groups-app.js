@@ -583,6 +583,8 @@ function getLeaderboardEntries() {
 }
 
 const PODIUM_PRIZE_POOL = { 1: 60, 2: 30, 3: 10 };
+/** Oculto en UI; la lógica y buildLeaderboardPrizeSummaryHTML se mantienen. */
+const SHOW_LEADERBOARD_PRIZE_SUMMARY = false;
 
 /** Desempate oficial: campeón → finalistas → semifinalistas (entry.tiebreak). */
 function compareTiebreak(a, b) {
@@ -775,7 +777,7 @@ function renderLeaderboard() {
     return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td class="leaderboard-name">${nameCell}</td>${breakdownCols}<td class="leaderboard-points">${e.points}</td>${prizeCol}</tr>`;
   }).join('');
   if (prizeSummaryEl) {
-    const html = isPrizePhase ? buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) : '';
+    const html = isPrizePhase && SHOW_LEADERBOARD_PRIZE_SUMMARY ? buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) : '';
     prizeSummaryEl.innerHTML = html;
     prizeSummaryEl.classList.toggle('hidden', !html);
   }

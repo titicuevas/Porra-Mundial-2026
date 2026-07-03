@@ -1652,11 +1652,6 @@
       }));
       if (!getActiveKoUser()) {
         parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:0 0 .75rem">👆 Elige <strong>participante</strong> arriba para marcar octavos de final.</p>');
-      } else {
-        const r16Ready = KO_R16_MATCHES.filter(isMatchReady).length;
-        if (r16Ready < KO_R16_MATCHES.length) {
-          parts.push('<p class="ko-hint-callout" style="margin:0 0 .75rem">Los cruces se rellenan con <strong>resultados oficiales</strong> y, si faltan, con tus dieciseisavos guardados en este móvil.</p>');
-        }
       }
       const upcoming = getUpcomingKoRounds();
       if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));

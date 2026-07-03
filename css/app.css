@@ -940,10 +940,23 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
   .ko-round-card .group-header .text-2xl{font-size:1.35rem;line-height:1;}
   .ko-round-card .ko-round-status{font-size:.66rem;line-height:1.35;}
   .ko-round-preview-banner{margin:.45rem .55rem .55rem;padding:.55rem .65rem;font-size:.7rem;line-height:1.5;}
-  .ko-upcoming-rounds{padding:.6rem .7rem;margin-top:.5rem;}
-  .ko-upcoming-title{font-size:.64rem;margin-bottom:.4rem;}
-  .ko-upcoming-row{flex-direction:column;align-items:flex-start;gap:.12rem;padding:.35rem 0;}
-  .ko-upcoming-date{white-space:normal;text-align:left;font-size:.64rem;}
+  .ko-upcoming-rounds{padding:.4rem .55rem;margin-top:.35rem;border-radius:8px;}
+  .ko-upcoming-title{font-size:.58rem;margin-bottom:.22rem;letter-spacing:.05em;}
+  .ko-upcoming-row{
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    gap:.35rem .4rem;
+    padding:.18rem 0;
+    font-size:.68rem;
+    line-height:1.25;
+  }
+  .ko-upcoming-row > span:first-child{flex:1 1 auto;min-width:0;}
+  .ko-upcoming-date{white-space:nowrap;text-align:right;font-size:.62rem;flex-shrink:0;}
+  .ko-round-waiting{padding:.4rem .55rem;margin-bottom:.35rem;border-radius:8px;gap:.4rem;}
+  .ko-round-waiting-title{font-size:.72rem;}
+  .ko-round-waiting-hint{font-size:.58rem;margin-top:.05rem;}
+  .ko-round-waiting-badge{font-size:.58rem;padding:.14rem .4rem;}
   .ko-countdown-box{flex-direction:column;align-items:stretch;text-align:center;padding:.55rem .65rem;}
   .ko-countdown-label{min-width:0;text-align:center;font-size:.68rem;}
   .ko-countdown-digits{font-size:1.35rem;text-align:center;width:100%;}
