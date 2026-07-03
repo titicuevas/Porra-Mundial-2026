@@ -336,5 +336,10 @@
     "home": 2,
     "away": 0,
     "winner": "us"
+  },
+  "KO32-7": {
+    "home": 3,
+    "away": 0,
+    "winner": "es"
   }
 }
