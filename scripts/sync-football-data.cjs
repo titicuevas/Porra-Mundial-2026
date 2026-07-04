@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Prueba / actualiza results.json desde football-data.org (dieciseisavos).
+ * Actualiza results.json desde football-data.org (dieciseisavos, octavos, cuartos).
  *
  * Uso:
  *   FOOTBALL_DATA_TOKEN=xxx node scripts/sync-football-data.cjs
@@ -56,12 +56,24 @@ async function main() {
   }
 
   const base = readLocalResults(ROOT);
-  const { updates, details, rawCount } = await fetchKoUpdatesFromFootballData(token);
-  console.log(`football-data.org: ${rawCount} partidos LAST_32, ${details.length} mapeados a KO32-N`);
+  const { updates, details, stages, fixtures } = await fetchKoUpdatesFromFootballData(token, base);
 
-  if (!details.length) {
+  stages.forEach(s => {
+    const label = s.stage === 'r32' ? 'KO32' : s.stage === 'r16' ? 'KO16' : 'KO8';
+    const fx = s.fixtures != null ? `, ${s.fixtures} cruces` : '';
+    console.log(`football-data.org ${s.stage}: ${s.rawCount} partidos, ${s.mapped} mapeados a ${label}${fx}`);
+  });
+
+  if (Object.keys(fixtures || {}).length) {
+    console.log('\nCruces desde API:');
+    Object.keys(fixtures).sort().forEach(id => {
+      const f = fixtures[id];
+      console.log(`  ${id}: ${f.home} vs ${f.away}`);
+    });
+  }
+
+  if (!details.length && !(fixtures && Object.keys(fixtures).length)) {
     console.log('Nada nuevo que aplicar (ningún FINISHED que coincida con el cuadro).');
-    console.log('Prueba Países Bajos–Marruecos: node scripts/sync-football-data.cjs --probe nl ma');
     return;
   }
 
@@ -72,6 +84,9 @@ async function main() {
 
   const merged = mergeIntoResults(base, updates);
   delete merged._meta;
+  if (fixtures && Object.keys(fixtures).length) {
+    merged._fixtures = fixtures;
+  }
 
   if (dryRun) {
     console.log('\n--dry-run: no se escribe results.json');

@@ -21,6 +21,11 @@
       if (koRound === 'octavos' || koRound === 'r16') {
         sessionStorage.setItem('porra2026_ko_focus', 'r16');
       }
+      if (koRound === 'cuartos' || koRound === 'r8') {
+        sessionStorage.setItem('porra2026_ko_focus', 'r8');
+        sessionStorage.setItem(KO_PREVIEW_KEY, '1');
+        localStorage.setItem(KO_PREVIEW_KEY, '1');
+      }
       if (localStorage.getItem(KO_LAB_KEY) === '1') {
         sessionStorage.setItem(KO_PREVIEW_KEY, '1');
       }
@@ -150,6 +155,10 @@
     [3, 7], [1, 13], [2, 15], [0, 8], [10, 6], [4, 11], [12, 14], [5, 9]
   ];
 
+  const KO_R8_FEEDERS = SK.R8_FEEDERS || [
+    [0, 1], [2, 3], [4, 5], [6, 7]
+  ];
+
   const KO_R8_MATCHES = R8_META.map((meta, i) =>
     mkKoMatch('KO8-' + (i + 1), null, null, meta)
   );
@@ -171,7 +180,8 @@
   /** Cierre de pronósticos = pitido del primer partido de la ronda. */
   const KO_ROUND_CLOSES = {
     r32: koRoundFirstKickoffIso(KO_R32_MATCHES) || '2026-06-28T21:00:00+02:00',
-    r16: koRoundFirstKickoffIso(KO_R16_MATCHES) || '2026-07-04T19:00:00+02:00'
+    r16: koRoundFirstKickoffIso(KO_R16_MATCHES) || '2026-07-04T19:00:00+02:00',
+    r8: koRoundFirstKickoffIso(KO_R8_MATCHES) || '2026-07-09T22:00:00+02:00'
   };
 
   /** Especiales y dieciseisavos comparten plazo: 10:00–21:00 del 28 jun. */
@@ -329,6 +339,15 @@
     return winnerFromKoMatch(m);
   }
 
+  function winnerFromR16MatchIndex(r16Index) {
+    const m = KO_R16_MATCHES[r16Index];
+    return winnerFromKoMatch(m);
+  }
+
+  function allKoR16ResultsComplete() {
+    return KO_R16_MATCHES.every(m => isMatchReady(m) && winnerFromKoMatch(m));
+  }
+
   function allKoR32ResultsComplete() {
     return KO_R32_MATCHES.every(m => isMatchReady(m) && winnerFromKoMatch(m));
   }
@@ -349,18 +368,65 @@
     return winnerFromUserKoPick(KO_R32_MATCHES[r32Index]);
   }
 
+  /** Ganador de un octavo: resultado oficial primero; pronóstico del usuario si aplica. */
+  function winnerFromR16Feeder(r16Index, allowUserFallback) {
+    const m = KO_R16_MATCHES[r16Index];
+    if (!m) return null;
+    const r = getKoOfficialResult(m.id);
+    if (r && r.winner && r.winner !== 'tbd') return r.winner;
+    const official = winnerFromR16MatchIndex(r16Index);
+    if (official) return official;
+    if (!allowUserFallback) return null;
+    return winnerFromUserKoPick(m);
+  }
+
+  /** Cruces oficiales (equipos) desde football-data.org vía /api/results → _fixtures. */
+  function applyKoFixturesFromOfficial() {
+    if (typeof results === 'undefined' || !results || !results._fixtures) return;
+    const fx = results._fixtures;
+    Object.keys(fx).forEach(id => {
+      const teams = fx[id];
+      if (!teams || !teams.home || !teams.away) return;
+      let match = null;
+      if (id.indexOf('KO16-') === 0) {
+        const idx = parseInt(id.split('-')[1], 10) - 1;
+        match = KO_R16_MATCHES[idx];
+      } else if (id.indexOf('KO8-') === 0) {
+        const idx = parseInt(id.split('-')[1], 10) - 1;
+        match = KO_R8_MATCHES[idx];
+      }
+      if (match) {
+        match.home = teams.home;
+        match.away = teams.away;
+      }
+    });
+  }
+
   function syncKnockoutBracketFromResults() {
-    const allowUserFallback = !!getActiveKoUser() && !allKoR32ResultsComplete() && (
+    applyKoFixturesFromOfficial();
+    const allowUserFallbackR32 = !!getActiveKoUser() && !allKoR32ResultsComplete() && (
       canViewOctavosBracket() || isKoR16PreviewActive() || isKoLabEnabled()
     );
     KO_R16_FEEDERS.forEach((feeders, i) => {
       const match = KO_R16_MATCHES[i];
       if (!match) return;
-      const home = winnerFromR32Feeder(feeders[0], allowUserFallback);
-      const away = winnerFromR32Feeder(feeders[1], allowUserFallback);
+      const home = winnerFromR32Feeder(feeders[0], allowUserFallbackR32);
+      const away = winnerFromR32Feeder(feeders[1], allowUserFallbackR32);
       match.home = home || 'tbd';
       match.away = away || 'tbd';
     });
+    applyKoFixturesFromOfficial();
+    // Cuartos: solo clasificados oficiales de octavos (API). Sin pronósticos de usuario.
+    const allowUserFallbackR16 = isKoLabEnabled() && !!getActiveKoUser() && !allKoR16ResultsComplete();
+    KO_R8_FEEDERS.forEach((feeders, i) => {
+      const match = KO_R8_MATCHES[i];
+      if (!match) return;
+      const home = winnerFromR16Feeder(feeders[0], allowUserFallbackR16);
+      const away = winnerFromR16Feeder(feeders[1], allowUserFallbackR16);
+      match.home = home || 'tbd';
+      match.away = away || 'tbd';
+    });
+    applyKoFixturesFromOfficial();
   }
 
   const KO_SEMI_SLOT_LABELS = ['SF izq. 1', 'SF der. 1', 'SF izq. 2', 'SF der. 2'];
@@ -448,20 +514,36 @@
     renderKnockoutUserBar();
     renderKnockoutExtras();
     renderKnockoutMatches();
+    updateKoAccessCodeBtn();
     updateKnockoutStatus();
     if (typeof renderQualifiedSummary === 'function') renderQualifiedSummary();
     const legend = document.getElementById('koSpecialLegendWrap');
     if (legend) legend.classList.toggle('hidden', !shouldShowKoExtrasSection() || isKoDieciseisavosClosed());
     const stepsExtras = document.getElementById('koStepsExtras');
+    const stepsRound = document.getElementById('koStepsRound');
     if (stepsExtras) {
-      if (isKoOctavosPhase()) {
-        stepsExtras.innerHTML = '<strong>Octavos de final (4–7 jul):</strong> marca el ganador en cada cruce.';
+      if (isKoCuartosPhase()) {
+        stepsExtras.innerHTML = '<strong>Cuartos de final (' + formatKoOpensAtShort('r8') + ' – ' + formatKoRoundCloseShort('r8') + '):</strong> marca el ganador en los 4 cruces.';
+        stepsExtras.classList.remove('hidden');
+      } else if (isKoOctavosPhase()) {
+        stepsExtras.innerHTML = '<strong>Octavos de final (' + formatKoOpensAtShort('r16') + ' – ' + formatKoRoundCloseShort('r16') + '):</strong> marca el ganador en cada cruce.';
         stepsExtras.classList.remove('hidden');
       } else if (isKoRoundClosed('r32')) {
         stepsExtras.classList.add('hidden');
       } else {
         stepsExtras.innerHTML = '<strong>Dieciseisavos (28 jun):</strong> 4 semifinalistas, 2 finalistas, campeón y los 16 partidos.';
         stepsExtras.classList.remove('hidden');
+      }
+    }
+    if (stepsRound) {
+      if (isKoCuartosPhase()) {
+        stepsRound.innerHTML = 'Marca el ganador en cada <strong>cuarto de final</strong> (4 partidos, plazo hasta el <strong>' + formatKoRoundCloseShort('r8') + '</strong>).';
+      } else if (isKoOctavosPhase()) {
+        stepsRound.innerHTML = 'Marca el ganador en cada <strong>octavo de final</strong> (8 partidos, plazo hasta el <strong>' + formatKoRoundCloseShort('r16') + '</strong>).';
+      } else if (isKoRoundPickable('r32')) {
+        stepsRound.innerHTML = 'Marca el ganador en cada <strong>dieciseisavo</strong> (16 partidos, plazo hasta el <strong>' + formatKoRoundCloseShort('r32') + '</strong>).';
+      } else {
+        stepsRound.textContent = 'Marca el ganador en cada partido de la ronda activa (octavos, cuartos… según calendario).';
       }
     }
   }
@@ -518,10 +600,12 @@
   }
 
   function showKoPreviewBadge() {
+    if (isKoCuartosPreviewOnly()) return true;
     if (isKoOctavosPreviewOnly()) return true;
     if (!isKnockoutPreviewUnlocked()) return false;
     if (!isKnockoutPublicOpen()) return true;
-    return !isKoRoundOfficiallyOpen('r16');
+    if (!isKoRoundOfficiallyOpen('r16')) return true;
+    return !isKoRoundOfficiallyOpen('r8');
   }
 
   function isKnockoutPreviewUnlocked() {
@@ -545,7 +629,7 @@
 
   function isKoRoundStarted(key) {
     if (!isKnockoutAccessible()) return false;
-    if (KO_TEST_MODE && (key === 'r32' || key === 'r16')) return true;
+    if (KO_TEST_MODE && (key === 'r32' || key === 'r16' || key === 'r8')) return true;
     if (key === 'r32') {
       if (isKoRoundOfficiallyOpen('r32')) return true;
       if (isKnockoutPreviewUnlocked() && !isKoRoundOfficiallyOpen('r32')) return true;
@@ -556,24 +640,34 @@
       if (isKnockoutPreviewUnlocked() && isKoDieciseisavosClosed()) return true;
       return false;
     }
+    if (key === 'r8') {
+      if (isKoRoundOfficiallyOpen('r8')) return true;
+      if (isKnockoutPreviewUnlocked() && isKoRoundClosedBySchedule('r16')) return true;
+      return false;
+    }
     return isKoRoundOfficiallyOpen(key);
   }
 
   function isKoRoundClosed(key) {
-    if (KO_TEST_MODE && (key === 'r32' || key === 'r16')) return false;
+    if (KO_TEST_MODE && (key === 'r32' || key === 'r16' || key === 'r8')) return false;
     return isKoRoundClosedBySchedule(key);
   }
 
   function isKoRoundPickable(key) {
     if (!isKoRoundStarted(key)) return false;
     if (key === 'r32' && isKoRoundClosedBySchedule('r32')) return false;
-    if (KO_TEST_MODE && (key === 'r32' || key === 'r16')) return true;
-    if (isKoLabEnabled() && (key === 'r32' || key === 'r16')) {
+    if (KO_TEST_MODE && (key === 'r32' || key === 'r16' || key === 'r8')) return true;
+    if (isKoLabEnabled() && (key === 'r32' || key === 'r16' || key === 'r8')) {
       return !isKoRoundClosedBySchedule(key);
     }
     if (key === 'r16') {
-      if (!canViewOctavosBracket()) return false;
+      if (!canViewOctavosBracket() || isKoCuartosPhase()) return false;
       if (isKoRoundClosedBySchedule('r16')) return false;
+      return true;
+    }
+    if (key === 'r8') {
+      if (!canViewCuartosBracket()) return false;
+      if (isKoRoundClosedBySchedule('r8')) return false;
       return true;
     }
     return !isKoRoundClosed(key);
@@ -613,6 +707,21 @@
     };
   }
 
+  function getCountdownToKoRoundOpen(key) {
+    const openAt = KO_ROUND_OPENS[key];
+    if (!openAt) return null;
+    if (isKoRoundOfficiallyOpen(key)) return null;
+    const ms = new Date(openAt).getTime() - Date.now();
+    if (ms <= 0) return null;
+    const total = Math.floor(ms / 1000);
+    return {
+      h: Math.floor(total / 3600),
+      m: Math.floor((total % 3600) / 60),
+      s: total % 60,
+      ms
+    };
+  }
+
   function normalizeKoPasswordInput(password) {
     return String(password || '').trim().normalize('NFC');
   }
@@ -636,13 +745,27 @@
     if (modal) modal.classList.remove('hidden');
     const title = document.getElementById('koModalTitle');
     const hint = document.getElementById('koModalHint');
-    if (title) title.textContent = isKnockoutPublicOpen() ? '🔒 Octavos (prueba)' : '🔒 Eliminatorias';
+    if (title) {
+      if (isKoWaitingForCuartosPublic() || isKoCuartosPreviewOnly()) {
+        title.textContent = '🔒 Cuartos (prueba)';
+      } else if (isKnockoutPublicOpen()) {
+        title.textContent = '🔒 Octavos (prueba)';
+      } else {
+        title.textContent = '🔒 Eliminatorias';
+      }
+    }
     if (hint) {
-      hint.textContent = isKoRoundClosed('r32')
-        ? 'Código para desbloquear octavos en prueba (si no aparecen solos). Oficial: 4 jul, 10:00.'
-        : isKnockoutPublicOpen()
-          ? 'Código para octavos en prueba. Marca dieciseisavos y los cruces de octavos se rellenan solos (oficial 4 jul, 10:00).'
-          : 'Código para probar dieciseisavos y octavos antes del 28 jun, 10:00. Elige participante y marca ganadores.';
+      if (isKoWaitingForCuartosPublic()) {
+        hint.textContent = 'Octavos ya cerrados. Código para ver y marcar cuartos antes del ' + formatKoOpensAtShort('r8') + ' (oficial).';
+      } else if (isKoCuartosPreviewOnly()) {
+        hint.textContent = 'Cuartos en prueba — marca los 4 cruces y exporta PDF. Oficial: ' + formatKoOpensAtShort('r8') + '.';
+      } else if (isKoRoundClosed('r32')) {
+        hint.textContent = 'Código para desbloquear octavos en prueba (si no aparecen solos). Oficial: 4 jul, 10:00.';
+      } else if (isKnockoutPublicOpen()) {
+        hint.textContent = 'Código para octavos en prueba. Marca dieciseisavos y los cruces de octavos se rellenan solos (oficial 4 jul, 10:00).';
+      } else {
+        hint.textContent = 'Código para probar dieciseisavos y octavos antes del 28 jun, 10:00. Elige participante y marca ganadores.';
+      }
     }
     const inp = document.getElementById('koPasswordInput');
     if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 100); }
@@ -665,6 +788,7 @@
     if (tryUnlockKnockout(inp.value)) {
       koPasswordFails = 0;
       hideKoPasswordModal();
+      updateKoAccessCodeBtn();
       if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
       if (typeof renderScheduleBanner === 'function') renderScheduleBanner();
       renderKnockout();
@@ -702,16 +826,78 @@
     return isKnockoutAccessible() && isKoRoundClosedBySchedule('r32');
   }
 
-  /** Octavos visibles: apertura oficial (4 jul 10:00) o código de prueba. */
+  /** Octavos visibles solo mientras el plazo de marcado está abierto (o prueba antes del 4 jul 10:00). */
   function canViewOctavosBracket() {
     if (!isKoDieciseisavosClosed()) return false;
+    if (isKoRoundClosedBySchedule('r16')) return false;
     if (isKoRoundOfficiallyOpen('r16')) return true;
     return isKnockoutPreviewUnlocked();
   }
 
+  /** Entre cierre octavos (4 jul 19:00) y apertura cuartos (8 jul 08:00), sin código. */
+  function isKoWaitingForCuartosPublic() {
+    return isKnockoutAccessible()
+      && isKoRoundClosedBySchedule('r16')
+      && !isKoRoundOfficiallyOpen('r8')
+      && !isKnockoutPreviewUnlocked();
+  }
+
+  /** Botón 🔑 Código: ventana de prueba antes de apertura oficial; oculto solo si ya desbloqueaste o puedes marcar al público. */
+  function shouldShowKoAccessCodeBtn() {
+    if (isKoLabEnabled()) return false;
+    if (isKoRoundPickable('r8') || isKoRoundPickable('r16')) return false;
+    if (isKoWaitingForCuartosPublic()) return true;
+    if (isKnockoutPreviewUnlocked()) return false;
+    if (isKoRoundClosedBySchedule('r16') && !isKoRoundOfficiallyOpen('r8')) return true;
+    if (isKoDieciseisavosClosed() && !isKoRoundOfficiallyOpen('r16') && !isKoRoundClosedBySchedule('r16')) return true;
+    if (!isKnockoutPublicOpen()) return true;
+    return false;
+  }
+
+  function koAccessCodeInlineHTML() {
+    if (!shouldShowKoAccessCodeBtn()) return '';
+    const hint = isKoWaitingForCuartosPublic() || (isKoRoundClosedBySchedule('r16') && !isKoRoundOfficiallyOpen('r8'))
+      ? ' para probar cuartos antes del <strong>' + formatKoOpensAtShort('r8') + '</strong>'
+      : isKoDieciseisavosClosed()
+        ? ' para probar octavos antes del <strong>' + formatKoOpensAtShort('r16') + '</strong>'
+        : ' para acceder antes de la apertura oficial';
+    return `<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint ko-access-code-inline">
+      <button type="button" class="ko-access-code-inline-btn" onclick="showKoPasswordModal()">🔑 Introducir código</button>
+      <span class="ko-access-code-inline-text">${hint}.</span>
+    </p>`;
+  }
+
+  function updateKoAccessCodeBtn() {
+    const codeBtn = document.querySelector('.ko-access-code-btn');
+    if (codeBtn) {
+      codeBtn.classList.toggle('hidden', !shouldShowKoAccessCodeBtn());
+    }
+  }
+
+  /** Cuartos visibles: mié 8 jul 08:00 o código tras cierre plazo octavos (4 jul 19:00). */
+  function canViewCuartosBracket() {
+    if (!isKnockoutAccessible()) return false;
+    if (!isKoRoundClosedBySchedule('r16')) return false;
+    if (isKoRoundOfficiallyOpen('r8')) return true;
+    return isKnockoutPreviewUnlocked();
+  }
+
+  /** Fase activa de cuartos en UI y PDF (sustituye octavos en pantalla). */
+  function isKoCuartosPhase() {
+    return canViewCuartosBracket();
+  }
+
+  function isKoCuartosPreviewOnly() {
+    return isKoCuartosPhase() && !isKoRoundOfficiallyOpen('r8');
+  }
+
+  function isKoR8PreviewActive() {
+    return isKnockoutPreviewUnlocked() && !isKoRoundOfficiallyOpen('r8');
+  }
+
   /** Fase activa de octavos en UI y PDF. */
   function isKoOctavosPhase() {
-    return canViewOctavosBracket();
+    return canViewOctavosBracket() && !isKoCuartosPhase();
   }
 
   function isKoOctavosPreviewOnly() {
@@ -736,25 +922,40 @@
 
   /** Octavos arriba: tras cerrar dieciseisavos o en modo prueba con octavos activos. */
   function shouldPrioritizeOctavos() {
+    if (isKoCuartosPhase()) return false;
     if (isKoOctavosPhase()) return true;
     if (!isKoRoundStarted('r16')) return false;
     return isKoLabEnabled() || isKnockoutPreviewUnlocked();
+  }
+
+  function shouldPrioritizeCuartos() {
+    return isKoCuartosPhase();
   }
 
   function shouldHideR32Bracket() {
     return isKoDieciseisavosClosed();
   }
 
+  function shouldHideOctavosBracket() {
+    if (isKoRoundClosedBySchedule('r16')) return true;
+    return isKoCuartosPhase() || isKoWaitingForCuartosPublic();
+  }
+
   function getKoBracketRenderOrder() {
+    if (shouldPrioritizeCuartos()) return ['r8', 'r4', 'r2'];
     if (shouldPrioritizeOctavos()) return ['r16', 'r8', 'r4', 'r2'];
     return KO_ROUND_ORDER.slice();
   }
 
   function getUpcomingKoRounds() {
+    if (isKoCuartosPhase()) {
+      return ['r4', 'r2'].map(key => KO_ROUNDS[key]).filter(Boolean);
+    }
+    if (isKoWaitingForCuartosPublic()) {
+      return ['r4', 'r2'].map(key => KO_ROUNDS[key]).filter(Boolean);
+    }
     if (isKoOctavosPhase()) {
-      return ['r8', 'r4', 'r2']
-        .filter(key => !isKoRoundPickable(key) && !isKoRoundClosed(key))
-        .map(key => KO_ROUNDS[key]);
+      return ['r8', 'r4', 'r2'].map(key => KO_ROUNDS[key]).filter(Boolean);
     }
     const seen = new Set();
     const out = [];
@@ -762,6 +963,7 @@
       if (seen.has(key)) return;
       if (key === 'r32' && shouldHideR32Bracket()) return;
       if (key === 'r16' && shouldPrioritizeOctavos()) return;
+      if (key === 'r8' && shouldPrioritizeCuartos()) return;
       if (isKoRoundPickable(key)) return;
       if (isKoRoundClosed(key)) return;
       if (!isKoRoundStarted(key)) {
@@ -778,6 +980,7 @@
   }
 
   function getActiveQuinielaRoundKey() {
+    if (isKoCuartosPhase()) return 'r8';
     if (isKoOctavosPhase()) return 'r16';
     if (shouldPrioritizeOctavos() && isKoRoundStarted('r16')) return 'r16';
     if (!shouldHideR32Bracket() && (isKoRoundPickable('r32') || isKoRoundStarted('r32'))) return 'r32';
@@ -786,14 +989,15 @@
   }
 
   function koMatchesRequiredCount() {
-    if (isKoOctavosPhase()) {
-      const ready = KO_R16_MATCHES.filter(isMatchReady).length;
-      return ready || KO_R16_MATCHES.length;
-    }
+    if (isKoCuartosPhase()) return KO_R8_MATCHES.length;
+    if (isKoOctavosPhase()) return KO_R16_MATCHES.length;
     return getQuinielaMatchPool().length;
   }
 
   function koMatchesDoneCount() {
+    if (isKoCuartosPhase()) {
+      return KO_R8_MATCHES.filter(m => getKoPick(m.id)).length;
+    }
     if (isKoOctavosPhase()) {
       return KO_R16_MATCHES.filter(m => getKoPick(m.id)).length;
     }
@@ -810,12 +1014,22 @@
 
   function focusKoRoundIfNeeded() {
     try {
+      const urlFocus = sessionStorage.getItem('porra2026_ko_focus');
+      if (urlFocus === 'r8' || (shouldPrioritizeCuartos() && isKoRoundPickable('r8'))) {
+        const autoKey = 'porra2026_ko_cuartos_autoscroll';
+        const shouldAuto = shouldPrioritizeCuartos() && isKoRoundPickable('r8') && !sessionStorage.getItem(autoKey);
+        if (!urlFocus && !shouldAuto) return;
+        if (urlFocus === 'r8') sessionStorage.removeItem('porra2026_ko_focus');
+        if (shouldAuto) sessionStorage.setItem(autoKey, '1');
+        scrollToKoRound('r8');
+        return;
+      }
       if (!isKoRoundStarted('r16')) return;
-      const urlFocus = sessionStorage.getItem('porra2026_ko_focus') === 'r16';
+      const urlFocusR16 = urlFocus === 'r16';
       const autoKey = 'porra2026_ko_octavos_autoscroll';
       const shouldAuto = shouldPrioritizeOctavos() && isKoRoundPickable('r16') && !sessionStorage.getItem(autoKey);
-      if (!urlFocus && !shouldAuto) return;
-      if (urlFocus) sessionStorage.removeItem('porra2026_ko_focus');
+      if (!urlFocusR16 && !shouldAuto) return;
+      if (urlFocusR16) sessionStorage.removeItem('porra2026_ko_focus');
       if (shouldAuto) sessionStorage.setItem(autoKey, '1');
       scrollToKoRound('r16');
     } catch (e) { /* */ }
@@ -825,8 +1039,23 @@
     return isKnockoutAccessible() && !!getActiveKoUser();
   }
 
+  function isKoTeamKnown(code) {
+    return !!(code && code !== 'tbd');
+  }
+
   function isMatchReady(m) {
-    return !!(m && m.home && m.home !== 'tbd' && m.away && m.away !== 'tbd');
+    return !!(m && isKoTeamKnown(m.home) && isKoTeamKnown(m.away));
+  }
+
+  function isMatchPartiallyKnown(m) {
+    if (!m) return false;
+    const h = isKoTeamKnown(m.home);
+    const a = isKoTeamKnown(m.away);
+    return (h || a) && !(h && a);
+  }
+
+  function isMatchDisplayable(m) {
+    return !!(m && (isMatchReady(m) || isMatchPartiallyKnown(m) || m.home || m.away));
   }
 
   function getRoundKeyForMatch(matchId) {
@@ -983,6 +1212,7 @@
   }
 
   function getExportRounds() {
+    if (isKoCuartosPhase()) return [KO_ROUNDS.r8];
     if (isKoOctavosPhase()) return [KO_ROUNDS.r16];
     return KO_ROUND_ORDER
       .filter(k => isKoRoundStarted(k) && (isKoRoundPickable(k) || isKoRoundClosed(k)))
@@ -991,9 +1221,15 @@
 
   function getKnockoutPdfFilename(user) {
     const safe = user.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-    return isKoOctavosPhase()
-      ? `porra-octavos-2026-${safe}.pdf`
-      : `porra-knockout-2026-${safe}.pdf`;
+    if (isKoCuartosPhase()) return `porra-cuartos-2026-${safe}.pdf`;
+    if (isKoOctavosPhase()) return `porra-octavos-2026-${safe}.pdf`;
+    return `porra-knockout-2026-${safe}.pdf`;
+  }
+
+  function getKoPdfKind() {
+    if (isKoCuartosPhase()) return 'cuartos';
+    if (isKoOctavosPhase()) return 'octavos';
+    return 'knockout';
   }
 
   function getOpenRounds() {
@@ -1023,6 +1259,12 @@
     }
     if (!getActiveKoUser()) {
       blockers.push('Elige un participante arriba.');
+      return blockers;
+    }
+    if (isKoCuartosPhase()) {
+      const req = koMatchesRequired();
+      const md = koMatchesDone();
+      if (md < req) blockers.push(`Cuartos: ${md}/${req} cruces marcados.`);
       return blockers;
     }
     if (isKoOctavosPhase()) {
@@ -1354,8 +1596,9 @@
     const rKey = getRoundKeyForMatch(m.id);
     const roundOpen = rKey ? isKoRoundPickable(rKey) : false;
     const ready = isMatchReady(m);
-    if (!code || code === 'tbd') {
-      return `<button type="button" class="ko-team-pick ko-team-pick--slot tbd" disabled>${koSlotDisplayLabel(slot)}</button>`;
+    const known = isKoTeamKnown(code);
+    if (!known) {
+      return `<button type="button" class="ko-team-pick ko-team-pick--slot tbd" disabled>Por definir</button>`;
     }
     const canPick = ready && roundOpen;
     const showSpecial = showKoExtraOnMatch(m.id);
@@ -1377,7 +1620,10 @@
   }
 
   function koChunkMatches(matches) {
-    if (matches.length <= 3) return [matches];
+    if (matches.length <= 2) return [matches];
+    if (matches.length === 4) {
+      return [matches.slice(0, 2), matches.slice(2, 4)];
+    }
     const half = Math.ceil(matches.length / 2);
     return [matches.slice(0, half), matches.slice(half)];
   }
@@ -1416,41 +1662,50 @@
   function koRoundCardHTML(round, opts) {
     opts = opts || {};
     const playable = round.matches.filter(isMatchReady);
+    const partial = round.matches.filter(isMatchPartiallyKnown);
     const done = playable.filter(m => getKoPick(m.id)).length;
-    const total = playable.length;
+    const total = round.matches.length;
     const allDefined = round.matches.every(isMatchReady);
+    const anyKnown = round.matches.some(m => isMatchReady(m) || isMatchPartiallyKnown(m));
     const complete = total > 0 && done === total;
-    const pendingTeams = !allDefined;
     const preview = !!opts.preview;
     const locked = !!opts.locked;
     const focus = !!opts.focus;
     const secondary = !!opts.secondary;
+    const suppressBanner = !!opts.suppressBanner;
     let statusBanner = '';
-    if (preview) {
+    if (!suppressBanner && preview) {
       statusBanner = `<div class="ko-round-preview-banner">🔒 Vista previa de cruces — podrás marcar ganadores desde el <strong>${formatKoOpensAtShort(round.key)}</strong> hasta el <strong>${formatKoRoundCloseShort(round.key) || 'cierre'}</strong>.</div>`;
-    } else if (round.key === 'r16' && isKoOctavosPreviewOnly()) {
+    } else if (!suppressBanner && round.key === 'r16' && isKoOctavosPreviewOnly()) {
       statusBanner = '<div class="ko-round-preview-banner">🧪 <strong>Octavos en prueba</strong> (código) — solo organizadores antes del 4 jul, 10:00. Cruces según tus dieciseisavos.</div>';
-    } else if (round.key === 'r16' && isKoRoundOfficiallyOpen('r16') && !locked) {
+    } else if (!suppressBanner && round.key === 'r16' && isKoRoundPickable('r16') && !locked) {
       statusBanner = `<div class="ko-round-preview-banner">🏅 <strong>Octavos de final</strong> — plazo hasta el <strong>${formatKoRoundCloseShort('r16')}</strong>.</div>`;
-    } else if (round.key === 'r32' && isKoR32PreviewActive()) {
+    } else if (!suppressBanner && round.key === 'r8' && isKoCuartosPreviewOnly()) {
+      statusBanner = `<div class="ko-round-preview-banner">🧪 <strong>Cuartos en prueba</strong> (código) — oficial ${formatKoOpensAtShort('r8')} · cierran ${formatKoRoundCloseShort('r8')}.</div>`;
+    } else if (!suppressBanner && round.key === 'r8' && isKoRoundPickable('r8') && !locked) {
+      statusBanner = `<div class="ko-round-preview-banner">🏅 <strong>Cuartos de final</strong> — plazo hasta el <strong>${formatKoRoundCloseShort('r8')}</strong>.</div>`;
+    } else if (!suppressBanner && round.key === 'r32' && isKoR32PreviewActive()) {
       statusBanner = '<div class="ko-round-preview-banner">🧪 <strong>Dieciseisavos en prueba</strong> — marca ganadores y los octavos se rellenan abajo. Oficial: <strong>28 jun, 10:00–21:00</strong>.</div>';
-    } else if (locked) {
+    } else if (!suppressBanner && locked) {
       statusBanner = `<div class="ko-round-preview-banner">🔒 ${round.label} cerrados — plazo finalizado a las <strong>${formatKoRoundCloseShort(round.key)}</strong> (inicio del primer partido).</div>`;
     }
-    const countLabel = preview ? 'Vista previa' : locked ? (complete ? '✓ Completo · cerrado' : `${done}/${total} · cerrado`) : (total ? (complete ? '✓ Completo' : `${done}/${total}`) : '—');
+    const countLabel = preview ? 'Vista previa' : locked ? (complete ? '✓ Completo · cerrado' : `${done}/${playable.length || total} · cerrado`) : (total ? (complete ? '✓ Completo' : `${done}/${playable.length || total}`) : '—');
     const countClass = preview ? 'text-blue-300 font-semibold text-xs' : locked ? (complete ? 'text-green-400 font-semibold text-xs' : 'text-gray-400 font-semibold text-xs') : (complete ? 'text-green-400 font-semibold text-xs' : 'text-yellow-500 font-semibold text-xs');
-    return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}${locked ? ' ko-round-card--locked' : ''}${focus ? ' ko-round-card--focus' : ''}${secondary ? ' ko-round-card--secondary' : ''}" id="ko-round-${round.key}">
+    const footerNote = !allDefined
+      ? 'Clasificados oficiales · resto por definir'
+      : (locked ? 'Pronósticos bloqueados' : 'Quiniela ' + round.label.toLowerCase());
+    return `<div class="group-card overflow-hidden ko-round-card${complete ? ' group-complete' : ''}${locked ? ' ko-round-card--locked' : ''}${focus ? ' ko-round-card--focus' : ''}${secondary ? ' ko-round-card--secondary' : ''}${anyKnown && !allDefined ? ' ko-round-card--partial' : ''}" id="ko-round-${round.key}">
       <div class="group-header px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2 flex-shrink-0">
           <span class="text-xs font-black text-yellow-300 tracking-widest">RONDA</span>
           <span class="text-2xl font-black text-white">${round.short}</span>
         </div>
-        <span class="ko-round-status text-xs text-gray-500">${round.matches.length} partido${round.matches.length === 1 ? '' : 's'} · toca al ganador</span>
+        <span class="ko-round-status text-xs text-gray-500">${total} partido${total === 1 ? '' : 's'} · toca al ganador</span>
       </div>
       ${statusBanner}
       <div>${koRoundMatchesHTML(round.matches)}</div>
-      <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap">
-        <span class="text-xs text-gray-600">${pendingTeams ? 'Algunos equipos aún por definir' : locked ? 'Pronósticos bloqueados' : 'Quiniela ' + round.label.toLowerCase()}</span>
+      <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap ko-round-card-footer">
+        <span class="text-xs text-gray-600">${footerNote}</span>
         <span id="koMatchCount-${round.key}" class="${countClass}">${countLabel}</span>
       </div>
     </div>`;
@@ -1470,9 +1725,9 @@
     const seen = new Set();
     const unique = (rounds || []).filter(r => {
       if (!r || seen.has(r.key)) return false;
-      if (r.key === 'r16' && shouldPrioritizeOctavos()) return false;
       if (r.key === 'r32' && shouldHideR32Bracket()) return false;
-      if (isKoRoundPickable(r.key)) return false;
+      if (r.key === 'r16' && (shouldHideOctavosBracket() || shouldPrioritizeOctavos())) return false;
+      if (r.key === 'r8' && isKoCuartosPhase()) return false;
       seen.add(r.key);
       return true;
     });
@@ -1509,6 +1764,10 @@
     if (rKey === 'r32' && (isKoR16PreviewActive() || isKoR16EarlyWindow() || isKoLabEnabled())) {
       syncKnockoutBracketFromResults();
       KO_R16_MATCHES.forEach(m => renderKoMatchRow(m.id));
+    }
+    if (rKey === 'r16' && (isKoCuartosPhase() || isKoR8PreviewActive() || isKoLabEnabled())) {
+      syncKnockoutBracketFromResults();
+      KO_R8_MATCHES.forEach(m => renderKoMatchRow(m.id));
     }
     updateKoRoundCounts();
     updateKnockoutStatus();
@@ -1619,29 +1878,75 @@
     if (!isKnockoutAccessible()) {
       el.innerHTML = `<div class="extras-locked">
         <p class="text-gray-400 text-sm">🔒 Las eliminatorias abren el <strong>28 de junio a las 10:00</strong> (hora peninsular).</p>
-        <p class="text-xs text-gray-500 mt-2">Si tienes código de acceso anticipado, pulsa la pestaña 🏅 Eliminatorias.</p>
-      </div>`;
+        <p class="text-xs text-gray-500 mt-2">Si tienes código de acceso anticipado, pulsa la pestaña 🏅 Eliminatorias o el botón de abajo.</p>
+      </div>${koAccessCodeInlineHTML()}`;
+      updateKoAccessCodeBtn();
       return;
     }
     const parts = [];
     if (KO_TEST_MODE) {
-      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>🧪 <strong>Modo prueba</strong> — dieciseisavos y octavos abiertos. Desactiva <code>KO_TEST_MODE</code> en knockout.js antes del despliegue.</p></div>');
+      parts.push('<div class="app-reload-banner ko-bracket-banner"><p>🧪 <strong>Modo prueba</strong> — dieciseisavos y octavos abiertos. Desactiva <code>KO_TEST_MODE</code> en knockout.js antes del despliegue.</p></div>');
     }
-    if (isKoOctavosPreviewOnly()) {
-      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>🧪 <strong>Octavos en prueba</strong> (código) — el público los verá el <strong>4 jul, 10:00</strong>. Marca tus cruces hasta el <strong>4 jul, 19:00</strong>.</p></div>');
+    if (isKoCuartosPreviewOnly()) {
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🧪 <strong>Cuartos en prueba</strong> (código) — el público los verá el <strong>${formatKoOpensAtShort('r8')}</strong> · cierran <strong>${formatKoRoundCloseShort('r8')}</strong>. Cruces según resultados oficiales de octavos.</p></div>`);
+    } else if (isKoCuartosPhase() && isKoRoundPickable('r8')) {
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🏅 <strong>Cuartos de final abiertos</strong> — elige participante y marca tus cruces · plazo hasta el <strong>${formatKoRoundCloseShort('r8')}</strong>.</p></div>`);
+    } else if (isKoCuartosPhase() && isKoRoundClosed('r8')) {
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Cuartos de final cerrados</strong> — plazo finalizado a las <strong>${formatKoRoundCloseShort('r8')}</strong>.</p></div>`);
+    } else if (isKoOctavosPreviewOnly()) {
+      parts.push('<div class="app-reload-banner ko-bracket-banner"><p>🧪 <strong>Octavos en prueba</strong> (código) — el público los verá el <strong>4 jul, 10:00</strong>. Marca tus cruces hasta el <strong>4 jul, 19:00</strong>.</p></div>');
+    } else if (isKoOctavosPhase() && isKoRoundPickable('r16')) {
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🏅 <strong>Octavos de final abiertos</strong> — elige participante y marca tus cruces · plazo hasta el <strong>${formatKoRoundCloseShort('r16')}</strong>.</p></div>`);
+    } else if (isKoOctavosPhase() && isKoRoundClosed('r16') && !canViewCuartosBracket()) {
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Octavos cerrados</strong> — partidos en juego · cuartos abren el <strong>${formatKoOpensAtShort('r8')}</strong>.</p></div>`);
+    } else if (isKoOctavosPhase() && isKoRoundClosed('r16')) {
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Octavos de final cerrados</strong> — cuartos abren el <strong>${formatKoOpensAtShort('r8')}</strong>.</p></div>`);
     } else if (isKoOctavosPhase() && isKoRoundOfficiallyOpen('r16')) {
-      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>🏅 <strong>Octavos de final abiertos</strong> — elige participante y marca tus cruces · plazo hasta el <strong>4 jul, 19:00</strong>.</p></div>');
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🏅 <strong>Octavos de final</strong> — plazo hasta el <strong>${formatKoRoundCloseShort('r16')}</strong>.</p></div>`);
     } else if (isKoR32PreviewActive() && !shouldHideR32Bracket()) {
-      parts.push('<div class="app-reload-banner" style="position:relative;margin-bottom:.75rem"><p>🧪 <strong>Modo prueba</strong> — con código puedes ver octavos antes del 4 jul. Completa dieciseisavos antes del 28 jun, 21:00.</p></div>');
+      parts.push('<div class="app-reload-banner ko-bracket-banner"><p>🧪 <strong>Modo prueba</strong> — con código puedes ver octavos antes del 4 jul. Completa dieciseisavos antes del 28 jun, 21:00.</p></div>');
     }
-    if (isKoDieciseisavosClosed() && !canViewOctavosBracket()) {
-      parts.push(`<div class="extras-locked" style="margin-bottom:.75rem">
+    if (isKoDieciseisavosClosed() && !canViewOctavosBracket()
+      && !isKoCuartosPhase() && !isKoWaitingForCuartosPublic()) {
+      parts.push(`<div class="extras-locked ko-bracket-locked">
         <p class="text-gray-300 text-sm">🔒 <strong>Dieciseisavos cerrados</strong> (28 jun, 21:00).</p>
         <p class="text-gray-400 text-sm mt-2">Los <strong>octavos de final</strong> abren el <strong>${formatKoOpensAtShort('r16')}</strong> para todo el mundo.</p>
-        <p class="text-xs text-gray-500 mt-2">Organizadores: pulsa <strong>🔑 Código</strong> para probar octavos antes.</p>
       </div>`);
+      parts.push(koAccessCodeInlineHTML());
       el.innerHTML = parts.join('');
       updateKoRoundCounts();
+      updateKoAccessCodeBtn();
+      return;
+    }
+    if (isKoCuartosPhase()) {
+      const r8Preview = isKoCuartosPreviewOnly();
+      const r8Pickable = isKoRoundPickable('r8');
+      parts.push(koRoundCardHTML(KO_ROUNDS.r8, {
+        preview: r8Preview && !r8Pickable,
+        focus: true,
+        locked: isKoRoundClosed('r8') || (r8Preview && !r8Pickable),
+        suppressBanner: true
+      }));
+      if (!getActiveKoUser()) {
+        parts.push('<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint">👆 Elige <strong>participante</strong> arriba para marcar cuartos de final.</p>');
+      }
+      const upcoming = getUpcomingKoRounds();
+      if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));
+      el.innerHTML = parts.join('');
+      updateKoRoundCounts();
+      updateKoAccessCodeBtn();
+      focusKoRoundIfNeeded();
+      return;
+    }
+    if (isKoWaitingForCuartosPublic()) {
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Octavos cerrados</strong> — cuartos abren el <strong>${formatKoOpensAtShort('r8')}</strong>.</p></div>`);
+      parts.push(koAccessCodeInlineHTML());
+      parts.push(koRoundCardHTML(KO_ROUNDS.r8, { preview: true, locked: true, focus: true, suppressBanner: true }));
+      const upcoming = getUpcomingKoRounds();
+      if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));
+      el.innerHTML = parts.join('');
+      updateKoRoundCounts();
+      updateKoAccessCodeBtn();
       return;
     }
     if (isKoOctavosPhase()) {
@@ -1651,7 +1956,9 @@
         locked: isKoRoundClosed('r16') && !isKoRoundPickable('r16')
       }));
       if (!getActiveKoUser()) {
-        parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:0 0 .75rem">👆 Elige <strong>participante</strong> arriba para marcar octavos de final.</p>');
+        parts.push('<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint">👆 Elige <strong>participante</strong> arriba para marcar octavos de final.</p>');
+      } else if (!isKoRoundPickable('r16')) {
+        parts.push(`<p class="ko-hint-callout ko-bracket-hint">Plazo octavos cerrado · partidos hasta el <strong>7 jul</strong> · cuartos abren el <strong>${formatKoOpensAtShort('r8')}</strong>.</p>`);
       }
       const upcoming = getUpcomingKoRounds();
       if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));
@@ -1667,7 +1974,7 @@
           preview: !isKoRoundPickable('r16'),
           focus: true
         }));
-        parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:0 0 .75rem">👆 Elige <strong>participante</strong> arriba para marcar octavos de final.</p>');
+        parts.push('<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint">👆 Elige <strong>participante</strong> arriba para marcar octavos de final.</p>');
       }
       if (!shouldHideR32Bracket()) {
         parts.push(koRoundCardHTML(KO_ROUNDS.r32, {
@@ -1683,7 +1990,7 @@
           parts.push(`<p class="text-yellow-500 text-sm mt-3">👆 Elige tu <strong>participante</strong> arriba · dieciseisavos abiertos hasta el <strong>${formatKoRoundCloseShort('r32')}</strong>.</p>`);
         }
         if (isKoRoundStarted('r16')) {
-          parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:.5rem 0 .75rem"><button type="button" class="ko-jump-round-btn" onclick="scrollToKoRound(\'r16\')">↓ Octavos de final</button> — elige participante para marcar</p>');
+          parts.push('<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint"><button type="button" class="ko-jump-round-btn" onclick="scrollToKoRound(\'r16\')">↓ Octavos de final</button> — elige participante para marcar</p>');
         }
       }
       const upcoming = getUpcomingKoRounds();
@@ -1709,9 +2016,9 @@
         if (isKoRoundStarted('r16') && getActiveKoUser() && !octavosFirst) {
           const r16Ready = KO_R16_MATCHES.filter(isMatchReady).length;
           if (r16Ready > 0) {
-            parts.push('<p class="ko-hint-callout ko-hint-callout--action" style="margin:.5rem 0 .75rem"><button type="button" class="ko-jump-round-btn" onclick="scrollToKoRound(\'r16\')">↓ Ir a octavos de final</button> (' + r16Ready + ' de ' + KO_R16_MATCHES.length + ' cruces listos)</p>');
+            parts.push('<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint"><button type="button" class="ko-jump-round-btn" onclick="scrollToKoRound(\'r16\')">↓ Ir a octavos de final</button> (' + r16Ready + ' de ' + KO_R16_MATCHES.length + ' cruces listos)</p>');
           } else {
-            parts.push('<p class="ko-hint-callout" style="margin:.5rem 0 .75rem">Marca ganadores en <strong>dieciseisavos</strong> para rellenar los octavos abajo.</p>');
+            parts.push('<p class="ko-hint-callout ko-bracket-hint">Marca ganadores en <strong>dieciseisavos</strong> para rellenar los octavos abajo.</p>');
           }
         }
         return;
@@ -1734,6 +2041,7 @@
     if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));
     el.innerHTML = parts.join('') || '<p class="text-xs text-gray-500 text-center">Todas las rondas se abrirán según el calendario del Mundial.</p>';
     updateKoRoundCounts();
+    updateKoAccessCodeBtn();
     focusKoRoundIfNeeded();
   }
 
@@ -2314,6 +2622,35 @@
     const req = koMatchesRequired();
     const ed = koExtrasDone();
     const complete = isKnockoutComplete();
+    if (isKoCuartosPhase()) {
+      if (!getActiveKoUser()) {
+        st.textContent = 'Elige un participante arriba para marcar cuartos de final.';
+      } else if (complete) {
+        st.textContent = '✓ Cuartos completos — puedes exportar el PDF';
+      } else {
+        const closeHint = isKoRoundPickable('r8') ? ` · cierran ${formatKoRoundCloseShort('r8')}` : '';
+        st.textContent = `Cuartos: ${md}/${req}${closeHint} · PDF al completar los 4 cruces`;
+      }
+      st.className = complete
+        ? 'text-xs text-green-400 font-medium mt-3'
+        : 'text-xs text-yellow-500 font-medium mt-3';
+      if (btn) {
+        btn.classList.toggle('is-locked', !complete);
+        btn.classList.toggle('btn-export-ko-ready', complete);
+        btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
+        btn.textContent = '📄 Exportar PDF cuartos';
+      }
+      const clearBtn = document.getElementById('btnClearKo');
+      const clearMatchesBtn = document.getElementById('btnClearKoMatches');
+      const canClear = !!getActiveKoUser();
+      [clearBtn, clearMatchesBtn].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = !canClear;
+        btn.style.opacity = canClear ? '1' : '.45';
+        btn.style.pointerEvents = canClear ? '' : 'none';
+      });
+      return;
+    }
     if (isKoOctavosPhase()) {
       if (!getActiveKoUser()) {
         st.textContent = 'Elige un participante arriba para marcar octavos de final.';
@@ -2407,15 +2744,32 @@
 
   function renderKnockout() {
     loadKnockoutStore();
+    updateKoAccessCodeBtn();
     const preview = document.getElementById('koPreviewBadge');
     if (preview) {
       preview.classList.toggle('hidden', !showKoPreviewBadge());
-      preview.textContent = isKoR16PreviewActive() ? 'Octavos · prueba' : 'Modo prueba';
+      preview.textContent = isKoCuartosPreviewOnly()
+        ? 'Cuartos · prueba'
+        : isKoR16PreviewActive()
+          ? 'Octavos · prueba'
+          : 'Modo prueba';
     }
     const subtitle = document.getElementById('koSubtitle');
     if (subtitle) {
       if (!isKnockoutAccessible()) {
         subtitle.textContent = 'Apertura oficial el 28 jun, 10:00 (hora peninsular).';
+      } else if (isKoCuartosPhase()) {
+        if (isKoRoundPickable('r8')) {
+          subtitle.textContent = `Octavos cerrados · plazo cuartos abierto hasta ${formatKoRoundCloseShort('r8')}.`;
+        } else if (isKoRoundClosed('r8')) {
+          subtitle.textContent = 'Cuartos cerrados · semis abren el 14 jul.';
+        } else {
+          subtitle.textContent = `Octavos en juego · cuartos abren el ${formatKoOpensAtShort('r8')}.`;
+        }
+      } else if (isKoWaitingForCuartosPublic()) {
+        subtitle.textContent = shouldShowKoAccessCodeBtn()
+          ? `Octavos cerrados · cuartos abren el ${formatKoOpensAtShort('r8')} · 🔑 Código para probar antes.`
+          : `Octavos cerrados · cuartos abren el ${formatKoOpensAtShort('r8')}.`;
       } else if (!isKoRoundStarted('r32')) {
         subtitle.textContent = 'Vista anticipada · plazo oficial el 28 jun, 10:00–21:00 (participante, especiales y dieciseisavos).';
       } else if (isKoRoundPickable('r32')) {
@@ -2475,8 +2829,10 @@
     return alive;
   }
 
-  function koPdfChunkMatches(matches) {
-    return koChunkMatches(koSortMatches(matches));
+  function koPdfChunkMatches(matches, pdfKind) {
+    const ordered = koSortMatches(matches);
+    if (pdfKind === 'cuartos') return [ordered];
+    return koChunkMatches(ordered);
   }
 
   function koPdfSyncColumns(colY) {
@@ -2488,11 +2844,14 @@
     pdf.rect(0, 0, PW, PH, 'F');
   }
 
-  function koPdfFooter(pdf, PW, PH, M, name, page, total) {
+  function koPdfFooter(pdf, PW, PH, M, name, page, total, pdfKind) {
+    const phase = pdfKind === 'cuartos' ? 'Cuartos de final'
+      : pdfKind === 'octavos' ? 'Octavos de final'
+        : 'Eliminatorias';
     pdf.setFontSize(5);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(...KO_PDF_C.mut);
-    pdf.text(`Porra Mundial 2026 · Eliminatorias · ${name}`, M, PH - 4);
+    pdf.text(`Porra Mundial 2026 · ${phase} · ${name}`, M, PH - 4);
     pdf.text(`${page}/${total}`, PW - M, PH - 4, { align: 'right' });
   }
 
@@ -2541,7 +2900,8 @@
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(...KO_PDF_C.mut);
     const city = koPdfVenueShort(m.venue);
-    const line = `${m.date} ${m.hour} ESP${city ? ' · ' + city : ''}`;
+    const no = m.fifaNo ? `P${m.fifaNo} · ` : '';
+    const line = `${no}${m.date} ${m.hour} ESP${city ? ' · ' + city : ''}`;
     koPdfDrawFittedText(pdf, line, centerX, metaY, maxW, { size: 3.2, align: 'center' });
   }
 
@@ -2615,23 +2975,34 @@
     return ex.finalists.filter(code => code && code !== ex.champion);
   }
 
-  function koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, startY, octavosPdf) {
+  function koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, startY, pdfKind) {
+    pdfKind = pdfKind || 'knockout';
     const C = KO_PDF_C;
     const pad = 4;
     const headerH = 9.5;
     const nameLines = pdf.splitTextToSize(displayName, cardW - pad * 2);
     const introH = headerH + nameLines.length * 3.5 + 9;
     const y = startY;
-    const headerTitle = octavosPdf ? 'PORRA MUNDIAL 2026 — OCTAVOS DE FINAL' : 'PORRA MUNDIAL 2026 — ELIMINATORIAS';
-    const progressLabel = octavosPdf ? `${done}/${req} cruces marcadas` : `${done}/${req} partidos marcados`;
+    const headerTitle = pdfKind === 'cuartos'
+      ? 'PORRA MUNDIAL 2026 — CUARTOS DE FINAL'
+      : pdfKind === 'octavos'
+        ? 'PORRA MUNDIAL 2026 — OCTAVOS DE FINAL'
+        : 'PORRA MUNDIAL 2026 — ELIMINATORIAS';
+    const progressLabel = (pdfKind === 'octavos' || pdfKind === 'cuartos')
+      ? `${done}/${req} cruces marcadas`
+      : `${done}/${req} partidos marcados`;
+    const showDeadline = pdfKind === 'octavos' || pdfKind === 'cuartos';
+    const deadlineKey = pdfKind === 'cuartos' ? 'r8' : pdfKind === 'octavos' ? 'r16' : '';
+    const deadlineLine = showDeadline && deadlineKey ? formatKoRoundCloseShort(deadlineKey) : '';
+    const extraH = deadlineLine ? 4 : 0;
 
     pdf.setFillColor(12, 18, 32);
-    pdf.roundedRect(M, y, cardW, introH, 2, 2, 'F');
+    pdf.roundedRect(M, y, cardW, introH + extraH, 2, 2, 'F');
     pdf.setFillColor(...C.hdr);
     pdf.roundedRect(M, y, cardW, headerH, 2, 2, 'F');
     pdf.setDrawColor(75, 85, 99);
     pdf.setLineWidth(0.2);
-    pdf.roundedRect(M, y, cardW, introH, 2, 2, 'S');
+    pdf.roundedRect(M, y, cardW, introH + extraH, 2, 2, 'S');
 
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.5);
@@ -2653,8 +3024,12 @@
     pdf.setFontSize(5.2);
     pdf.setTextColor(...C.mut);
     pdf.text(`${progressLabel}  ·  ${today}`, PW / 2, nameEndY + 3.8, { align: 'center' });
+    if (deadlineLine) {
+      pdf.setFontSize(4.8);
+      pdf.text(`Plazo de marcado hasta ${deadlineLine}`, PW / 2, nameEndY + 7.5, { align: 'center' });
+    }
 
-    return y + introH + 10;
+    return y + introH + extraH + 10;
   }
 
   function koPdfDrawExtraListRow(pdf, leftLabel, code, cache, x, y, w, h, opts) {
@@ -2910,7 +3285,7 @@
     const cardW = PW - M * 2;
     const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
     const displayName = user.replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-    const octavosPdf = isKoOctavosPhase();
+    const pdfKind = getKoPdfKind();
     const req = koMatchesRequired();
     const done = koMatchesDone();
 
@@ -2920,7 +3295,7 @@
         if (isMatchReady(m)) { codes.add(m.home); codes.add(m.away); }
       });
     });
-    if (!octavosPdf) {
+    if (pdfKind === 'knockout') {
       data.extras.semis.concat(data.extras.finalists, [data.extras.champion]).filter(Boolean).forEach(c => codes.add(c));
     }
     if (typeof loadTrophyDataUrl === 'function') await loadTrophyDataUrl();
@@ -2928,12 +3303,16 @@
     const cache = typeof flagCache !== 'undefined' ? flagCache : {};
 
     koPdfBg(pdf, PW, PH);
-    let y = koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, PAGE_TOP, octavosPdf);
-    if (!octavosPdf && koExtrasDone() > 0) {
+    let y = koPdfDrawIntro(pdf, PW, M, cardW, displayName, done, req, today, PAGE_TOP, pdfKind);
+    if (pdfKind === 'knockout' && koExtrasDone() > 0) {
       y = koPdfDrawExtrasCard(pdf, data, cache, M, y + 5, cardW);
     }
-    const sectionTitle = octavosPdf ? 'OCTAVOS DE FINAL' : 'TUS PARTIDOS';
-    const sectionSub = octavosPdf ? '8 partidos · Verde = ganador  ·  Rojo = eliminado' : 'Verde = ganador  ·  Rojo = eliminado';
+    const sectionTitle = pdfKind === 'cuartos' ? 'CUARTOS DE FINAL' : pdfKind === 'octavos' ? 'OCTAVOS DE FINAL' : 'TUS PARTIDOS';
+    const sectionSub = pdfKind === 'cuartos'
+      ? 'P97–P100 · 4 partidos · Verde = ganador  ·  Rojo = eliminado'
+      : pdfKind === 'octavos'
+        ? 'P89–P96 · 8 partidos · Verde = ganador  ·  Rojo = eliminado'
+        : 'Verde = ganador  ·  Rojo = eliminado';
     y = koPdfDrawSectionTitle(pdf, M, y + 6, cardW, sectionTitle, sectionSub);
 
     const openPlayable = getExportRounds().map(r => ({
@@ -2943,7 +3322,7 @@
 
     let maxChunkLen = 1;
     openPlayable.forEach(({ matches }) => {
-      koPdfChunkMatches(matches).forEach(chunk => {
+      koPdfChunkMatches(matches, pdfKind).forEach(chunk => {
         if (chunk.length > maxChunkLen) maxChunkLen = chunk.length;
       });
     });
@@ -2967,15 +3346,17 @@
     }
 
     openPlayable.forEach(({ round, matches }) => {
-      const chunks = koPdfChunkMatches(matches);
+      const chunks = koPdfChunkMatches(matches, pdfKind);
       chunks.forEach((chunk, ci) => {
         if (!chunk.length) return;
-        const fullWidth = chunks.length === 1;
+        const fullWidth = pdfKind === 'cuartos' || chunks.length === 1;
         const colW = fullWidth ? cardW : CW;
         const groupH = KO_PDF.HEAD_H + chunk.length * matchH + KO_PDF.FOOT_H;
         placeGroup(groupH, fullWidth);
         const xOff = fullWidth ? M : M + col * (CW + GAP);
-        const label = round.label + (chunks.length > 1 ? (ci ? ' B' : ' A') : '');
+        const label = pdfKind === 'cuartos'
+          ? round.label
+          : round.label + (chunks.length > 1 ? (ci ? ' B' : ' A') : '');
         colY[col] = koPdfDrawMatchColumn(pdf, chunk, xOff, colY[col], colW, data.picks, cache, label, data.extras, matchH, false) + 1.5;
         if (fullWidth) {
           colY = koPdfSyncColumns(colY);
@@ -2991,7 +3372,7 @@
     const totalPages = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
-      koPdfFooter(pdf, PW, PH, M, user, i, totalPages);
+      koPdfFooter(pdf, PW, PH, M, user, i, totalPages, pdfKind);
     }
 
     const filename = getKnockoutPdfFilename(user);
@@ -3013,6 +3394,13 @@
   window.KO_TEST_MODE = KO_TEST_MODE;
   window.isKoOctavosPhase = isKoOctavosPhase;
   window.isKoOctavosPreviewOnly = isKoOctavosPreviewOnly;
+  window.isKoCuartosPhase = isKoCuartosPhase;
+  window.isKoCuartosPreviewOnly = isKoCuartosPreviewOnly;
+  window.isKoWaitingForCuartosPublic = isKoWaitingForCuartosPublic;
+  window.shouldShowKoAccessCodeBtn = shouldShowKoAccessCodeBtn;
+  window.updateKoAccessCodeBtn = updateKoAccessCodeBtn;
+  window.canViewCuartosBracket = canViewCuartosBracket;
+  window.shouldPrioritizeCuartos = shouldPrioritizeCuartos;
   window.isKoDieciseisavosClosed = isKoDieciseisavosClosed;
   window.canViewOctavosBracket = canViewOctavosBracket;
   window.isKoRoundClosedBySchedule = isKoRoundClosedBySchedule;
@@ -3038,6 +3426,8 @@
   window.clearKnockoutMatches = clearKnockoutMatches;
   window.clearKnockoutAll = clearKnockoutAll;
   window.exportKnockoutPDF = exportKnockoutPDF;
+  window.getKoPdfKind = getKoPdfKind;
+  window.getKnockoutExportBlockers = getKnockoutExportBlockers;
   window.syncKnockoutGroupSeeds = syncKnockoutGroupSeeds;
   window.syncKnockoutBracketFromResults = syncKnockoutBracketFromResults;
   window.scrollToKoRound = scrollToKoRound;
@@ -3052,6 +3442,7 @@
   window.isKoRoundPickable = isKoRoundPickable;
   window.isKoRoundOpen = isKoRoundOpen;
   window.getCountdownToKoRoundClose = getCountdownToKoRoundClose;
+  window.getCountdownToKoRoundOpen = getCountdownToKoRoundOpen;
   window.formatKoRoundCloseShort = formatKoRoundCloseShort;
   window.formatKoOpensAtShort = formatKoOpensAtShort;
 

@@ -366,5 +366,44 @@
     "home": 1,
     "away": 0,
     "winner": "co"
+  },
+  "KO16-2": {
+    "home": 0,
+    "away": 3,
+    "winner": "ma"
+  },
+  "_fixtures": {
+    "KO16-2": {
+      "home": "ca",
+      "away": "ma"
+    },
+    "KO16-1": {
+      "home": "py",
+      "away": "fr"
+    },
+    "KO16-3": {
+      "home": "br",
+      "away": "no"
+    },
+    "KO16-4": {
+      "home": "mx",
+      "away": "gb-eng"
+    },
+    "KO16-5": {
+      "home": "pt",
+      "away": "es"
+    },
+    "KO16-6": {
+      "home": "us",
+      "away": "be"
+    },
+    "KO16-7": {
+      "home": "ar",
+      "away": "eg"
+    },
+    "KO16-8": {
+      "home": "ch",
+      "away": "co"
+    }
   }
 }

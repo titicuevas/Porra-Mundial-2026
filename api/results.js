@@ -1,5 +1,5 @@
 /**
- * GET /api/results — results.json + dieciseisavos FINISHED desde football-data.org
+ * GET /api/results — results.json + eliminatorias FINISHED desde football-data.org
  * Env en Vercel: FOOTBALL_DATA_TOKEN
  */
 const path = require('path');
@@ -49,9 +49,14 @@ module.exports = async function handler(req, res) {
   const token = process.env.FOOTBALL_DATA_TOKEN;
   if (token) {
     try {
-      const { updates, details } = await fetchKoUpdatesFromFootballData(token);
+      const { updates, details, stages, fixtures } = await fetchKoUpdatesFromFootballData(token, base);
       base = mergeIntoResults(base, updates);
+      if (fixtures && Object.keys(fixtures).length) {
+        base._fixtures = fixtures;
+      }
       meta.footballData = true;
+      meta.stages = stages;
+      meta.fixtures = fixtures ? Object.keys(fixtures).length : 0;
       meta.synced = details.map(d => ({
         id: d.matchId,
         home: d.homeCode,
