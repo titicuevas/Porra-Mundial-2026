@@ -637,10 +637,12 @@ function getDisplayRank(sorted, index) {
 }
 
 function leaderboardRankCell(rank) {
-  if (rank === 1) {
-    return '<span class="leaderboard-crown" aria-label="1º">👑</span>';
-  }
   return String(rank);
+}
+
+function leaderboardFirstMedal(rank) {
+  if (rank !== 1) return '';
+  return '<span class="leaderboard-medal" aria-label="1º"> 🥇</span>';
 }
 
 function buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) {
@@ -772,7 +774,8 @@ function renderLeaderboard() {
         ? `<td class="leaderboard-prize-cell"><span class="leaderboard-prize-col">${formatPrizeSharePct(prizeShares[i])}%</span></td>`
         : '<td class="leaderboard-prize-cell"><span class="leaderboard-prize-col leaderboard-prize-col--empty">—</span></td>')
       : '';
-    const nameCell = `${e.name}${suffix}${showBreakdown ? leaderboardBreakdownSubHTML(e) : ''}`;
+    const medal = hasOfficial ? leaderboardFirstMedal(ranks[i]) : '';
+    const nameCell = `${e.name}${medal}${suffix}${showBreakdown ? leaderboardBreakdownSubHTML(e) : ''}`;
     const breakdownCols = showBreakdown ? leaderboardBreakdownCells(e, true) : '';
     return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td class="leaderboard-name">${nameCell}</td>${breakdownCols}<td class="leaderboard-points">${e.points}</td>${prizeCol}</tr>`;
   }).join('');

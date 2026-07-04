@@ -356,5 +356,15 @@
     "home": 3,
     "away": 5,
     "winner": "eg"
+  },
+  "KO32-13": {
+    "home": 3,
+    "away": 2,
+    "winner": "ar"
+  },
+  "KO32-10": {
+    "home": 1,
+    "away": 0,
+    "winner": "co"
   }
 }
