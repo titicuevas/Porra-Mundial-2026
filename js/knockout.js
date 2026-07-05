@@ -1642,10 +1642,8 @@
     if (chunks.length === 1) {
       return `<div class="ko-round-matches">${ordered.map(koMatchRowHTML).join('')}</div>`;
     }
-    const labels = ['A', 'B'];
-    return `<div class="ko-round-matches-grid">${chunks.map((chunk, i) =>
+    return `<div class="ko-round-matches-grid">${chunks.map((chunk) =>
       `<div class="ko-round-col">
-        <p class="ko-round-col-label">${labels[i] || i + 1}</p>
         ${chunk.map(koMatchRowHTML).join('')}
       </div>`
     ).join('')}</div>`;
