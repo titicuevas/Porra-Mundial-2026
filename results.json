@@ -404,6 +404,15 @@
     "KO16-8": {
       "home": "ch",
       "away": "co"
+    },
+    "KO8-1": {
+      "home": "fr",
+      "away": "ma"
     }
+  },
+  "KO16-1": {
+    "home": 0,
+    "away": 1,
+    "winner": "fr"
   }
 }
