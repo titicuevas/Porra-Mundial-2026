@@ -20,9 +20,10 @@
 <title>Porra Mundial 2026 🏆</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link rel="stylesheet" href="css/app.css?v=133"/>
+<link rel="stylesheet" href="css/app.css?v=134"/>
 </head>
 <body class="min-h-screen text-white">
+<a href="#mainContent" id="skipToContent" class="skip-link">Saltar al contenido principal</a>
 <noscript><div style="background:#7f1d1d;color:#fff;padding:1rem;text-align:center">Activa JavaScript para usar la porra.</div></noscript>
 <div id="boot-error" class="hidden max-w-6xl px-4" role="alert" aria-live="polite"></div>
 
@@ -54,22 +55,24 @@
     <button onclick="clearAll()" class="btn-ghost sm:hidden" type="button" style="margin-left:auto">Borrar</button>
   </div>
   <div class="max-w-6xl mx-auto px-4 pb-2">
-    <div class="progress-bar" style="height:4px"><div id="mainProgress" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#3b82f6,#facc15)"></div></div>
+    <div class="progress-bar progress-bar--header"><div id="mainProgress" class="progress-fill progress-fill--main" style="width:0%"></div></div>
   </div>
 </header>
+
+<main id="mainContent" tabindex="-1">
 
 <div id="scheduleBanner" class="max-w-6xl mx-auto px-4 pt-3"></div>
 
 <nav class="phase-tabs-wrap" aria-label="Secciones de la porra">
-  <div class="phase-tabs max-w-6xl">
-    <button type="button" id="tabGrupos" class="phase-tab" onclick="switchPhaseTab('grupos')">⚽ Grupos</button>
-    <button type="button" id="tabExtras" class="phase-tab active" onclick="requestKnockoutAccess()">🏅 Eliminatorias</button>
-    <button type="button" id="tabLeaderboard" class="phase-tab is-locked" onclick="switchPhaseTab('leaderboard')">🏆 Clasificación</button>
+  <div class="phase-tabs max-w-6xl" role="tablist">
+    <button type="button" id="tabGrupos" class="phase-tab" role="tab" aria-selected="false" aria-controls="panelGrupos" onclick="switchPhaseTab('grupos')">⚽ Grupos</button>
+    <button type="button" id="tabExtras" class="phase-tab active" role="tab" aria-selected="true" aria-controls="panelExtras" onclick="requestKnockoutAccess()">🏅 Eliminatorias</button>
+    <button type="button" id="tabLeaderboard" class="phase-tab is-locked" role="tab" aria-selected="false" aria-controls="panelLeaderboard" onclick="switchPhaseTab('leaderboard')">🏆 Clasificación</button>
   </div>
 </nav>
 <div id="phaseLockToast" class="phase-lock-toast" role="status" aria-live="polite"></div>
 
-<div id="panelGrupos" class="phase-panel hidden">
+<div id="panelGrupos" class="phase-panel hidden" role="tabpanel" aria-labelledby="tabGrupos" aria-hidden="true">
 <!-- Bienvenida / presentación -->
 <div id="welcomeSection" class="max-w-6xl mx-auto px-4 pt-5">
   <div class="welcome-card p-5 sm:p-6">
@@ -244,7 +247,7 @@
 </div>
 </div><!-- /panelGrupos -->
 
-<div id="panelExtras" class="phase-panel">
+<div id="panelExtras" class="phase-panel" role="tabpanel" aria-labelledby="tabExtras" aria-hidden="false">
   <div class="max-w-6xl mx-auto px-4 py-5">
     <div class="extras-card p-5 sm:p-6">
       <div class="ko-extras-head flex flex-wrap items-center gap-2 mb-3">
@@ -326,7 +329,7 @@
   </div>
 </div>
 
-<div id="koPasswordModal" class="ko-modal hidden" role="dialog" aria-labelledby="koModalTitle">
+<div id="koPasswordModal" class="ko-modal hidden" role="dialog" aria-modal="true" aria-labelledby="koModalTitle" aria-hidden="true">
   <div class="ko-modal-box">
     <div class="ko-modal-mascot" aria-hidden="true">🏆</div>
     <h3 id="koModalTitle">🔒 Eliminatorias</h3>
@@ -341,7 +344,7 @@
   </div>
 </div>
 
-<div id="panelLeaderboard" class="phase-panel hidden">
+<div id="panelLeaderboard" class="phase-panel hidden" role="tabpanel" aria-labelledby="tabLeaderboard" aria-hidden="true">
   <div class="max-w-6xl mx-auto px-4 py-5">
     <div class="leaderboard-card p-5 sm:p-6">
       <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación</h2>
@@ -370,7 +373,8 @@
       <p id="scoreAutoHint" class="text-xs text-gray-500 mt-2"></p>
     </div>
   </div>
-</div>
+</div><!-- /panelLeaderboard -->
+</main>
 
 <footer class="site-footer max-w-6xl mx-auto">
   <p class="footer-title">🍻 Porra entre colegas · Mundial 2026</p>
@@ -394,16 +398,18 @@
   <button type="button" id="btnExportDock" class="btn-export-dock is-locked" onclick="handleExportDockClick()" aria-disabled="true">📄 Exportar PDF</button>
 </div>
 
-<script src="js/version.js?v=133"></script>
-<script src="js/schedule.js?v=133"></script>
-<script src="js/groups-data.js?v=133"></script>
-<script src="js/annex-c-data.js?v=133"></script>
-<script src="js/team-fifa-meta.js?v=133"></script>
-<script src="js/groups-app.js?v=133"></script>
-<script src="js/knockout.js?v=133"></script>
+<script src="js/version.js?v=134"></script>
+<script src="js/a11y.js?v=134"></script>
+<script src="js/schedule.js?v=134"></script>
+<script src="js/groups-data.js?v=134"></script>
+<script src="js/annex-c-data.js?v=134"></script>
+<script src="js/team-fifa-meta.js?v=134"></script>
+<script src="js/groups-app.js?v=134"></script>
+<script src="js/knockout.js?v=134"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();
+if (typeof syncPhaseTabA11y === 'function') syncPhaseTabA11y(typeof activePhaseTab !== 'undefined' ? activePhaseTab : 'extras');
 if (typeof window.updateHeaderStats === 'function') window.updateHeaderStats();
 </script>
 </body>

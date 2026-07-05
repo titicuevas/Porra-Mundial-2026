@@ -101,8 +101,8 @@ function scrollToFirstIncomplete() {
   if (!nameEl.value.trim()) {
     nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     nameEl.focus();
-    nameEl.classList.add('ring-2', 'ring-yellow-400');
-    setTimeout(() => nameEl.classList.remove('ring-2', 'ring-yellow-400'), 2500);
+    nameEl.classList.add('input-focus-hint');
+    setTimeout(() => nameEl.classList.remove('input-focus-hint'), 2500);
     return;
   }
 
@@ -578,6 +578,7 @@ function switchPhaseTab(tab) {
     renderQualifiedSummary();
     renderKoCountdown();
   }
+  if (typeof syncPhaseTabA11y === 'function') syncPhaseTabA11y(tab);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

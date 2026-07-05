@@ -208,9 +208,10 @@ Array `PARTICIPANTS` en `js/knockout.js` → sync → push.
 
 ```
 ├── index.html                 ← Única página (HTML + enlaces a JS/CSS)
-├── css/app.css                ← Estilos
+├── css/app.css                ← Estilos (tokens CSS + componentes)
 ├── js/
 │   ├── version.js             ← Versión única (PORRA_BUILD)
+│   ├── a11y.js                ← Accesibilidad (tabs, modal, skip link)
 │   ├── schedule.js            ← Calendario grupos + FIFA KO (P73–P104)
 │   ├── groups-data.js         ← 12 grupos, equipos y partidos
 │   ├── groups-app.js          ← Fase de grupos, PDF, clasificación

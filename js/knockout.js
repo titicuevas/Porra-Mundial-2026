@@ -741,8 +741,12 @@
   }
 
   function showKoPasswordModal() {
-    const modal = document.getElementById('koPasswordModal');
-    if (modal) modal.classList.remove('hidden');
+    if (typeof openKoPasswordModalA11y === 'function') {
+      openKoPasswordModalA11y(document.activeElement);
+    } else {
+      const modal = document.getElementById('koPasswordModal');
+      if (modal) modal.classList.remove('hidden');
+    }
     const title = document.getElementById('koModalTitle');
     const hint = document.getElementById('koModalHint');
     if (title) {
@@ -777,8 +781,12 @@
   }
 
   function hideKoPasswordModal() {
-    const modal = document.getElementById('koPasswordModal');
-    if (modal) modal.classList.add('hidden');
+    if (typeof closeKoPasswordModalA11y === 'function') {
+      closeKoPasswordModalA11y();
+    } else {
+      const modal = document.getElementById('koPasswordModal');
+      if (modal) modal.classList.add('hidden');
+    }
   }
 
   function submitKoPassword() {
