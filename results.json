@@ -409,6 +409,10 @@
       "home": "fr",
       "away": "ma"
     },
+    "KO8-3": {
+      "home": "es",
+      "away": "be"
+    },
     "KO8-2": {
       "home": "no",
       "away": "gb-eng"
@@ -433,5 +437,15 @@
     "home": 0,
     "away": 1,
     "winner": "es"
+  },
+  "KO16-6": {
+    "home": 1,
+    "away": 4,
+    "winner": "be"
+  },
+  "KO16-7": {
+    "home": 3,
+    "away": 2,
+    "winner": "ar"
   }
 }
