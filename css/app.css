@@ -305,9 +305,9 @@ body.modal-open{overflow:hidden;}
 .leaderboard-table.leaderboard-table--breakdown td.leaderboard-breakdown-col{font-size:.78rem;padding:.48rem .3rem;}
 .leaderboard-scroll{-webkit-overflow-scrolling:touch;margin:0 -.15rem;padding:0 .15rem;}
 .leaderboard-scroll .leaderboard-table{min-width:min(100%,18rem);}
-.leaderboard-table.leaderboard-table--breakdown{min-width:20.5rem;}
+.leaderboard-table.leaderboard-table--breakdown{min-width:22.5rem;}
 @media(min-width:520px){
-  .leaderboard-table.leaderboard-table--breakdown{min-width:26rem;}
+  .leaderboard-table.leaderboard-table--breakdown{min-width:30rem;}
   .leaderboard-table.leaderboard-table--breakdown .leaderboard-breakdown-col{display:table-cell;}
   .leaderboard-table.leaderboard-table--breakdown .leaderboard-name-sub{display:none;}
   .leaderboard-table.leaderboard-table--breakdown td.leaderboard-name{white-space:nowrap;max-width:11rem;}
@@ -1049,7 +1049,7 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
   .ko-round-card .group-header{padding:.8rem 1rem!important;}
   .leaderboard-table{font-size:.82rem;}
   .leaderboard-table td.leaderboard-name,.leaderboard-table td:nth-child(2){max-width:12rem;}
-  .leaderboard-table.leaderboard-table--breakdown{min-width:28rem;}
+  .leaderboard-table.leaderboard-table--breakdown{min-width:32rem;}
   .leaderboard-medal{font-size:1.12rem;}
   .phase-tab{min-width:6.25rem;font-size:.76rem;}
   #panelExtras .extras-card{padding:1.15rem 1.05rem!important;}

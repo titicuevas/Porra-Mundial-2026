@@ -744,7 +744,7 @@ function leaderboardBreakdownSubHTML(e) {
   const parts = [];
   if (b.grupos != null) parts.push('Gr. ' + b.grupos);
   if (b.r32 != null) parts.push('16 ' + b.r32);
-  if (b.r16 != null) parts.push('8 ' + b.r16);
+  if (b.r16 != null) parts.push('Oct. ' + b.r16);
   if (!parts.length) return '';
   return '<span class="leaderboard-name-sub">' + parts.join(' · ') + '</span>';
 }
@@ -754,7 +754,8 @@ function leaderboardBreakdownCells(e, showCols) {
   const b = e.breakdown || {};
   const g = b.grupos != null ? b.grupos : '—';
   const r32 = b.r32 != null ? b.r32 : '—';
-  return '<td class="leaderboard-breakdown-col">' + g + '</td><td class="leaderboard-breakdown-col">' + r32 + '</td>';
+  const r16 = b.r16 != null ? b.r16 : '—';
+  return '<td class="leaderboard-breakdown-col">' + g + '</td><td class="leaderboard-breakdown-col">' + r32 + '</td><td class="leaderboard-breakdown-col">' + r16 + '</td>';
 }
 
 function renderLeaderboard() {

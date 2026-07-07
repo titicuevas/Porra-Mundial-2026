@@ -72,9 +72,9 @@
     [3, 7], [1, 13], [2, 15], [0, 8], [10, 6], [4, 11], [12, 14], [5, 9]
   ];
 
-  /** Ganadores KO16 (índice 0–7) → cada cuarto KO8-1…4 (P97–P100). */
+  /** Ganadores KO16 (índice 0–7 = M89–M96) → cuartos KO8-1…4 (P97–P100). */
   const R8_FEEDERS = [
-    [0, 1], [2, 3], [4, 5], [6, 7]
+    [0, 1], [4, 5], [2, 3], [6, 7]
   ];
 
   window.FIFA_KO_SCHEDULE = {

@@ -37,7 +37,7 @@ const KO_R16_FEEDERS = [
 ];
 
 const KO_R8_FEEDERS = [
-  [0, 1], [2, 3], [4, 5], [6, 7]
+  [0, 1], [4, 5], [2, 3], [6, 7]
 ];
 
 const KO_R16_SLOT_IDS = Array.from({ length: 8 }, (_, i) => 'KO16-' + (i + 1));

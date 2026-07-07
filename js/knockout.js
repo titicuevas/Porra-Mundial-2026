@@ -156,7 +156,7 @@
   ];
 
   const KO_R8_FEEDERS = SK.R8_FEEDERS || [
-    [0, 1], [2, 3], [4, 5], [6, 7]
+    [0, 1], [4, 5], [2, 3], [6, 7]
   ];
 
   const KO_R8_MATCHES = R8_META.map((meta, i) =>
@@ -1638,6 +1638,10 @@
 
   function koRoundMatchesHTML(matches) {
     const ordered = koSortMatches(matches);
+    // Cuartos (4 partidos): lista única por horario; el grid 2×2 rompe el orden cronológico.
+    if (ordered.length === 4) {
+      return `<div class="ko-round-matches">${ordered.map(koMatchRowHTML).join('')}</div>`;
+    }
     const chunks = koChunkMatches(ordered);
     if (chunks.length === 1) {
       return `<div class="ko-round-matches">${ordered.map(koMatchRowHTML).join('')}</div>`;

@@ -409,13 +409,17 @@
       "home": "fr",
       "away": "ma"
     },
-    "KO8-3": {
+    "KO8-2": {
       "home": "es",
       "away": "be"
     },
-    "KO8-2": {
+    "KO8-3": {
       "home": "no",
       "away": "gb-eng"
+    },
+    "KO8-4": {
+      "home": "ar",
+      "away": "ch"
     }
   },
   "KO16-1": {
