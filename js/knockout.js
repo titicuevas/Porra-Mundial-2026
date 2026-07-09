@@ -462,10 +462,8 @@
       match.away = away || 'tbd';
     });
     applyKoFixturesFromOfficial();
-    // Semifinales: oficiales de cuartos (API); en prueba también pronósticos de cuartos.
-    const allowUserFallbackR8 = !!getActiveKoUser() && !allKoR8ResultsComplete() && (
-      isKoLabEnabled() || isKoSemisPreviewActive() || isKoSemisPreviewRequested()
-    );
+    // Semifinales: solo clasificados oficiales de cuartos (API). Sin pronósticos de usuario.
+    const allowUserFallbackR8 = isKoLabEnabled() && !!getActiveKoUser() && !allKoR8ResultsComplete();
     KO_R4_FEEDERS.forEach((feeders, i) => {
       const match = KO_R4_MATCHES[i];
       if (!match) return;
@@ -2100,7 +2098,7 @@
       parts.push('<div class="app-reload-banner ko-bracket-banner"><p>🧪 <strong>Modo prueba</strong> — dieciseisavos y octavos abiertos. Desactiva <code>KO_TEST_MODE</code> en knockout.js antes del despliegue.</p></div>');
     }
     if (isKoSemisPreviewOnly()) {
-      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🧪 <strong>Semifinales en prueba</strong> (código) — el público las verá el <strong>${formatKoOpensAtShort('r4')}</strong> · cierran <strong>${formatKoRoundCloseShort('r4')}</strong>. Cruces según resultados oficiales de cuartos.</p></div>`);
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🧪 <strong>Semifinales en prueba</strong> (código) — el público las verá el <strong>${formatKoOpensAtShort('r4')}</strong> · cierran <strong>${formatKoRoundCloseShort('r4')}</strong>. Los equipos aparecen solo con <strong>resultados oficiales de cuartos</strong> (no con tus pronósticos).</p></div>`);
     } else if (isKoSemisPhase() && isKoRoundPickable('r4')) {
       parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🏅 <strong>Semifinales abiertas</strong> — elige participante y marca tus cruces · plazo hasta el <strong>${formatKoRoundCloseShort('r4')}</strong>.</p></div>`);
     } else if (isKoSemisPhase() && isKoRoundClosed('r4')) {
@@ -2148,6 +2146,8 @@
       }));
       if (!getActiveKoUser()) {
         parts.push('<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint">👆 Elige <strong>participante</strong> arriba para marcar semifinales.</p>');
+      } else if (!KO_ROUNDS.r4.matches.every(isMatchReady)) {
+        parts.push('<p class="ko-hint-callout ko-bracket-hint">⏳ Los cruces se rellenarán cuando haya <strong>resultados oficiales de cuartos</strong>. Tus pronósticos de cuartos no adelantan el cuadro.</p>');
       }
       const upcoming = getUpcomingKoRounds();
       if (upcoming.length) parts.push(koUpcomingRoundsHTML(upcoming));

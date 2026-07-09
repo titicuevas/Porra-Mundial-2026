@@ -126,7 +126,7 @@ function runStaticChecks() {
 
   const missingWinners = ko8.filter(m => !m.winner).length;
   if (missingWinners === 4) {
-    console.log('\nℹ Sin resultados de cuartos aún — semifinales mostrarán cruces según pronósticos (modo prueba) o tbd.');
+    console.log('\nℹ Sin resultados de cuartos aún — semifinales en tbd hasta que la API publique ganadores.');
   } else if (missingWinners > 0) {
     console.log(`\n⚠ Faltan ${missingWinners} resultado(s) de cuartos para completar semifinales oficiales.`);
   } else {
@@ -207,22 +207,15 @@ async function runPlaywrightChecks() {
       console.log('✓ Preview semifinales activo en navegador');
     }
 
-    // Con picks: KO8-1 home=fr, KO8-2 away=be → KO4-1 fr vs be
-    const expect = { ko4_1: ['francia', 'bélgica'], ko4_2: ['noruega', 'suiza'] };
-    // Team names might be localized - check via KO_R4_MATCHES codes
+    // Sin resultados oficiales de cuartos: semifinales en tbd (no pronósticos de usuario)
     if (state.picks) {
       const [m1, m2] = state.picks;
-      if (m1.home !== 'fr' || m1.away !== 'be') {
-        console.error(`✗ KO4-1 esperado fr vs be, obtuvo ${m1.home} vs ${m1.away}`);
+      const allTbd = [m1, m2].every(m => m.home === 'tbd' && m.away === 'tbd');
+      if (!allTbd) {
+        console.error(`✗ Sin resultados KO8, semifinales deberían estar en tbd: KO4-1 ${m1.home} vs ${m1.away}, KO4-2 ${m2.home} vs ${m2.away}`);
         ok = false;
       } else {
-        console.log('✓ KO4-1 (P101 Dallas): fr vs be — ganadores KO8-1 + KO8-2');
-      }
-      if (m2.home !== 'no' || m2.away !== 'ch') {
-        console.error(`✗ KO4-2 esperado no vs ch, obtuvo ${m2.home} vs ${m2.away}`);
-        ok = false;
-      } else {
-        console.log('✓ KO4-2 (P102 Atlanta): no vs ch — ganadores KO8-3 + KO8-4');
+        console.log('✓ KO4-1 y KO4-2 en tbd hasta resultados oficiales de cuartos');
       }
     }
 
