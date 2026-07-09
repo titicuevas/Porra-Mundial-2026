@@ -456,5 +456,10 @@
     "home": 4,
     "away": 3,
     "winner": "ch"
+  },
+  "KO8-1": {
+    "home": 2,
+    "away": 0,
+    "winner": "fr"
   }
 }

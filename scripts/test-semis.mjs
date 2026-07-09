@@ -207,15 +207,40 @@ async function runPlaywrightChecks() {
       console.log('✓ Preview semifinales activo en navegador');
     }
 
-    // Sin resultados oficiales de cuartos: semifinales en tbd (no pronósticos de usuario)
+    // Con API parcial: solo aparecen ganadores oficiales de cuartos ya jugados
     if (state.picks) {
       const [m1, m2] = state.picks;
-      const allTbd = [m1, m2].every(m => m.home === 'tbd' && m.away === 'tbd');
-      if (!allTbd) {
-        console.error(`✗ Sin resultados KO8, semifinales deberían estar en tbd: KO4-1 ${m1.home} vs ${m1.away}, KO4-2 ${m2.home} vs ${m2.away}`);
+      const results = await page.evaluate(() => {
+        const w = (id) => {
+          const r = typeof results !== 'undefined' ? results[id] : null;
+          if (!r || r.home == null) return null;
+          const h = parseInt(r.home, 10);
+          const a = parseInt(r.away, 10);
+          if (isNaN(h)) return r.winner || null;
+          if (r.winner) return r.winner;
+          const fx = results._fixtures && results._fixtures[id];
+          if (!fx) return null;
+          if (h > a) return fx.home;
+          if (a > h) return fx.away;
+          return null;
+        };
+        return { ko8_1: w('KO8-1'), ko8_2: w('KO8-2'), ko8_3: w('KO8-3'), ko8_4: w('KO8-4') };
+      });
+      const exp1h = results.ko8_1 || 'tbd';
+      const exp1a = results.ko8_2 || 'tbd';
+      const exp2h = results.ko8_3 || 'tbd';
+      const exp2a = results.ko8_4 || 'tbd';
+      if (m1.home !== exp1h || m1.away !== exp1a) {
+        console.error(`✗ KO4-1 esperado ${exp1h} vs ${exp1a}, obtuvo ${m1.home} vs ${m1.away}`);
         ok = false;
       } else {
-        console.log('✓ KO4-1 y KO4-2 en tbd hasta resultados oficiales de cuartos');
+        console.log(`✓ KO4-1 (P101): ${m1.home} vs ${m1.away} — según API cuartos`);
+      }
+      if (m2.home !== exp2h || m2.away !== exp2a) {
+        console.error(`✗ KO4-2 esperado ${exp2h} vs ${exp2a}, obtuvo ${m2.home} vs ${m2.away}`);
+        ok = false;
+      } else {
+        console.log(`✓ KO4-2 (P102): ${m2.home} vs ${m2.away} — según API cuartos`);
       }
     }
 

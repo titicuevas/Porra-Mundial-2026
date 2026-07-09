@@ -1,2 +1,2 @@
 /** Única fuente de versión de la app. Tras cambiar: node scripts/sync-version.js */
-window.PORRA_BUILD = '142';
+window.PORRA_BUILD = '143';

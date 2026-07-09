@@ -30,7 +30,6 @@
         sessionStorage.setItem('porra2026_ko_focus', 'r4');
         sessionStorage.setItem('porra2026_ko_semis_preview', '1');
         sessionStorage.setItem(KO_PREVIEW_KEY, '1');
-        localStorage.setItem(KO_PREVIEW_KEY, '1');
       }
       if (localStorage.getItem(KO_LAB_KEY) === '1') {
         sessionStorage.setItem(KO_PREVIEW_KEY, '1');
@@ -473,6 +472,19 @@
       match.away = away || 'tbd';
     });
     applyKoFixturesFromOfficial();
+    pruneInvalidKoPicks();
+  }
+
+  /** Quita pronósticos en partidos sin cruces oficiales (evita "completo" con equipos fantasma). */
+  function pruneInvalidKoPicks() {
+    if (!koStore.users) return;
+    Object.keys(koStore.users).forEach(name => {
+      const picks = koStore.users[name] && koStore.users[name].picks;
+      if (!picks) return;
+      KO_R4_MATCHES.forEach(m => {
+        if (!isMatchReady(m) && picks[m.id]) delete picks[m.id];
+      });
+    });
   }
 
   const KO_SEMI_SLOT_LABELS = ['SF izq. 1', 'SF der. 1', 'SF izq. 2', 'SF der. 2'];
@@ -1010,13 +1022,12 @@
   function isKoSemisPhase() {
     if (!canViewSemisBracket()) return false;
     if (isKoRoundOfficiallyOpen('r4')) return true;
-    if (isKoRoundClosedBySchedule('r8')) return true;
     if (isKnockoutPreviewUnlocked() && isKoSemisPreviewRequested()) return true;
     return false;
   }
 
   function isKoSemisPreviewOnly() {
-    return isKoSemisPhase() && !isKoRoundOfficiallyOpen('r4');
+    return isKoSemisPhase() && !isKoRoundOfficiallyOpen('r4') && isKoSemisPreviewRequested();
   }
 
   function isKoSemisPreviewActive() {
@@ -1032,7 +1043,7 @@
     return isKnockoutAccessible()
       && isKoRoundClosedBySchedule('r8')
       && !isKoRoundOfficiallyOpen('r4')
-      && !isKnockoutPreviewUnlocked();
+      && !isKoSemisPreviewRequested();
   }
 
   /** Fase activa de octavos en UI y PDF. */
@@ -1975,7 +1986,7 @@
       syncKnockoutBracketFromResults();
       KO_R8_MATCHES.forEach(m => renderKoMatchRow(m.id));
     }
-    if (rKey === 'r8' && (isKoSemisPhase() || isKoR4PreviewActive() || isKoLabEnabled())) {
+    if (rKey === 'r8' && (isKoLabEnabled() || allKoR8ResultsComplete())) {
       syncKnockoutBracketFromResults();
       KO_R4_MATCHES.forEach(m => renderKoMatchRow(m.id));
     }
@@ -2158,7 +2169,7 @@
       return;
     }
     if (isKoWaitingForSemisPublic()) {
-      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Cuartos cerrados</strong> — semifinales abren el <strong>${formatKoOpensAtShort('r4')}</strong>.</p></div>`);
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Cuartos cerrados</strong> — semifinales abren el <strong>${formatKoOpensAtShort('r4')}</strong>. Los cruces se cargan desde <strong>resultados oficiales</strong> (API).</p></div>`);
       parts.push(koAccessCodeInlineHTML());
       parts.push(koRoundCardHTML(KO_ROUNDS.r4, { preview: true, locked: true, focus: true, suppressBanner: true }));
       const upcoming = getUpcomingKoRounds();
