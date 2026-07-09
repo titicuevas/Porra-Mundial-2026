@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Prueba de generación PDF (octavos + cuartos).
+ * Prueba de generación PDF (octavos + cuartos + semifinales).
  * Uso:
  *   cp scripts/test-pdf-export.mjs /tmp/porra-pdf-test/ && cd /tmp/porra-pdf-test
  *   npm init -y && npm install playwright && npx playwright install chromium
@@ -18,6 +18,7 @@ const BASE = process.argv[2] || 'http://localhost:8765';
 const USER = 'Manolín';
 
 const CUARTOS_DATE = '2026-07-08T10:00:00+02:00';
+const SEMIS_DATE = '2026-07-14T10:00:00+02:00';
 const OCTAVOS_DATE = '2026-07-04T12:00:00+02:00';
 
 function isPdf(buf) {
@@ -70,6 +71,11 @@ async function seedKnockoutPicks(page, round) {
       for (let i = 1; i <= 8; i++) picks['KO16-' + i] = i % 2 ? 'home' : 'away';
       for (let i = 1; i <= 4; i++) picks['KO8-' + i] = 'home';
     }
+    if (round === 'semis') {
+      for (let i = 1; i <= 8; i++) picks['KO16-' + i] = i % 2 ? 'home' : 'away';
+      for (let i = 1; i <= 4; i++) picks['KO8-' + i] = i % 2 ? 'home' : 'away';
+      for (let i = 1; i <= 2; i++) picks['KO4-' + i] = 'home';
+    }
     store.activeUser = user;
     localStorage.setItem('porra2026_knockout', JSON.stringify(store));
     localStorage.setItem('porra2026_ko_preview', '1');
@@ -99,16 +105,22 @@ async function testKoPdf(page, { label, dateIso, round, filename }) {
       for (let i = 1; i <= 8; i++) picks['KO16-' + i] = i % 2 ? 'home' : 'away';
       for (let i = 1; i <= 4; i++) picks['KO8-' + i] = 'home';
     }
+    if (round === 'semis') {
+      for (let i = 1; i <= 8; i++) picks['KO16-' + i] = i % 2 ? 'home' : 'away';
+      for (let i = 1; i <= 4; i++) picks['KO8-' + i] = i % 2 ? 'home' : 'away';
+      for (let i = 1; i <= 2; i++) picks['KO4-' + i] = 'home';
+    }
     store.activeUser = user;
     localStorage.setItem('porra2026_knockout', JSON.stringify(store));
     localStorage.setItem('porra2026_ko_preview', '1');
   }, { user: USER, round });
 
-  await page.goto(`${BASE}/?ko_round=${round === 'cuartos' ? 'cuartos' : 'octavos'}`, {
-    waitUntil: 'networkidle',
+  await page.goto(`${BASE}/?ko_round=${round === 'semis' ? 'semis' : round === 'cuartos' ? 'cuartos' : 'octavos'}`, {
+    waitUntil: 'load',
     timeout: 60000
   });
-  await page.waitForTimeout(2000);
+  await page.waitForFunction(() => typeof getKnockoutExportBlockers === 'function', null, { timeout: 30000 });
+  await page.waitForTimeout(1500);
 
   const seeded = await seedKnockoutPicks(page, round);
 
@@ -116,6 +128,7 @@ async function testKoPdf(page, { label, dateIso, round, filename }) {
     user: typeof getActiveKoUser === 'function' ? getActiveKoUser() : '',
     kind: typeof getKoPdfKind === 'function' ? getKoPdfKind() : '',
     cuartos: typeof isKoCuartosPhase === 'function' && isKoCuartosPhase(),
+    semis: typeof isKoSemisPhase === 'function' && isKoSemisPhase(),
     octavos: typeof isKoOctavosPhase === 'function' && isKoOctavosPhase(),
     blockers: typeof getKnockoutExportBlockers === 'function' ? getKnockoutExportBlockers() : ['?'],
     complete: typeof isKnockoutComplete === 'function' && isKnockoutComplete(),
@@ -144,7 +157,8 @@ async function main() {
   try {
     for (const cfg of [
       { label: 'PDF octavos', dateIso: OCTAVOS_DATE, round: 'octavos', filename: 'test-octavos.pdf' },
-      { label: 'PDF cuartos', dateIso: CUARTOS_DATE, round: 'cuartos', filename: 'test-cuartos.pdf' }
+      { label: 'PDF cuartos', dateIso: CUARTOS_DATE, round: 'cuartos', filename: 'test-cuartos.pdf' },
+      { label: 'PDF semifinales', dateIso: SEMIS_DATE, round: 'semis', filename: 'test-semis.pdf' }
     ]) {
       const p = await browser.newPage();
       p.on('pageerror', e => console.error('PAGE ERR:', e.message));

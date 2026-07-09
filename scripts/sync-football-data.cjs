@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Actualiza results.json desde football-data.org (dieciseisavos, octavos, cuartos).
+ * Actualiza results.json desde football-data.org (dieciseisavos, octavos, cuartos, semifinales).
  *
  * Uso:
  *   FOOTBALL_DATA_TOKEN=xxx node scripts/sync-football-data.cjs
@@ -59,7 +59,10 @@ async function main() {
   const { updates, details, stages, fixtures } = await fetchKoUpdatesFromFootballData(token, base);
 
   stages.forEach(s => {
-    const label = s.stage === 'r32' ? 'KO32' : s.stage === 'r16' ? 'KO16' : 'KO8';
+    const label = s.stage === 'r32' ? 'KO32'
+      : s.stage === 'r16' ? 'KO16'
+        : s.stage === 'r8' ? 'KO8'
+          : 'KO4';
     const fx = s.fixtures != null ? `, ${s.fixtures} cruces` : '';
     console.log(`football-data.org ${s.stage}: ${s.rawCount} partidos, ${s.mapped} mapeados a ${label}${fx}`);
   });

@@ -72,9 +72,15 @@
     [3, 7], [1, 13], [2, 15], [0, 8], [10, 6], [4, 11], [12, 14], [5, 9]
   ];
 
-  /** Ganadores KO16 (índice 0–7 = M89–M96) → cuartos KO8-1…4 (P97–P100). */
+  /** Ganadores KO16 (índice 0–7) → cada cuarto KO8-1…4 (P97–P100).
+   *  FIFA cruza lados: P98←P93/P94, P99←P91/P92 (no lineal 0-1, 2-3, 4-5, 6-7). */
   const R8_FEEDERS = [
     [0, 1], [4, 5], [2, 3], [6, 7]
+  ];
+
+  /** Ganadores KO8 (índice 0–3) → cada semifinal KO4-1…2 (P101–P102). */
+  const R4_FEEDERS = [
+    [0, 1], [2, 3]
   ];
 
   window.FIFA_KO_SCHEDULE = {
@@ -85,6 +91,7 @@
     R4_META,
     FINAL_META,
     R16_FEEDERS,
-    R8_FEEDERS
+    R8_FEEDERS,
+    R4_FEEDERS
   };
 })();

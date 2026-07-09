@@ -299,6 +299,7 @@ function getCountdownToKoLock() {
 }
 
 function getActiveKoCountdownRound() {
+  if (typeof isKoSemisPhase === 'function' && isKoSemisPhase()) return 'r4';
   if (typeof isKoCuartosPhase === 'function' && isKoCuartosPhase()) return 'r8';
   if (typeof isKoOctavosPhase === 'function' && isKoOctavosPhase()) {
     if (typeof isKoRoundPickable === 'function' && isKoRoundPickable('r16')) return 'r16';
@@ -337,16 +338,21 @@ function renderKoCountdown() {
   let label;
   let when;
   if (closeC) {
-    if (koRound === 'r8') {
+    if (koRound === 'r4') {
+      label = '⏳ Cierra el plazo de semifinales en:';
+    } else if (koRound === 'r8') {
       label = '⏳ Cierra el plazo de cuartos de final en:';
     } else if (koRound === 'r16') {
       label = '⏳ Cierra el plazo de octavos de final en:';
     } else {
       label = '⏳ Cierra el plazo (especiales + dieciseisavos) en:';
     }
-    when = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort(koRound) : (koRound === 'r8' ? '9 jul, 22:00' : koRound === 'r16' ? '4 jul, 19:00' : '28 jun, 21:00');
+    when = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort(koRound) : (koRound === 'r4' ? '14 jul, 21:00' : koRound === 'r8' ? '9 jul, 22:00' : koRound === 'r16' ? '4 jul, 19:00' : '28 jun, 21:00');
   } else {
-    if (koRound === 'r8') {
+    if (koRound === 'r4') {
+      label = '⏳ Abren semifinales en:';
+      when = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '14 jul, 07:00';
+    } else if (koRound === 'r8') {
       label = '⏳ Abren cuartos de final en:';
       when = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r8') : '8 jul, 08:00';
     } else if (koRound === 'r16') {
@@ -383,16 +389,20 @@ function updateKoCountdownDisplay() {
 
 function updateShareLinks() {
   const base = 'https://porra-mundial-2026-rust.vercel.app/';
-  const cuartos = typeof shouldPrioritizeCuartos === 'function' && shouldPrioritizeCuartos()
+  const semis = typeof shouldPrioritizeSemis === 'function' && shouldPrioritizeSemis()
+    && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r4');
+  const cuartos = !semis && typeof shouldPrioritizeCuartos === 'function' && shouldPrioritizeCuartos()
     && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r8');
-  const octavos = !cuartos && typeof shouldPrioritizeOctavos === 'function' && shouldPrioritizeOctavos()
+  const octavos = !semis && !cuartos && typeof shouldPrioritizeOctavos === 'function' && shouldPrioritizeOctavos()
     && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r16');
-  const url = cuartos ? base + '?ko_round=cuartos' : octavos ? base + '?ko_round=octavos' : base;
-  const msg = cuartos
-    ? '⚽ Porra Mundial 2026 — cuartos de final abiertos. Marca tus cruces:'
-    : octavos
-      ? '⚽ Porra Mundial 2026 — octavos de final abiertos. Marca tus cruces:'
-      : '⚽ Porra Mundial 2026 — la quiniela que cuenta son las eliminatorias';
+  const url = semis ? base + '?ko_round=semis' : cuartos ? base + '?ko_round=cuartos' : octavos ? base + '?ko_round=octavos' : base;
+  const msg = semis
+    ? '⚽ Porra Mundial 2026 — semifinales abiertas. Marca tus cruces:'
+    : cuartos
+      ? '⚽ Porra Mundial 2026 — cuartos de final abiertos. Marca tus cruces:'
+      : octavos
+        ? '⚽ Porra Mundial 2026 — octavos de final abiertos. Marca tus cruces:'
+        : '⚽ Porra Mundial 2026 — la quiniela que cuenta son las eliminatorias';
   const wa = 'https://wa.me/?text=' + encodeURIComponent(url + ' ' + msg);
   document.querySelectorAll('.btn-share--wa').forEach(a => { a.href = wa; });
   document.querySelectorAll('.btn-share--official').forEach(a => { a.href = url; });
@@ -432,6 +442,12 @@ function renderScheduleBanner() {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Fase de grupos cerrada</strong> desde el 11 jun, 21:00. Ya no se pueden cambiar los pronósticos de grupos.</div>';
   } else if (typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular)</div>';
+  } else if (typeof isKoWaitingForSemisPublic === 'function' && isKoWaitingForSemisPublic()) {
+    const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '14 jul, 07:00';
+    const codeHint = typeof shouldShowKoAccessCodeBtn === 'function' && shouldShowKoAccessCodeBtn()
+      ? ' · <strong>🔑 Código</strong> para probar'
+      : '';
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Cuartos cerrados</strong> — partidos en juego · semifinales abren el <strong>' + opens + '</strong>' + codeHint + '</div>';
   } else if (typeof isKoWaitingForCuartosPublic === 'function' && isKoWaitingForCuartosPublic()) {
     const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r8') : '8 jul, 08:00';
     const codeHint = typeof shouldShowKoAccessCodeBtn === 'function' && shouldShowKoAccessCodeBtn()
@@ -443,6 +459,17 @@ function renderScheduleBanner() {
     && typeof isKoRoundClosedBySchedule === 'function' && !isKoRoundClosedBySchedule('r16')) {
     const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r16') : '4 jul, 10:00';
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Dieciseisavos cerrados</strong> (28 jun, 21:00). Los octavos abren el <strong>' + opens + '</strong>. Organizadores: <strong>🔑 Código</strong> para probar antes.</div>';
+  } else if (typeof isKoSemisPreviewOnly === 'function' && isKoSemisPreviewOnly()) {
+    const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r4') : '14 jul, 21:00';
+    el.innerHTML = '<div class="schedule-banner schedule-open">🧪 <strong>Semifinales en prueba</strong> (código) — el público las verá el <strong>14 jul, 07:00</strong> · cierran <strong>' + closeLabel + '</strong></div>';
+  } else if (typeof isKoSemisPhase === 'function' && isKoSemisPhase()
+    && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r4')) {
+    const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r4') : '14 jul, 21:00';
+    el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Semifinales abiertas</strong> — elige participante y marca semifinales · cierran <strong>' + closeLabel + '</strong></div>';
+  } else if (typeof isKoSemisPhase === 'function' && isKoSemisPhase()
+    && typeof isKoRoundClosed === 'function' && isKoRoundClosed('r4')) {
+    const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r4') : '14 jul, 21:00';
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Semifinales cerradas</strong> — plazo finalizado a las <strong>' + closeLabel + '</strong></div>';
   } else if (typeof isKoCuartosPreviewOnly === 'function' && isKoCuartosPreviewOnly()) {
     const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r8') : '9 jul, 22:00';
     el.innerHTML = '<div class="schedule-banner schedule-open">🧪 <strong>Cuartos en prueba</strong> (código) — el público los verá el <strong>8 jul, 08:00</strong> · cierran <strong>' + closeLabel + '</strong></div>';
@@ -496,9 +523,11 @@ function tickSchedule() {
   const r16Closed = typeof isKoRoundClosed === 'function' ? isKoRoundClosed('r16') : false;
   const r8Pickable = typeof isKoRoundPickable === 'function' ? isKoRoundPickable('r8') : false;
   const r8Closed = typeof isKoRoundClosed === 'function' ? isKoRoundClosed('r8') : false;
+  const r4Pickable = typeof isKoRoundPickable === 'function' ? isKoRoundPickable('r4') : false;
+  const r4Closed = typeof isKoRoundClosed === 'function' ? isKoRoundClosed('r4') : false;
   updateCountdownDisplay();
   updateKoCountdownDisplay();
-  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard || ko !== window._schedKo || koOpenNow !== koOpenDone || r32Pickable !== window._schedR32Pickable || r32Closed !== window._schedR32Closed || r16Pickable !== window._schedR16Pickable || r16Closed !== window._schedR16Closed || r8Pickable !== window._schedR8Pickable || r8Closed !== window._schedR8Closed) {
+  if (g !== window._schedGroups || e !== window._schedExtras || lb !== window._schedLeaderboard || ko !== window._schedKo || koOpenNow !== koOpenDone || r32Pickable !== window._schedR32Pickable || r32Closed !== window._schedR32Closed || r16Pickable !== window._schedR16Pickable || r16Closed !== window._schedR16Closed || r8Pickable !== window._schedR8Pickable || r8Closed !== window._schedR8Closed || r4Pickable !== window._schedR4Pickable || r4Closed !== window._schedR4Closed) {
     window._schedGroups = g;
     window._schedExtras = e;
     window._schedLeaderboard = lb;
@@ -510,6 +539,8 @@ function tickSchedule() {
     window._schedR16Closed = r16Closed;
     window._schedR8Pickable = r8Pickable;
     window._schedR8Closed = r8Closed;
+    window._schedR4Pickable = r4Pickable;
+    window._schedR4Closed = r4Closed;
     renderScheduleBanner();
     renderGroups();
     if (typeof renderKnockout === 'function') renderKnockout();

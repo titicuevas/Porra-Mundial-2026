@@ -139,6 +139,31 @@ requiredFns.forEach((fn) => {
   });
   if (bracketOk) pass('Cuadro KO (dieciseisavos + octavos) coincide con FIFA P73–P96');
   else fail('Cuadro KO desalineado respecto a FIFA — revisa js/schedule.js y knockout.js');
+
+  const r8Block = sched.match(/const R8_FEEDERS = (\[[\s\S]*?\]);/);
+  const r4Block = sched.match(/const R4_FEEDERS = (\[[\s\S]*?\]);/);
+  if (r8Block && r4Block) {
+    const r8Feeders = eval(r8Block[1]);
+    const r4Feeders = eval(r4Block[1]);
+    const fifaR8 = { 97: [0, 1], 98: [4, 5], 99: [2, 3], 100: [6, 7] };
+    const fifaR4 = { 101: [0, 1], 102: [2, 3] };
+    let r8Ok = true;
+    let r4Ok = true;
+    r8Feeders.forEach((pair, i) => {
+      const m = 97 + i;
+      const exp = fifaR8[m];
+      if (!exp || pair[0] !== exp[0] || pair[1] !== exp[1]) r8Ok = false;
+    });
+    r4Feeders.forEach((pair, i) => {
+      const m = 101 + i;
+      const exp = fifaR4[m];
+      if (!exp || pair[0] !== exp[0] || pair[1] !== exp[1]) r4Ok = false;
+    });
+    if (r8Ok) pass('Cuartos KO8-1…4 alineados con FIFA P97–P100 (lados del cuadro)');
+    else fail('Cuartos desalineados — R8_FEEDERS debe ser [[0,1],[4,5],[2,3],[6,7]]');
+    if (r4Ok) pass('Semifinales KO4-1…2 alineadas con FIFA P101–P102');
+    else fail('Semifinales desalineadas — R4_FEEDERS debe ser [[0,1],[2,3]]');
+  }
 })();
 
 // 6. JSON válidos
