@@ -1159,21 +1159,15 @@
   }
 
   function koMatchesRequiredCount() {
-    if (isKoSemisPhase()) return KO_R4_MATCHES.length;
-    if (isKoCuartosPhase()) return KO_R8_MATCHES.length;
-    if (isKoOctavosPhase()) return KO_R16_MATCHES.length;
+    const active = koActiveRoundMatches();
+    if (active) return active.length;
     return getQuinielaMatchPool().length;
   }
 
   function koMatchesDoneCount() {
-    if (isKoSemisPhase()) {
-      return KO_R4_MATCHES.filter(m => getKoPick(m.id)).length;
-    }
-    if (isKoCuartosPhase()) {
-      return KO_R8_MATCHES.filter(m => getKoPick(m.id)).length;
-    }
-    if (isKoOctavosPhase()) {
-      return KO_R16_MATCHES.filter(m => getKoPick(m.id)).length;
+    const active = koActiveRoundMatches();
+    if (active) {
+      return active.filter(m => isMatchReady(m) && getKoPick(m.id)).length;
     }
     return getQuinielaMatchPool().filter(m => getKoPick(m.id)).length;
   }
@@ -1437,6 +1431,39 @@
     return n;
   }
 
+  function koActiveRoundMatches() {
+    if (isKoSemisPhase()) return KO_R4_MATCHES;
+    if (isKoCuartosPhase()) return KO_R8_MATCHES;
+    if (isKoOctavosPhase()) return KO_R16_MATCHES;
+    return null;
+  }
+
+  function koRoundPickStatus(matches) {
+    const total = matches.length;
+    const ready = matches.filter(isMatchReady);
+    const done = matches.filter(m => isMatchReady(m) && getKoPick(m.id)).length;
+    return {
+      total,
+      ready: ready.length,
+      done,
+      pendingOfficial: total - ready.length,
+      allReady: ready.length === total
+    };
+  }
+
+  function koRoundExportBlockers(matches, label) {
+    const blockers = [];
+    const st = koRoundPickStatus(matches);
+    if (st.pendingOfficial > 0) {
+      blockers.push(`${label}: faltan ${st.pendingOfficial} cruce(s) oficial(es) (${st.ready}/${st.total} definidos).`);
+      return blockers;
+    }
+    if (st.done < st.total) {
+      blockers.push(`${label}: ${st.done}/${st.total} cruces marcados.`);
+    }
+    return blockers;
+  }
+
   function getKnockoutExportBlockers() {
     const blockers = [];
     if (!isKnockoutAccessible()) {
@@ -1447,23 +1474,14 @@
       blockers.push('Elige un participante arriba.');
       return blockers;
     }
-    if (isKoSemisPhase()) {
-      const req = koMatchesRequired();
-      const md = koMatchesDone();
-      if (md < req) blockers.push(`Semifinales: ${md}/${req} cruces marcados.`);
+    if (isKoWaitingForSemisPublic()) {
+      blockers.push(`Semifinales abren el ${formatKoOpensAtShort('r4')} — espera los cruces oficiales de cuartos.`);
       return blockers;
     }
-    if (isKoCuartosPhase()) {
-      const req = koMatchesRequired();
-      const md = koMatchesDone();
-      if (md < req) blockers.push(`Cuartos: ${md}/${req} cruces marcados.`);
-      return blockers;
-    }
-    if (isKoOctavosPhase()) {
-      const req = koMatchesRequired();
-      const md = koMatchesDone();
-      if (md < req) blockers.push(`Octavos: ${md}/${req} cruces marcados.`);
-      return blockers;
+    const activeRound = koActiveRoundMatches();
+    if (activeRound) {
+      const label = isKoSemisPhase() ? 'Semifinales' : isKoCuartosPhase() ? 'Cuartos' : 'Octavos';
+      return koRoundExportBlockers(activeRound, label);
     }
     const ex = getActiveKoData().extras;
     const extrasDone = koExtrasDone();
@@ -2884,13 +2902,16 @@
     const ed = koExtrasDone();
     const complete = isKnockoutComplete();
     if (isKoSemisPhase()) {
+      const rps = koRoundPickStatus(KO_R4_MATCHES);
       if (!getActiveKoUser()) {
         st.textContent = 'Elige un participante arriba para marcar semifinales.';
+      } else if (rps.pendingOfficial > 0) {
+        st.textContent = `Semifinales: ${rps.ready}/${rps.total} cruces oficiales · faltan ${rps.pendingOfficial} por resultados de cuartos`;
       } else if (complete) {
         st.textContent = '✓ Semifinales completas — puedes exportar el PDF';
       } else {
         const closeHint = isKoRoundPickable('r4') ? ` · cierran ${formatKoRoundCloseShort('r4')}` : '';
-        st.textContent = `Semifinales: ${md}/${req}${closeHint} · PDF al completar los 2 cruces`;
+        st.textContent = `Semifinales: ${rps.done}/${rps.total}${closeHint} · PDF al completar los 2 cruces`;
       }
       st.className = complete
         ? 'text-xs text-green-400 font-medium mt-3'
@@ -2910,6 +2931,7 @@
         btn.style.opacity = canClear ? '1' : '.45';
         btn.style.pointerEvents = canClear ? '' : 'none';
       });
+      koWasComplete = complete;
       return;
     }
     if (isKoCuartosPhase()) {
@@ -2939,6 +2961,7 @@
         btn.style.opacity = canClear ? '1' : '.45';
         btn.style.pointerEvents = canClear ? '' : 'none';
       });
+      koWasComplete = complete;
       return;
     }
     if (isKoOctavosPhase()) {
@@ -2968,6 +2991,7 @@
         btn.style.opacity = canClear ? '1' : '.45';
         btn.style.pointerEvents = canClear ? '' : 'none';
       });
+      koWasComplete = complete;
       return;
     }
     if (!getActiveKoUser()) {
