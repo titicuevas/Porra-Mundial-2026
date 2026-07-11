@@ -420,6 +420,10 @@
     "KO8-4": {
       "home": "ar",
       "away": "ch"
+    },
+    "KO4-1": {
+      "home": "fr",
+      "away": "es"
     }
   },
   "KO16-1": {
@@ -461,5 +465,10 @@
     "home": 2,
     "away": 0,
     "winner": "fr"
+  },
+  "KO8-2": {
+    "home": 2,
+    "away": 1,
+    "winner": "es"
   }
 }
