@@ -6,12 +6,14 @@
     extrasOpen: '2026-06-01T00:00:00+02:00'
   };
 
-  /** Apertura de pronósticos por ronda (cierra al pitido del 1er partido de la ronda). */
+  /** Apertura de pronósticos por ronda.
+   *  Cierre = pitido del 1er partido (KO_ROUND_CLOSES en knockout.js).
+   *  Semis (r4): apertura dinámica al terminar cuartos; cierre fijo 14 jul 21:00 (P101). */
   const ROUND_OPENS = {
     r32: '2026-06-28T10:00:00+02:00',
     r16: '2026-07-04T10:00:00+02:00',
     r8: '2026-07-08T08:00:00+02:00',
-    r4: '2026-07-14T07:00:00+02:00',
+    r4: '2026-07-12T05:30:00+02:00',
     r2: '2026-07-19T07:00:00+02:00'
   };
 

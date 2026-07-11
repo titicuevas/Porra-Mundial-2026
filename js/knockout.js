@@ -65,7 +65,7 @@
     r32: '2026-06-28T10:00:00+02:00',
     r16: '2026-07-04T10:00:00+02:00',
     r8: '2026-07-09T07:00:00+02:00',
-    r4: '2026-07-14T07:00:00+02:00',
+    r4: '2026-07-12T05:30:00+02:00',
     r2: '2026-07-19T07:00:00+02:00'
   };
 
@@ -76,6 +76,28 @@
       if (!best || m.sortAt < best) best = m.sortAt;
     });
     return best;
+  }
+
+  function koRoundLastKickoffIso(matches) {
+    let best = null;
+    (matches || []).forEach(m => {
+      if (!m || !m.sortAt) return;
+      if (!best || m.sortAt > best) best = m.sortAt;
+    });
+    return best;
+  }
+
+  /** Estimación fin del último partido de cuartos (KO8-4, ~2h30 tras pitido).
+   *  Apertura semis ≠ cierre: abren al terminar cuartos; cierran al pitido de KO4-1 (P101). */
+  const KO_R8_MATCH_END_BUFFER_MS = 150 * 60 * 1000;
+
+  function getKoSemisOpensAtMs() {
+    if (allKoR8ResultsComplete()) return Date.now();
+    const lastKick = koRoundLastKickoffIso(KO_R8_MATCHES);
+    if (lastKick) {
+      return new Date(lastKick).getTime() + KO_R8_MATCH_END_BUFFER_MS;
+    }
+    return new Date(KO_ROUND_OPENS.r4).getTime();
   }
 
   // Terceros posibles por partido R32 (Anexo FIFA — hueco 3P)
@@ -644,6 +666,11 @@
   }
 
   function isKoRoundOfficiallyOpen(key) {
+    if (key === 'r4') {
+      if (!isKoRoundClosedBySchedule('r8')) return false;
+      if (allKoR8ResultsComplete()) return true;
+      return Date.now() >= getKoSemisOpensAtMs();
+    }
     return Date.now() >= new Date(KO_ROUND_OPENS[key]).getTime();
   }
 
@@ -753,7 +780,8 @@
   }
 
   function formatKoOpensAtShort(key) {
-    const d = new Date(KO_ROUND_OPENS[key]);
+    const openAt = key === 'r4' ? getKoSemisOpensAtMs() : new Date(KO_ROUND_OPENS[key]).getTime();
+    const d = new Date(openAt);
     const date = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' });
     const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
     return date + ' · ' + time;
@@ -783,6 +811,19 @@
   }
 
   function getCountdownToKoRoundOpen(key) {
+    if (key === 'r4') {
+      if (isKoRoundOfficiallyOpen('r4')) return null;
+      if (!isKoRoundClosedBySchedule('r8')) return null;
+      const ms = getKoSemisOpensAtMs() - Date.now();
+      if (ms <= 0) return null;
+      const total = Math.floor(ms / 1000);
+      return {
+        h: Math.floor(total / 3600),
+        m: Math.floor((total % 3600) / 60),
+        s: total % 60,
+        ms
+      };
+    }
     const openAt = KO_ROUND_OPENS[key];
     if (!openAt) return null;
     if (isKoRoundOfficiallyOpen(key)) return null;
@@ -996,7 +1037,7 @@
     return isKnockoutPreviewUnlocked() && !isKoRoundOfficiallyOpen('r8');
   }
 
-  /** Semifinales visibles: lun 14 jul 07:00 (público) o código desde cuartos abiertos (prueba). */
+  /** Semifinales visibles: tras el último cuarto (API o fin estimado KO8-4) o código en prueba. */
   function canViewSemisBracket() {
     if (!isKnockoutAccessible()) return false;
     if (isKoRoundOfficiallyOpen('r4')) return true;
@@ -1038,7 +1079,7 @@
     return isKoSemisPreviewActive();
   }
 
-  /** Entre cierre cuartos (9 jul 22:00) y apertura semis (14 jul 07:00), sin código. */
+  /** Entre cierre plazo cuartos (9 jul 22:00) y apertura semis (fin KO8-4), sin código. */
   function isKoWaitingForSemisPublic() {
     return isKnockoutAccessible()
       && isKoRoundClosedBySchedule('r8')
@@ -2187,7 +2228,7 @@
       return;
     }
     if (isKoWaitingForSemisPublic()) {
-      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Cuartos cerrados</strong> — semifinales abren el <strong>${formatKoOpensAtShort('r4')}</strong>. Los cruces se cargan desde <strong>resultados oficiales</strong> (API).</p></div>`);
+      parts.push(`<div class="app-reload-banner ko-bracket-banner"><p>🔒 <strong>Cuartos en juego</strong> — semifinales abren al terminar el <strong>último cuarto</strong> (est. <strong>${formatKoOpensAtShort('r4')}</strong>). Plazo para marcar hasta el <strong>${formatKoRoundCloseShort('r4')}</strong> (pitido P101 Dallas).</p></div>`);
       parts.push(koAccessCodeInlineHTML());
       parts.push(koRoundCardHTML(KO_ROUNDS.r4, { preview: true, locked: true, focus: true, suppressBanner: true }));
       const upcoming = getUpcomingKoRounds();

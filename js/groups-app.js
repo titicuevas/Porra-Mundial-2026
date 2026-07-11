@@ -300,6 +300,10 @@ function getCountdownToKoLock() {
 
 function getActiveKoCountdownRound() {
   if (typeof isKoSemisPhase === 'function' && isKoSemisPhase()) return 'r4';
+  if (typeof isKoRoundClosedBySchedule === 'function' && isKoRoundClosedBySchedule('r8')
+    && typeof isKoRoundOfficiallyOpen === 'function' && !isKoRoundOfficiallyOpen('r4')) {
+    return 'r4';
+  }
   if (typeof isKoCuartosPhase === 'function' && isKoCuartosPhase()) return 'r8';
   if (typeof isKoOctavosPhase === 'function' && isKoOctavosPhase()) {
     if (typeof isKoRoundPickable === 'function' && isKoRoundPickable('r16')) return 'r16';
@@ -350,8 +354,8 @@ function renderKoCountdown() {
     when = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort(koRound) : (koRound === 'r4' ? '14 jul, 21:00' : koRound === 'r8' ? '9 jul, 22:00' : koRound === 'r16' ? '4 jul, 19:00' : '28 jun, 21:00');
   } else {
     if (koRound === 'r4') {
-      label = '⏳ Abren semifinales en:';
-      when = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '14 jul, 07:00';
+      label = '⏳ Abren semifinales (fin de cuartos) en:';
+      when = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '12 jul, 05:30';
     } else if (koRound === 'r8') {
       label = '⏳ Abren cuartos de final en:';
       when = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r8') : '8 jul, 08:00';
