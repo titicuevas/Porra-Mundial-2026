@@ -447,11 +447,12 @@ function renderScheduleBanner() {
   } else if (typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular)</div>';
   } else if (typeof isKoWaitingForSemisPublic === 'function' && isKoWaitingForSemisPublic()) {
-    const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '14 jul, 07:00';
+    const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '12 jul, 05:30';
+    const closes = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r4') : '14 jul, 21:00';
     const codeHint = typeof shouldShowKoAccessCodeBtn === 'function' && shouldShowKoAccessCodeBtn()
       ? ' · <strong>🔑 Código</strong> para probar'
       : '';
-    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Cuartos cerrados</strong> — partidos en juego · semifinales abren el <strong>' + opens + '</strong>' + codeHint + '</div>';
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Cuartos en juego</strong> — semifinales abren al terminar el último cuarto (est. <strong>' + opens + '</strong>) · cierran <strong>' + closes + '</strong>' + codeHint + '</div>';
   } else if (typeof isKoWaitingForCuartosPublic === 'function' && isKoWaitingForCuartosPublic()) {
     const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r8') : '8 jul, 08:00';
     const codeHint = typeof shouldShowKoAccessCodeBtn === 'function' && shouldShowKoAccessCodeBtn()
@@ -464,8 +465,9 @@ function renderScheduleBanner() {
     const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r16') : '4 jul, 10:00';
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Dieciseisavos cerrados</strong> (28 jun, 21:00). Los octavos abren el <strong>' + opens + '</strong>. Organizadores: <strong>🔑 Código</strong> para probar antes.</div>';
   } else if (typeof isKoSemisPreviewOnly === 'function' && isKoSemisPreviewOnly()) {
+    const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '12 jul, 05:30';
     const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r4') : '14 jul, 21:00';
-    el.innerHTML = '<div class="schedule-banner schedule-open">🧪 <strong>Semifinales en prueba</strong> (código) — el público las verá el <strong>14 jul, 07:00</strong> · cierran <strong>' + closeLabel + '</strong></div>';
+    el.innerHTML = '<div class="schedule-banner schedule-open">🧪 <strong>Semifinales en prueba</strong> (código) — el público las verá al terminar cuartos (est. <strong>' + opens + '</strong>) · cierran <strong>' + closeLabel + '</strong></div>';
   } else if (typeof isKoSemisPhase === 'function' && isKoSemisPhase()
     && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r4')) {
     const closeLabel = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r4') : '14 jul, 21:00';

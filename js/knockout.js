@@ -3131,7 +3131,7 @@
         if (isKoRoundPickable('r8')) {
           subtitle.textContent = `Octavos cerrados · plazo cuartos abierto hasta ${formatKoRoundCloseShort('r8')}.`;
         } else if (isKoRoundClosed('r8')) {
-          subtitle.textContent = 'Cuartos cerrados · semis abren el 14 jul.';
+          subtitle.textContent = `Cuartos cerrados · semis abren el ${formatKoOpensAtShort('r4')} · cierran ${formatKoRoundCloseShort('r4')}.`;
         } else {
           subtitle.textContent = `Octavos en juego · cuartos abren el ${formatKoOpensAtShort('r8')}.`;
         }
