@@ -308,6 +308,35 @@ body.modal-open{overflow:hidden;}
 .leaderboard-table.leaderboard-table--breakdown{min-width:24rem;}
 .leaderboard-table.leaderboard-table--breakdown th.leaderboard-extras-col,
 .leaderboard-table.leaderboard-table--breakdown td.leaderboard-extras-col{color:#fca5a5;}
+.semis-picks-section{margin-top:1.25rem;}
+.semis-picks-table{min-width:20rem;margin-top:.5rem;}
+.semis-picks-table th.semis-pick-head{background:#6b4f2a;color:#fef3c7;text-align:center;}
+.semis-picks-table th.finalist-pick-head{background:#4a5568;color:#e2e8f0;text-align:center;}
+.semis-picks-table th.champion-pick-head{background:#ca8a04;color:#1c1917;text-align:center;}
+.semis-picks-table th.champion-pick-head span{font-size:.95em;line-height:1;}
+.semis-picks-table .col-h-short{display:none;}
+.semis-picks-table td.semis-pick-col{text-align:center;padding:.45rem .35rem;}
+.semis-picks-table td.leaderboard-name{max-width:11rem;}
+.semis-pick-flag{display:inline-flex;align-items:center;justify-content:center;line-height:0;position:relative;}
+.semis-pick-flag .flag-icon{border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.35);}
+.semis-pick-flag--out{opacity:.42;}
+.semis-pick-flag--out::after{content:'';position:absolute;left:8%;right:8%;top:50%;height:2px;background:#ef4444;transform:rotate(-32deg);box-shadow:0 0 1px rgba(0,0,0,.6);pointer-events:none;}
+.semis-pick-empty{color:#4b5563;font-weight:600;}
+.semis-picks-table tr.leaderboard-me td{background:rgba(37,99,235,.12);}
+@media(max-width:519px){
+  .semis-picks-table{min-width:17.5rem;}
+  .semis-picks-table .col-h-long{display:none;}
+  .semis-picks-table .col-h-short{display:inline;}
+  .semis-picks-table th.semis-pick-head,
+  .semis-picks-table th.finalist-pick-head,
+  .semis-picks-table th.champion-pick-head{font-size:.62rem;letter-spacing:.02em;padding:.4rem .15rem;}
+  .semis-picks-table td.semis-pick-col{padding:.4rem .12rem;}
+  .semis-picks-table td.leaderboard-name{max-width:6.5rem;font-size:.78rem;}
+}
+@media(min-width:520px){
+  .semis-picks-table{min-width:38rem;}
+  .semis-picks-table td.leaderboard-name{max-width:14rem;}
+}
 @media(min-width:520px){
   .leaderboard-table.leaderboard-table--breakdown{min-width:36rem;}
   .leaderboard-table.leaderboard-table--breakdown .leaderboard-breakdown-col{display:table-cell;}

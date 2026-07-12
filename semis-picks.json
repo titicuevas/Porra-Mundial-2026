@@ -1,0 +1,22 @@
+{
+  "updated": "2026-07-12",
+  "entries": [
+    { "name": "Manolín", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "br"], "champion": "es" },
+    { "name": "Enrique Cuevas García", "semis": ["fr", "gb-eng", "es", "ar"], "finalists": ["es", "ar"], "champion": "es" },
+    { "name": "Juan Medina", "semis": ["fr", "gb-eng", "es", "ar"], "finalists": ["es", "ar"], "champion": "es" },
+    { "name": "Felipe Escobar Montaño", "semis": ["fr", "gb-eng", "es", "ar"], "finalists": ["es", "gb-eng"], "champion": "es" },
+    { "name": "Alicia Pérez", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "ar"], "champion": "es" },
+    { "name": "Jenifer", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "ar"], "champion": "es" },
+    { "name": "Juani", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "br"], "champion": "es" },
+    { "name": "Manuel Montaño", "semis": ["fr", "br", "es", "ar"], "finalists": ["fr", "br"], "champion": "fr" },
+    { "name": "Salomé Juanjo", "semis": ["fr", "br", "es", "ar"], "finalists": ["fr", "ar"], "champion": "fr" },
+    { "name": "Daniel", "semis": ["fr", "gb-eng", "es", "ar"], "finalists": ["fr", "ar"], "champion": "fr" },
+    { "name": "Carlos Mondragón", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "ar"], "champion": "es" },
+    { "name": "Nolo", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "br"], "champion": "es" },
+    { "name": "Belén Que", "semis": ["fr", "gb-eng", "es", "ar"], "finalists": ["es", "gb-eng"], "champion": "es" },
+    { "name": "Lego", "semis": ["fr", "gb-eng", "es", "ar"], "finalists": ["es", "ar"], "champion": "es" },
+    { "name": "Francisco Romero", "semis": ["de", "br", "us", "ar"], "finalists": ["de", "ar"], "champion": "ar" },
+    { "name": "Chuck Norris Está Vivo", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "br"], "champion": "br" },
+    { "name": "María y Javi", "semis": ["fr", "br", "es", "ar"], "finalists": ["es", "ar"], "champion": "es" }
+  ]
+}

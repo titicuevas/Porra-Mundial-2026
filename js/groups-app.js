@@ -61,6 +61,7 @@ function progressTotal() { return MATCH_TOTAL; }
 let picks = {};
 let results = {};
 let leaderboardData = { entries: [] };
+let semisPicksData = { entries: [] };
 const flagCache = {};
 let trophyCache = null;
 let activePhaseTab = 'extras';
@@ -788,6 +789,140 @@ function leaderboardBreakdownSubHTML(e) {
   return '<span class="leaderboard-name-sub">' + parts.join(' · ') + '</span>';
 }
 
+function getOfficialSemifinalistCodes() {
+  const codes = new Set();
+  for (let i = 1; i <= 4; i++) {
+    const r = results['KO8-' + i];
+    if (r && r.winner && r.winner !== 'tbd') codes.add(r.winner);
+  }
+  const fx = results._fixtures;
+  if (fx) {
+    for (let i = 1; i <= 2; i++) {
+      const m = fx['KO4-' + i];
+      if (!m) continue;
+      if (m.home && m.home !== 'tbd') codes.add(m.home);
+      if (m.away && m.away !== 'tbd') codes.add(m.away);
+    }
+  }
+  return codes;
+}
+
+function getKoEliminatedTeamCodes() {
+  const eliminated = new Set();
+  const fx = results._fixtures || {};
+  Object.keys(results).forEach(id => {
+    if (id.charAt(0) === '_' || !/^KO(32|16|8|4)-\d+$/.test(id)) return;
+    const r = results[id];
+    if (!r || !r.winner || r.winner === 'tbd') return;
+    const teams = fx[id];
+    if (!teams || !teams.home || !teams.away) return;
+    const loser = r.winner === teams.home ? teams.away : teams.home;
+    if (loser && loser !== 'tbd') eliminated.add(loser);
+  });
+  return eliminated;
+}
+
+function getOfficialFinalistCodes() {
+  const codes = new Set();
+  for (let i = 1; i <= 2; i++) {
+    const r = results['KO4-' + i];
+    if (r && r.winner && r.winner !== 'tbd') codes.add(r.winner);
+  }
+  const fx = results._fixtures;
+  if (fx && fx['KOF-1']) {
+    const fin = fx['KOF-1'];
+    if (fin.home && fin.home !== 'tbd') codes.add(fin.home);
+    if (fin.away && fin.away !== 'tbd') codes.add(fin.away);
+  }
+  return codes;
+}
+
+function isSemisPickEliminated(code) {
+  if (!code) return false;
+  if (getOfficialSemifinalistCodes().has(code)) return false;
+  if (getKoEliminatedTeamCodes().has(code)) return true;
+  return getOfficialSemifinalistCodes().size >= 4;
+}
+
+function isFinalistPickEliminated(code) {
+  if (!code) return false;
+  if (getOfficialFinalistCodes().has(code)) return false;
+  if (getKoEliminatedTeamCodes().has(code)) return true;
+  return getOfficialFinalistCodes().size >= 2;
+}
+
+function getOfficialChampionCode() {
+  const r = results['KOF-1'];
+  if (r && r.winner && r.winner !== 'tbd') return r.winner;
+  return null;
+}
+
+function isChampionPickEliminated(code) {
+  if (!code) return false;
+  const champ = getOfficialChampionCode();
+  if (champ) return code !== champ;
+  return getKoEliminatedTeamCodes().has(code);
+}
+
+function koPickFlagCell(code, isEliminated) {
+  if (!code) return '<span class="semis-pick-empty">—</span>';
+  const t = teamByCode(code);
+  const label = t ? t.name : code;
+  const size = 28;
+  const h = Math.round(size * 0.72);
+  const out = isEliminated(code);
+  const outCls = out ? ' semis-pick-flag--out' : '';
+  const outNote = out ? ' (eliminado)' : '';
+  return `<span class="semis-pick-flag${outCls}" title="${escapeHtml(label + outNote)}"><img src="${flagUrl(code, 80)}" alt="${escapeHtml(label + outNote)}" class="flag-icon" width="${size}" height="${h}" loading="lazy"/></span>`;
+}
+
+function semisFlagCell(code) {
+  return koPickFlagCell(code, isSemisPickEliminated);
+}
+
+function finalistFlagCell(code) {
+  return koPickFlagCell(code, isFinalistPickEliminated);
+}
+
+function championFlagCell(code) {
+  return koPickFlagCell(code, isChampionPickEliminated);
+}
+
+/** Orden de columnas en tabla semis esp. (índices en semis[]); Semi 2 ↔ Semi 3 intercambiadas. */
+const SEMIS_PICK_COL_INDICES = [0, 2, 1, 3];
+
+function renderSemisPicksTable() {
+  const section = document.getElementById('semisPicksSection');
+  const tbody = document.getElementById('semisPicksBody');
+  if (!section || !tbody) return;
+  const entries = (semisPicksData.entries || []).filter(e => e.name && Array.isArray(e.semis));
+  if (!entries.length) {
+    section.classList.add('hidden');
+    tbody.innerHTML = '';
+    return;
+  }
+  section.classList.remove('hidden');
+  const myName = getPlayerDisplayName().toLowerCase();
+  tbody.innerHTML = entries.map(e => {
+    const isMe = myName && e.name.toLowerCase() === myName;
+    const semiCells = SEMIS_PICK_COL_INDICES.map(i => `<td class="semis-pick-col">${semisFlagCell(e.semis[i])}</td>`).join('');
+    const fin = Array.isArray(e.finalists) ? e.finalists : [];
+    const finalistCells = [0, 1].map(i => `<td class="semis-pick-col">${finalistFlagCell(fin[i])}</td>`).join('');
+    const championCell = `<td class="semis-pick-col">${championFlagCell(e.champion)}</td>`;
+    return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-name">${escapeHtml(e.name)}</td>${semiCells}${finalistCells}${championCell}</tr>`;
+  }).join('');
+}
+
+async function loadSemisPicks() {
+  try {
+    const res = await fetch('semis-picks.json?t=' + Date.now());
+    if (!res.ok) return;
+    const data = await res.json();
+    semisPicksData = data && Array.isArray(data.entries) ? data : { entries: [] };
+    renderSemisPicksTable();
+  } catch (e) { /* sin tabla semis */ }
+}
+
 function leaderboardBreakdownCells(e, showCols) {
   if (!showCols) return '';
   const b = e.breakdown || {};
@@ -891,6 +1026,7 @@ function renderLeaderboard() {
     const breakdownCols = showBreakdown ? leaderboardBreakdownCells(e, true) : '';
     return `<tr class="${isMe ? 'leaderboard-me' : ''}"><td class="leaderboard-rank">${rankCell}</td><td class="leaderboard-name">${nameCell}</td>${breakdownCols}<td class="leaderboard-points">${e.points}</td>${prizeCol}</tr>`;
   }).join('');
+  renderSemisPicksTable();
   if (prizeSummaryEl) {
     const html = isPrizePhase && SHOW_LEADERBOARD_PRIZE_SUMMARY ? buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) : '';
     prizeSummaryEl.innerHTML = html;
@@ -908,6 +1044,7 @@ async function loadOfficialLeaderboard() {
     updateHeaderStats();
     if (IS_ADMIN) renderAdminLeaderboardEditor();
   } catch (e) { /* sin leaderboard aún */ }
+  loadSemisPicks();
 }
 
 function renderAdminLeaderboardEditor() {
@@ -2065,6 +2202,7 @@ async function loadOfficialResults() {
   renderGroups();
   updateScoreHeader();
   refreshGroupStandingsAndKnockout();
+  renderSemisPicksTable();
   if (IS_ADMIN) renderAdminEditor();
 }
 
