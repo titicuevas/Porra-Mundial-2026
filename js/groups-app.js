@@ -789,6 +789,25 @@ function leaderboardBreakdownSubHTML(e) {
   return '<span class="leaderboard-name-sub">' + parts.join(' · ') + '</span>';
 }
 
+/** Cruces KO32 (índice = slot KO32-N − 1) — para detectar eliminados sin _fixtures. */
+const KO_R32_PAIR_SEEDS = [
+  ['mx', 'ec'], ['za', 'ca'], ['br', 'jp'], ['de', 'py'],
+  ['us', 'ba'], ['ch', 'dz'], ['es', 'at'], ['fr', 'se'],
+  ['gb-eng', 'cd'], ['co', 'gh'], ['pt', 'hr'], ['be', 'sn'],
+  ['ar', 'cv'], ['nl', 'ma'], ['au', 'eg'], ['ci', 'no']
+];
+
+function getKoMatchTeams(id) {
+  const fx = results._fixtures || {};
+  if (fx[id] && fx[id].home && fx[id].away) return fx[id];
+  const m32 = id.match(/^KO32-(\d+)$/);
+  if (m32) {
+    const pair = KO_R32_PAIR_SEEDS[parseInt(m32[1], 10) - 1];
+    if (pair) return { home: pair[0], away: pair[1] };
+  }
+  return null;
+}
+
 function getOfficialSemifinalistCodes() {
   const codes = new Set();
   for (let i = 1; i <= 4; i++) {
@@ -809,12 +828,11 @@ function getOfficialSemifinalistCodes() {
 
 function getKoEliminatedTeamCodes() {
   const eliminated = new Set();
-  const fx = results._fixtures || {};
   Object.keys(results).forEach(id => {
-    if (id.charAt(0) === '_' || !/^KO(32|16|8|4)-\d+$/.test(id)) return;
+    if (id.charAt(0) === '_' || !/^KO(?:32|16|8|4|F)-\d+$/.test(id)) return;
     const r = results[id];
     if (!r || !r.winner || r.winner === 'tbd') return;
-    const teams = fx[id];
+    const teams = getKoMatchTeams(id);
     if (!teams || !teams.home || !teams.away) return;
     const loser = r.winner === teams.home ? teams.away : teams.home;
     if (loser && loser !== 'tbd') eliminated.add(loser);
@@ -837,18 +855,23 @@ function getOfficialFinalistCodes() {
   return codes;
 }
 
+/** Semis esp.: tachar si no llegó a semifinales. */
 function isSemisPickEliminated(code) {
   if (!code) return false;
-  if (getOfficialSemifinalistCodes().has(code)) return false;
+  const semis = getOfficialSemifinalistCodes();
+  if (semis.size >= 4) return !semis.has(code);
   if (getKoEliminatedTeamCodes().has(code)) return true;
-  return getOfficialSemifinalistCodes().size >= 4;
+  return semis.size > 0 && !semis.has(code);
 }
 
+/** Finalistas esp.: tachar eliminados o quien ya no puede llegar a la final. */
 function isFinalistPickEliminated(code) {
   if (!code) return false;
-  if (getOfficialFinalistCodes().has(code)) return false;
+  const finalists = getOfficialFinalistCodes();
+  if (finalists.has(code)) return false;
   if (getKoEliminatedTeamCodes().has(code)) return true;
-  return getOfficialFinalistCodes().size >= 2;
+  if (finalists.size >= 2) return true;
+  return !getOfficialSemifinalistCodes().has(code);
 }
 
 function getOfficialChampionCode() {
@@ -857,11 +880,15 @@ function getOfficialChampionCode() {
   return null;
 }
 
+/** Campeón esp.: tachar si eliminado o ya no puede ganar el torneo. */
 function isChampionPickEliminated(code) {
   if (!code) return false;
   const champ = getOfficialChampionCode();
   if (champ) return code !== champ;
-  return getKoEliminatedTeamCodes().has(code);
+  if (getKoEliminatedTeamCodes().has(code)) return true;
+  const semis = getOfficialSemifinalistCodes();
+  if (semis.size >= 4) return !semis.has(code);
+  return false;
 }
 
 function koPickFlagCell(code, isEliminated) {
@@ -872,7 +899,7 @@ function koPickFlagCell(code, isEliminated) {
   const h = Math.round(size * 0.72);
   const out = isEliminated(code);
   const outCls = out ? ' semis-pick-flag--out' : '';
-  const outNote = out ? ' (eliminado)' : '';
+  const outNote = out ? ' (fuera)' : '';
   return `<span class="semis-pick-flag${outCls}" title="${escapeHtml(label + outNote)}"><img src="${flagUrl(code, 80)}" alt="${escapeHtml(label + outNote)}" class="flag-icon" width="${size}" height="${h}" loading="lazy"/></span>`;
 }
 
