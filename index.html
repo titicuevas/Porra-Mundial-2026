@@ -20,7 +20,7 @@
 <title>Porra Mundial 2026 🏆</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link rel="stylesheet" href="css/app.css?v=146"/>
+<link rel="stylesheet" href="css/app.css?v=147"/>
 </head>
 <body class="min-h-screen text-white">
 <a href="#mainContent" id="skipToContent" class="skip-link">Saltar al contenido principal</a>
@@ -348,7 +348,7 @@
   <div class="max-w-6xl mx-auto px-4 py-5">
     <div class="leaderboard-card p-5 sm:p-6">
       <h2 class="text-lg font-bold text-white mb-1">🏆 Clasificación</h2>
-      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Puntos oficiales: <strong class="text-gray-400">grupos + dieciseisavos + octavos</strong> (1 punto por acierto). <strong class="text-gray-300">No cuenta para el bote</strong> — orientativo. El premio (un 1.º, un 2.º, un 3.º con 60/30/10 %) se decide en la clasificación final de eliminatorias con desempate por campeón, finalistas y semifinalistas.</p>
+      <p class="text-xs text-gray-500 mb-3 leading-relaxed">Puntos oficiales: <strong class="text-gray-400">grupos + dieciseisavos + octavos + cuartos</strong> (1 punto por acierto) y <strong class="text-gray-400">semis especial</strong>. <strong class="text-gray-300">No cuenta para el bote</strong> — orientativo. El premio (un 1.º, un 2.º, un 3.º con 60/30/10 %) se decide en la clasificación final de eliminatorias con desempate por campeón, finalistas y semifinalistas.</p>
       <p id="leaderboardUpdated" class="text-xs text-gray-600 mb-2 hidden"></p>
       <div id="myScoreCard" class="my-score-card hidden">
         <p class="text-xs text-gray-500 mb-1">Tu registro en este dispositivo</p>
@@ -356,7 +356,7 @@
       </div>
       <div class="leaderboard-scroll overflow-x-auto">
         <table class="leaderboard-table" id="leaderboardTable" aria-label="Clasificación">
-          <thead><tr><th>#</th><th>Nombre</th><th class="leaderboard-breakdown-col">Grupos</th><th class="leaderboard-breakdown-col">16avos</th><th class="leaderboard-breakdown-col">Octavos</th><th class="leaderboard-points-col">Total</th><th class="leaderboard-prize-col leaderboard-prize-col-header hidden">Premio</th></tr></thead>
+          <thead><tr><th>#</th><th>Nombre</th><th class="leaderboard-breakdown-col">Grupos</th><th class="leaderboard-breakdown-col">16avos</th><th class="leaderboard-breakdown-col">Octavos</th><th class="leaderboard-breakdown-col">Cuartos</th><th class="leaderboard-breakdown-col leaderboard-extras-col">Semis esp.</th><th class="leaderboard-points-col">Total</th><th class="leaderboard-prize-col leaderboard-prize-col-header hidden">Premio</th></tr></thead>
           <tbody id="leaderboardBody"></tbody>
         </table>
       </div>
@@ -398,14 +398,14 @@
   <button type="button" id="btnExportDock" class="btn-export-dock is-locked" onclick="handleExportDockClick()" aria-disabled="true">📄 Exportar PDF</button>
 </div>
 
-<script src="js/version.js?v=146"></script>
-<script src="js/a11y.js?v=146"></script>
-<script src="js/schedule.js?v=146"></script>
-<script src="js/groups-data.js?v=146"></script>
-<script src="js/annex-c-data.js?v=146"></script>
-<script src="js/team-fifa-meta.js?v=146"></script>
-<script src="js/groups-app.js?v=146"></script>
-<script src="js/knockout.js?v=146"></script>
+<script src="js/version.js?v=147"></script>
+<script src="js/a11y.js?v=147"></script>
+<script src="js/schedule.js?v=147"></script>
+<script src="js/groups-data.js?v=147"></script>
+<script src="js/annex-c-data.js?v=147"></script>
+<script src="js/team-fifa-meta.js?v=147"></script>
+<script src="js/groups-app.js?v=147"></script>
+<script src="js/knockout.js?v=147"></script>
 <script>
 if (typeof renderKnockout === 'function') renderKnockout();
 if (typeof updatePhaseTabs === 'function') updatePhaseTabs();

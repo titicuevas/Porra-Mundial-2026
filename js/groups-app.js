@@ -771,7 +771,7 @@ function buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) {
 function leaderboardHasBreakdown(entries) {
   return (entries || []).some(e => {
     const b = e.breakdown;
-    return b && (b.grupos != null || b.r32 != null || b.r16 != null);
+    return b && (b.grupos != null || b.r32 != null || b.r16 != null || b.r8 != null || b.semisEsp != null);
   });
 }
 
@@ -782,6 +782,8 @@ function leaderboardBreakdownSubHTML(e) {
   if (b.grupos != null) parts.push('Gr. ' + b.grupos);
   if (b.r32 != null) parts.push('16 ' + b.r32);
   if (b.r16 != null) parts.push('Oct. ' + b.r16);
+  if (b.r8 != null) parts.push('4t. ' + b.r8);
+  if (b.semisEsp != null) parts.push('S.esp. ' + b.semisEsp);
   if (!parts.length) return '';
   return '<span class="leaderboard-name-sub">' + parts.join(' · ') + '</span>';
 }
@@ -792,7 +794,13 @@ function leaderboardBreakdownCells(e, showCols) {
   const g = b.grupos != null ? b.grupos : '—';
   const r32 = b.r32 != null ? b.r32 : '—';
   const r16 = b.r16 != null ? b.r16 : '—';
-  return '<td class="leaderboard-breakdown-col">' + g + '</td><td class="leaderboard-breakdown-col">' + r32 + '</td><td class="leaderboard-breakdown-col">' + r16 + '</td>';
+  const r8 = b.r8 != null ? b.r8 : '—';
+  const semisEsp = b.semisEsp != null ? b.semisEsp : '—';
+  return '<td class="leaderboard-breakdown-col">' + g + '</td>'
+    + '<td class="leaderboard-breakdown-col">' + r32 + '</td>'
+    + '<td class="leaderboard-breakdown-col">' + r16 + '</td>'
+    + '<td class="leaderboard-breakdown-col">' + r8 + '</td>'
+    + '<td class="leaderboard-breakdown-col leaderboard-extras-col">' + semisEsp + '</td>';
 }
 
 function renderLeaderboard() {
