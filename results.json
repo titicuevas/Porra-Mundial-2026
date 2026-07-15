@@ -484,5 +484,10 @@
     "home": 3,
     "away": 1,
     "winner": "ar"
+  },
+  "KO4-1": {
+    "home": 0,
+    "away": 2,
+    "winner": "es"
   }
 }

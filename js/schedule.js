@@ -14,7 +14,8 @@
     r16: '2026-07-04T10:00:00+02:00',
     r8: '2026-07-08T08:00:00+02:00',
     r4: '2026-07-12T05:30:00+02:00',
-    r2: '2026-07-19T07:00:00+02:00'
+    r3p: '2026-07-16T23:30:00+02:00',
+    r2: '2026-07-16T23:30:00+02:00'
   };
 
   /** Dieciseisavos P73–P88 (índice en array = slot KO32-N). sortAt ordena en la quiniela. */
@@ -61,6 +62,14 @@
     { fifaNo: 102, date: 'Mié 15 Jul', hour: '21:00', venue: 'Mercedes-Benz Stadium, Atlanta', sortAt: '2026-07-15T21:00:00+02:00' }
   ];
 
+  const THIRD_META = {
+    fifaNo: 103,
+    date: 'Sáb 18 Jul',
+    hour: '23:00',
+    venue: 'Hard Rock Stadium, Miami',
+    sortAt: '2026-07-18T23:00:00+02:00'
+  };
+
   const FINAL_META = {
     fifaNo: 104,
     date: 'Dom 19 Jul',
@@ -85,15 +94,24 @@
     [0, 1], [2, 3]
   ];
 
+  /** Ganadores KO4 (índice 0–1) → final KOF-1 (P104). */
+  const R2_FINAL_FEEDERS = [0, 1];
+
+  /** Perdedores KO4 (índice 0–1) → 3.er puesto KOB-1 (P103). */
+  const R3P_FEEDERS = [0, 1];
+
   window.FIFA_KO_SCHEDULE = {
     ROUND_OPENS,
     R32_META,
     R16_META,
     R8_META,
     R4_META,
+    THIRD_META,
     FINAL_META,
     R16_FEEDERS,
     R8_FEEDERS,
-    R4_FEEDERS
+    R4_FEEDERS,
+    R2_FINAL_FEEDERS,
+    R3P_FEEDERS
   };
 })();

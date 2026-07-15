@@ -47,12 +47,16 @@ const KO_R4_FEEDERS = [
 const KO_R16_SLOT_IDS = Array.from({ length: 8 }, (_, i) => 'KO16-' + (i + 1));
 const KO_R8_SLOT_IDS = Array.from({ length: 4 }, (_, i) => 'KO8-' + (i + 1));
 const KO_R4_SLOT_IDS = Array.from({ length: 2 }, (_, i) => 'KO4-' + (i + 1));
+const KO_R3P_SLOT_IDS = ['KOB-1'];
+const KO_R2_SLOT_IDS = ['KOF-1'];
 
 const FD_STAGES = {
   r32: 'LAST_32',
   r16: 'LAST_16',
   r8: 'QUARTER_FINALS',
-  r4: 'SEMI_FINALS'
+  r4: 'SEMI_FINALS',
+  r3p: 'THIRD_PLACE',
+  r2: 'FINAL'
 };
 
 function pairKey(a, b) {
@@ -103,6 +107,14 @@ function winnerFromStoredResult(results, matchId, homeCode, awayCode) {
   if (r.winner && r.winner !== 'tbd') return r.winner;
   if (h > a) return homeCode;
   if (a > h) return awayCode;
+  return null;
+}
+
+function loserFromStoredResult(results, matchId, homeCode, awayCode) {
+  const w = winnerFromStoredResult(results, matchId, homeCode, awayCode);
+  if (!w) return null;
+  if (w === homeCode) return awayCode;
+  if (w === awayCode) return homeCode;
   return null;
 }
 
@@ -163,7 +175,47 @@ function buildBracketSlots(results) {
     };
   });
 
-  return { r16, r8, r4 };
+  const r3p = [{
+    id: 'KOB-1',
+    home: (() => {
+      const fx = fixtures['KOB-1'];
+      if (fx && fx.home) return fx.home;
+      const s0 = r4[0];
+      return s0 && s0.home && s0.away
+        ? loserFromStoredResult(results, s0.id, s0.home, s0.away)
+        : null;
+    })(),
+    away: (() => {
+      const fx = fixtures['KOB-1'];
+      if (fx && fx.away) return fx.away;
+      const s1 = r4[1];
+      return s1 && s1.home && s1.away
+        ? loserFromStoredResult(results, s1.id, s1.home, s1.away)
+        : null;
+    })()
+  }];
+
+  const r2 = [{
+    id: 'KOF-1',
+    home: (() => {
+      const fx = fixtures['KOF-1'];
+      if (fx && fx.home) return fx.home;
+      const s0 = r4[0];
+      return s0 && s0.home && s0.away
+        ? winnerFromStoredResult(results, s0.id, s0.home, s0.away)
+        : null;
+    })(),
+    away: (() => {
+      const fx = fixtures['KOF-1'];
+      if (fx && fx.away) return fx.away;
+      const s1 = r4[1];
+      return s1 && s1.home && s1.away
+        ? winnerFromStoredResult(results, s1.id, s1.home, s1.away)
+        : null;
+    })()
+  }];
+
+  return { r16, r8, r4, r3p, r2 };
 }
 
 function mapFdMatchToFixture(fdMatch, slots) {
@@ -302,7 +354,9 @@ async function fetchStageUpdates(token, stageKey, slots, fixtures) {
   const slotIds = stageKey === 'r16' ? KO_R16_SLOT_IDS
     : stageKey === 'r8' ? KO_R8_SLOT_IDS
       : stageKey === 'r4' ? KO_R4_SLOT_IDS
-        : [];
+        : stageKey === 'r3p' ? KO_R3P_SLOT_IDS
+          : stageKey === 'r2' ? KO_R2_SLOT_IDS
+            : [];
   const updates = {};
   const details = [];
   for (const m of data.matches || []) {
@@ -366,15 +420,27 @@ async function fetchKoUpdatesFromFootballData(token, baseResults) {
 
   const r4Fixtures = await fetchStageFixtures(token, 'r4', bracket3.r4, KO_R4_SLOT_IDS);
   const r4 = await fetchStageUpdates(token, 'r4', bracket3.r4, r4Fixtures);
+  const mergedAfterR4 = mergeIntoResults(mergedAfterR8, r4.updates);
+  const bracket4 = buildBracketSlots(mergedAfterR4);
 
-  const updates = Object.assign({}, r32.updates, r16.updates, r8.updates, r4.updates);
-  const details = [].concat(r32.details, r16.details, r8.details, r4.details);
-  const fixtures = mergeFixtureMaps(r16Fixtures, r8Fixtures, r4Fixtures);
+  const r3pFixtures = await fetchStageFixtures(token, 'r3p', bracket4.r3p, KO_R3P_SLOT_IDS);
+  const r3p = await fetchStageUpdates(token, 'r3p', bracket4.r3p, r3pFixtures);
+  const mergedAfterR3p = mergeIntoResults(mergedAfterR4, r3p.updates);
+  const bracket5 = buildBracketSlots(mergedAfterR3p);
+
+  const r2Fixtures = await fetchStageFixtures(token, 'r2', bracket5.r2, KO_R2_SLOT_IDS);
+  const r2 = await fetchStageUpdates(token, 'r2', bracket5.r2, r2Fixtures);
+
+  const updates = Object.assign({}, r32.updates, r16.updates, r8.updates, r4.updates, r3p.updates, r2.updates);
+  const details = [].concat(r32.details, r16.details, r8.details, r4.details, r3p.details, r2.details);
+  const fixtures = mergeFixtureMaps(r16Fixtures, r8Fixtures, r4Fixtures, r3pFixtures, r2Fixtures);
   const stages = [
     { stage: 'r32', rawCount: r32.rawCount, mapped: r32.details.length },
     { stage: 'r16', rawCount: r16.rawCount, mapped: r16.details.length, fixtures: Object.keys(r16Fixtures).length },
     { stage: 'r8', rawCount: r8.rawCount, mapped: r8.details.length, fixtures: Object.keys(r8Fixtures).length },
-    { stage: 'r4', rawCount: r4.rawCount, mapped: r4.details.length, fixtures: Object.keys(r4Fixtures).length }
+    { stage: 'r4', rawCount: r4.rawCount, mapped: r4.details.length, fixtures: Object.keys(r4Fixtures).length },
+    { stage: 'r3p', rawCount: r3p.rawCount, mapped: r3p.details.length, fixtures: Object.keys(r3pFixtures).length },
+    { stage: 'r2', rawCount: r2.rawCount, mapped: r2.details.length, fixtures: Object.keys(r2Fixtures).length }
   ];
   return { updates, details, stages, fixtures };
 }
@@ -432,6 +498,8 @@ module.exports = {
   KO_R16_SLOT_IDS,
   KO_R8_SLOT_IDS,
   KO_R4_SLOT_IDS,
+  KO_R3P_SLOT_IDS,
+  KO_R2_SLOT_IDS,
   MATCH_ID_TO_PAIR,
   FD_STAGES,
   fdTeamToCode,

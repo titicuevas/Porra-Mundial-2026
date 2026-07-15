@@ -300,6 +300,14 @@ function getCountdownToKoLock() {
 }
 
 function getActiveKoCountdownRound() {
+  if (typeof isKoFinalPhase === 'function' && isKoFinalPhase()) {
+    if (typeof isKoRoundPickable === 'function' && isKoRoundPickable('r3p')) return 'r3p';
+    return 'r3p';
+  }
+  if (typeof isKoRoundClosedBySchedule === 'function' && isKoRoundClosedBySchedule('r4')
+    && typeof isKoRoundOfficiallyOpen === 'function' && !isKoRoundOfficiallyOpen('r3p')) {
+    return 'r3p';
+  }
   if (typeof isKoSemisPhase === 'function' && isKoSemisPhase()) return 'r4';
   if (typeof isKoRoundClosedBySchedule === 'function' && isKoRoundClosedBySchedule('r8')
     && typeof isKoRoundOfficiallyOpen === 'function' && !isKoRoundOfficiallyOpen('r4')) {
@@ -343,7 +351,11 @@ function renderKoCountdown() {
   let label;
   let when;
   if (closeC) {
-    if (koRound === 'r4') {
+    if (koRound === 'r3p') {
+      label = '⏳ Cierra la quiniela de finales en:';
+      when = typeof formatKoFinalesCloseShort === 'function' ? formatKoFinalesCloseShort()
+        : typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r3p') : '18 jul, 23:00';
+    } else if (koRound === 'r4') {
       label = '⏳ Cierra el plazo de semifinales en:';
     } else if (koRound === 'r8') {
       label = '⏳ Cierra el plazo de cuartos de final en:';
@@ -354,7 +366,10 @@ function renderKoCountdown() {
     }
     when = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort(koRound) : (koRound === 'r4' ? '14 jul, 21:00' : koRound === 'r8' ? '9 jul, 22:00' : koRound === 'r16' ? '4 jul, 19:00' : '28 jun, 21:00');
   } else {
-    if (koRound === 'r4') {
+    if (koRound === 'r3p' || koRound === 'r2') {
+      label = '⏳ Abren finales (fin de semis) en:';
+      when = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r3p') : '16 jul, 23:30';
+    } else if (koRound === 'r4') {
       label = '⏳ Abren semifinales (fin de cuartos) en:';
       when = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '12 jul, 05:30';
     } else if (koRound === 'r8') {
@@ -394,14 +409,21 @@ function updateKoCountdownDisplay() {
 
 function updateShareLinks() {
   const base = 'https://porra-mundial-2026-rust.vercel.app/';
-  const semis = typeof shouldPrioritizeSemis === 'function' && shouldPrioritizeSemis()
+  const finales = typeof shouldPrioritizeFinal === 'function' && shouldPrioritizeFinal()
+    && typeof isKoRoundPickable === 'function' && (isKoRoundPickable('r3p') || isKoRoundPickable('r2'));
+  const semis = !finales && typeof shouldPrioritizeSemis === 'function' && shouldPrioritizeSemis()
     && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r4');
-  const cuartos = !semis && typeof shouldPrioritizeCuartos === 'function' && shouldPrioritizeCuartos()
+  const cuartos = !finales && !semis && typeof shouldPrioritizeCuartos === 'function' && shouldPrioritizeCuartos()
     && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r8');
-  const octavos = !semis && !cuartos && typeof shouldPrioritizeOctavos === 'function' && shouldPrioritizeOctavos()
+  const octavos = !finales && !semis && !cuartos && typeof shouldPrioritizeOctavos === 'function' && shouldPrioritizeOctavos()
     && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r16');
-  const url = semis ? base + '?ko_round=semis' : cuartos ? base + '?ko_round=cuartos' : octavos ? base + '?ko_round=octavos' : base;
-  const msg = semis
+  const url = finales ? base + '?ko_round=final'
+    : semis ? base + '?ko_round=semis'
+      : cuartos ? base + '?ko_round=cuartos'
+        : octavos ? base + '?ko_round=octavos' : base;
+  const msg = finales
+    ? 'Porra Mundial 2026 — quiniela finales (3.er puesto + final). Marca antes del cierre.'
+    : semis
     ? '⚽ Porra Mundial 2026 — semifinales abiertas. Marca tus cruces:'
     : cuartos
       ? '⚽ Porra Mundial 2026 — cuartos de final abiertos. Marca tus cruces:'
@@ -447,6 +469,27 @@ function renderScheduleBanner() {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Fase de grupos cerrada</strong> desde el 11 jun, 21:00. Ya no se pueden cambiar los pronósticos de grupos.</div>';
   } else if (typeof isKnockoutAccessible === 'function' && !isKnockoutAccessible()) {
     el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Eliminatorias</strong> — apertura oficial el <strong>28 de junio a las 10:00</strong> (hora peninsular)</div>';
+  } else if (typeof isKoWaitingForFinalsPublic === 'function' && isKoWaitingForFinalsPublic()) {
+    const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r3p') : '16 jul, 23:30';
+    const closeAt = typeof formatKoFinalesCloseShort === 'function' ? formatKoFinalesCloseShort()
+      : typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r3p') : '18 jul, 23:00';
+    const codeHint = typeof shouldShowKoAccessCodeBtn === 'function' && shouldShowKoAccessCodeBtn()
+      ? ' · <strong>🔑 Código</strong> para probar'
+      : '';
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Semifinales en juego</strong> — finales abren al terminar la última semifinal (est. <strong>' + opens + '</strong>) · quiniela cierra <strong>' + closeAt + '</strong>' + codeHint + '</div>';
+  } else if (typeof isKoFinalPreviewOnly === 'function' && isKoFinalPreviewOnly()) {
+    const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r3p') : '16 jul, 23:30';
+    const closeAt = typeof formatKoFinalesCloseShort === 'function' ? formatKoFinalesCloseShort()
+      : typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r3p') : '18 jul, 23:00';
+    el.innerHTML = '<div class="schedule-banner schedule-open">🧪 <strong>Finales en prueba</strong> (código) — el público las verá al terminar semis (est. <strong>' + opens + '</strong>) · quiniela cierra <strong>' + closeAt + '</strong></div>';
+  } else if (typeof isKoFinalPhase === 'function' && isKoFinalPhase()
+    && typeof isKoRoundPickable === 'function' && isKoRoundPickable('r3p')) {
+    const closeAt = typeof formatKoFinalesCloseShort === 'function' ? formatKoFinalesCloseShort()
+      : typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r3p') : '18 jul, 23:00';
+    el.innerHTML = '<div class="schedule-banner schedule-open">🏅 <strong>Finales abiertas</strong> — marca 3.er puesto y final · plazo único hasta <strong>' + closeAt + '</strong></div>';
+  } else if (typeof isKoFinalPhase === 'function' && isKoFinalPhase()
+    && typeof isKoFinalesQuinielaClosed === 'function' && isKoFinalesQuinielaClosed()) {
+    el.innerHTML = '<div class="schedule-banner schedule-closed">🔒 <strong>Finales cerradas</strong> — plazo finalizado</div>';
   } else if (typeof isKoWaitingForSemisPublic === 'function' && isKoWaitingForSemisPublic()) {
     const opens = typeof formatKoOpensAtShort === 'function' ? formatKoOpensAtShort('r4') : '12 jul, 05:30';
     const closes = typeof formatKoRoundCloseShort === 'function' ? formatKoRoundCloseShort('r4') : '14 jul, 21:00';
@@ -779,14 +822,17 @@ function leaderboardHasBreakdown(entries) {
 function leaderboardBreakdownSubHTML(e) {
   const b = e.breakdown;
   if (!b) return '';
-  const parts = [];
-  if (b.grupos != null) parts.push('Gr. ' + b.grupos);
-  if (b.r32 != null) parts.push('16 ' + b.r32);
-  if (b.r16 != null) parts.push('Oct. ' + b.r16);
-  if (b.r8 != null) parts.push('4t. ' + b.r8);
-  if (b.semisEsp != null) parts.push('S.esp. ' + b.semisEsp);
-  if (!parts.length) return '';
-  return '<span class="leaderboard-name-sub">' + parts.join(' · ') + '</span>';
+  const chips = [];
+  if (b.grupos != null) chips.push({ label: 'Gr.', val: b.grupos });
+  if (b.r32 != null) chips.push({ label: '16av.', val: b.r32 });
+  if (b.r16 != null) chips.push({ label: 'Oct.', val: b.r16 });
+  if (b.r8 != null) chips.push({ label: '4t.', val: b.r8 });
+  if (b.semisEsp != null) chips.push({ label: 'S.esp.', val: b.semisEsp });
+  if (!chips.length) return '';
+  return '<span class="leaderboard-name-sub">' + chips.map(c =>
+    '<span class="leaderboard-breakdown-chip"><span class="leaderboard-breakdown-chip-label">' + c.label + '</span>'
+    + '<span class="leaderboard-breakdown-chip-val">' + c.val + '</span></span>'
+  ).join('') + '</span>';
 }
 
 /** Cruces KO32 (índice = slot KO32-N − 1) — para detectar eliminados sin _fixtures. */

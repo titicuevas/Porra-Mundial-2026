@@ -5,3 +5,6 @@ desktop.ini
 .env
 .env.local
 *.tmp
+node_modules/
+package-lock.json
+scripts/test-output/
