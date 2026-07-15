@@ -90,7 +90,6 @@ function assertPdfContent(pdfPath, buf) {
     ['FINALES', 'título finales'],
     ['3.er y 4', 'sección 3.er puesto'],
     ['Final del Mundial', 'sección final'],
-    ['Campeón', 'franja campeón en final'],
     ['cierran 3.er puesto y final', 'plazo único en PDF']
   ];
   const missing = checks.filter(([needle]) => !text.includes(needle)).map(([, label]) => label);

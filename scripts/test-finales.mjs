@@ -148,10 +148,10 @@ async function runPlaywrightChecks() {
         kof: !!document.querySelector('#ko-mr-KOF-1'),
         worldFinal: !!document.querySelector('.ko-list-match--world-final'),
         crown: document.querySelectorAll('.ko-champion-crown').length,
-        stackMobile: (() => {
+        pairCols: (() => {
           const pair = document.querySelector('.ko-list-pair--world-final');
-          if (!pair) return false;
-          return getComputedStyle(pair).gridTemplateColumns.split(' ').filter(Boolean).length === 1;
+          if (!pair) return 0;
+          return getComputedStyle(pair).gridTemplateColumns.split(' ').filter(Boolean).length;
         })()
       }));
 
@@ -179,8 +179,8 @@ async function runPlaywrightChecks() {
         console.error(`✗ [${vp.name}] Falta corona 👑 en finalista campeón`);
         ok = false;
       }
-      if (vp.width < 500 && !state.stackMobile) {
-        console.error(`✗ [${vp.name}] En móvil la final debería apilar botones (1 columna)`);
+      if (vp.width < 500 && state.pairCols < 3) {
+        console.error(`✗ [${vp.name}] En móvil la final debería mantener 3 columnas (local · vs · visitante)`);
         ok = false;
       }
 

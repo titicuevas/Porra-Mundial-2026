@@ -8,6 +8,10 @@
   const KO_PREVIEW_KEY = 'porra2026_ko_preview';
   /** Prueba local: true = dieciseisavos y octavos siempre abiertos. Volver a false en producción. */
   const KO_TEST_MODE = false;
+  /** Tarjeta hero «Campeón» en finales. false = oculta (código conservado). */
+  const SHOW_KO_FINALS_CHAMPION_HERO = false;
+  /** Aviso «Elige participante…» en finales. false = oculto (código conservado). */
+  const SHOW_KO_FINALS_PICK_PARTICIPANT_HINT = false;
 
   function initKoAccess() {
     try {
@@ -2282,10 +2286,6 @@
     return `<div class="ko-list-match ko-list-match--bronze-final${pick ? ' has-pick' : ''}" id="ko-mr-${m.id}">
       <div class="ko-bronze-final-header">
         <span class="ko-bronze-medal" aria-hidden="true">🥉</span>
-        <div>
-          <p class="ko-bronze-final-eyebrow">3.er y 4.º puesto</p>
-          <p class="ko-bronze-final-title">Partido por la medalla de bronce</p>
-        </div>
       </div>
       <div class="match-meta ko-bronze-final-meta">
         <span class="text-xs text-gray-500">${m.date}</span>
@@ -2309,10 +2309,6 @@
     return `<div class="ko-list-match ko-list-match--world-final${pick ? ' has-pick' : ''}${aligned ? ' ko-list-match--champion-aligned' : ''}" id="ko-mr-${m.id}">
       <div class="ko-world-final-header">
         <img src="/assets/wc-trophy.svg" class="ko-world-final-trophy" alt="" width="40" height="40" onerror="this.style.display='none'"/>
-        <div>
-          <p class="ko-world-final-eyebrow">Gran final</p>
-          <p class="ko-world-final-title">¿Quién levantará la Copa?</p>
-        </div>
       </div>
       <div class="match-meta ko-world-final-meta">
         <span class="text-xs text-gray-500">${m.date}</span>
@@ -2324,7 +2320,6 @@
         <span class="ko-vs ko-vs--final" aria-hidden="true">vs</span>
         ${koTeamPickBtnHTML(m, 'away')}
       </div>
-      ${champ ? '<p class="ko-world-final-hint">👑 Tu campeón (<strong>' + teamNameKoShort(champ, 16) + '</strong>) lleva corona en su bandera.</p>' : ''}
     </div>`;
   }
 
@@ -2364,10 +2359,11 @@
     }
     const countLabel = preview ? 'Vista previa' : locked ? (complete ? '✓ Completo · cerrado' : `${done}/${playable.length || total} · cerrado`) : (total ? (complete ? '✓ Completo' : `${done}/${playable.length || total}`) : '—');
     const countClass = preview ? 'text-blue-300 font-semibold text-xs' : locked ? (complete ? 'text-green-400 font-semibold text-xs' : 'text-gray-400 font-semibold text-xs') : (complete ? 'text-green-400 font-semibold text-xs' : 'text-yellow-500 font-semibold text-xs');
-    const footerNote = round.key === 'r3p' ? '3.er y 4.º puesto'
-      : round.key === 'r2' ? 'Final del Mundial'
+    const footerNote = (round.key === 'r3p' || round.key === 'r2') ? ''
       : !allDefined ? 'Clasificados oficiales · resto por definir'
       : (locked ? 'Pronósticos bloqueados' : 'Quiniela ' + round.label.toLowerCase());
+    const roundStatus = (round.key === 'r3p' || round.key === 'r2') ? ''
+      : `${total} partido${total === 1 ? '' : 's'} · toca al ganador`;
     const roundTheme = round.key === 'r3p' ? ' ko-round-card--bronze'
       : round.key === 'r2' ? ' ko-round-card--world-final' : '';
     return `<div class="group-card overflow-hidden ko-round-card${roundTheme}${complete ? ' group-complete' : ''}${locked ? ' ko-round-card--locked' : ''}${focus ? ' ko-round-card--focus' : ''}${secondary ? ' ko-round-card--secondary' : ''}${anyKnown && !allDefined ? ' ko-round-card--partial' : ''}" id="ko-round-${round.key}">
@@ -2376,12 +2372,12 @@
           <span class="text-xs font-black text-yellow-300 tracking-widest">RONDA</span>
           <span class="text-2xl font-black text-white">${round.short}</span>
         </div>
-        <span class="ko-round-status text-xs text-gray-500">${total} partido${total === 1 ? '' : 's'} · toca al ganador</span>
+        ${roundStatus ? `<span class="ko-round-status text-xs text-gray-500">${roundStatus}</span>` : ''}
       </div>
       ${statusBanner}
       <div>${koRoundMatchesHTML(round.matches, round.key)}</div>
-      <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap ko-round-card-footer">
-        <span class="text-xs text-gray-600">${footerNote}</span>
+      <div class="px-4 py-2 bg-gray-900 bg-opacity-50 flex items-center justify-between gap-2 flex-wrap ko-round-card-footer${footerNote ? '' : ' ko-round-card-footer--count-only'}">
+        ${footerNote ? `<span class="text-xs text-gray-600">${footerNote}</span>` : ''}
         <span id="koMatchCount-${round.key}" class="${countClass}">${countLabel}</span>
       </div>
     </div>`;
@@ -2459,11 +2455,13 @@
           showKoToast('koChampionToast', 4500);
         }
       }
-      const hero = document.getElementById('ko-finals-champion-hero');
-      if (hero) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = koFinalChampionHeroHTML();
-        hero.replaceWith(tmp.firstElementChild);
+      if (SHOW_KO_FINALS_CHAMPION_HERO) {
+        const hero = document.getElementById('ko-finals-champion-hero');
+        if (hero) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = koFinalChampionHeroHTML();
+          hero.replaceWith(tmp.firstElementChild);
+        }
       }
     }
     updateKoRoundCounts();
@@ -2634,7 +2632,7 @@
       const r3pPickable = isKoRoundPickable('r3p');
       const r2Pickable = isKoRoundPickable('r2');
       const finalsInner = [];
-      finalsInner.push(koFinalChampionHeroHTML());
+      if (SHOW_KO_FINALS_CHAMPION_HERO) finalsInner.push(koFinalChampionHeroHTML());
       finalsInner.push(koRoundCardHTML(KO_ROUNDS.r3p, {
         preview: finalsPreview && !r3pPickable,
         focus: true,
@@ -2648,7 +2646,7 @@
         suppressBanner: true
       }));
       parts.push('<div class="ko-finals-stack">' + finalsInner.join('') + '</div>');
-      if (!getActiveKoUser()) {
+      if (!getActiveKoUser() && SHOW_KO_FINALS_PICK_PARTICIPANT_HINT) {
         parts.push('<p class="ko-hint-callout ko-hint-callout--action ko-bracket-hint">👆 Elige <strong>participante</strong> arriba para marcar 3.er puesto y final.</p>');
       } else if (!KO_BRONZE_MATCHES.every(isMatchReady) || !KO_FINAL_MATCHES.every(isMatchReady)) {
         parts.push('<p class="ko-hint-callout ko-bracket-hint">⏳ Los cruces se rellenarán con <strong>resultados oficiales de semifinales</strong>. Tus pronósticos de semis no adelantan el cuadro.</p>');
@@ -3791,19 +3789,6 @@
     koPdfDrawFittedText(pdf, line, centerX, metaY, maxW, { size: 3.2, align: 'center' });
   }
 
-  /** Campeón especial guardado (PDF: sin revalidar bracket). */
-  function koPdfExportChampionCode(user, data) {
-    const fromData = data && data.extras && data.extras.champion;
-    if (fromData) return fromData;
-    try {
-      const raw = JSON.parse(localStorage.getItem('porra2026_knockout') || '{}');
-      const ex = raw.users && raw.users[user] && raw.users[user].extras;
-      return (ex && ex.champion) || '';
-    } catch (e) {
-      return '';
-    }
-  }
-
   const KO_PDF_TAG = {
     semi: { bg: [126, 34, 206], bgHi: [147, 51, 234], fg: [255, 255, 255], border: [216, 180, 254], fill: [31, 41, 55] },
     finalist: { bg: [234, 88, 12], bgHi: [249, 115, 22], fg: [255, 255, 255], border: [253, 186, 116], fill: [31, 41, 55] },
@@ -4066,48 +4051,6 @@
     return y + cardH + 2.5;
   }
 
-  /** Franja del campeón dentro de la caja de la final (PDF). */
-  function koPdfDrawChampionStrip(pdf, xOff, y, CW, h, champCode, cache, aligned) {
-    const pad = 1.8;
-    const labelW = 16;
-    pdf.setFillColor(32, 28, 14);
-    pdf.rect(xOff + 0.5, y, CW - 1, h, 'F');
-    pdf.setDrawColor(180, 140, 50);
-    pdf.setLineWidth(0.12);
-    pdf.line(xOff + pad, y + h - 0.1, xOff + CW - pad, y + h - 0.1);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(4);
-    pdf.setTextColor(251, 191, 36);
-    pdf.text('Campeón', xOff + pad, y + 3.4);
-
-    const nameX = xOff + pad + labelW;
-    if (champCode) {
-      let tx = nameX;
-      const img = cache[champCode];
-      if (img) {
-        pdf.addImage(img, 'PNG', tx, y + 1.1, KO_PDF.FLAG_W, KO_PDF.FLAG_H);
-        tx += KO_PDF.FLAG_W + 0.8;
-      }
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(5.2);
-      pdf.setTextColor(254, 243, 199);
-      koPdfDrawFittedText(pdf, teamNameKo(champCode), tx, y + 3.8, xOff + CW - pad - tx, { size: 5.2, align: 'left' });
-    } else {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(4.5);
-      pdf.setTextColor(148, 163, 184);
-      pdf.text('—', nameX, y + 3.6);
-    }
-
-    if (aligned) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(3.2);
-      pdf.setTextColor(134, 239, 172);
-      pdf.text('Coincide con la final', xOff + CW - pad, y + 3.4, { align: 'right' });
-    }
-  }
-
   function koPdfQualShort() {
     return '';
   }
@@ -4193,8 +4136,7 @@
 
   function koPdfDrawMatchColumn(pdf, matches, xOff, y, CW, picks, cache, label, ex, matchH, showSpecials, colOpts) {
     const { HEAD_H, FOOT_H, RADIUS } = KO_PDF;
-    const champStripH = colOpts && colOpts.championStrip ? 5.2 : 0;
-    const groupH = HEAD_H + champStripH + matches.length * matchH + FOOT_H;
+    const groupH = HEAD_H + matches.length * matchH + FOOT_H;
     const accent = colOpts && colOpts.accent === 'gold' ? [251, 191, 36]
       : colOpts && colOpts.accent === 'bronze' ? [180, 130, 70]
         : [96, 165, 250];
@@ -4220,11 +4162,7 @@
     pdf.setFont('helvetica', 'normal');
     pdf.text(`${done}/${matches.length}`, xOff + CW - 2.2, y + 4.2, { align: 'right' });
 
-    if (champStripH) {
-      koPdfDrawChampionStrip(pdf, xOff, y + HEAD_H, CW, champStripH, colOpts.championCode || '', cache, !!colOpts.championAligned);
-    }
-
-    let gy = y + HEAD_H + champStripH;
+    let gy = y + HEAD_H;
     matches.forEach((m, idx) => {
       koPdfDrawMatchRow(pdf, m, picks[m.id], xOff, gy + idx * matchH, CW, cache, idx % 2 === 1, ex, matchH, specials);
     });
@@ -4258,11 +4196,6 @@
     if (pdfKind === 'knockout') {
       data.extras.semis.concat(data.extras.finalists, [data.extras.champion]).filter(Boolean).forEach(c => codes.add(c));
     }
-    if (pdfKind === 'finales' && data.extras.champion) {
-      codes.add(data.extras.champion);
-    }
-    const pdfChampion = pdfKind === 'finales' ? koPdfExportChampionCode(user, data) : '';
-    if (pdfChampion) codes.add(pdfChampion);
     await Promise.all([...codes].map(c => typeof loadFlagDataUrl === 'function' ? loadFlagDataUrl(c) : null));
     const cache = typeof flagCache !== 'undefined' ? flagCache : {};
 
@@ -4323,18 +4256,10 @@
         if (!chunk.length) return;
         const fullWidth = pdfKind === 'cuartos' || pdfKind === 'semis' || pdfKind === 'finales' || chunks.length === 1;
         const colW = fullWidth ? cardW : CW;
-        const fin = KO_FINAL_MATCHES[0];
-        const kofPick = data.picks && data.picks['KOF-1'];
-        const champAligned = pdfChampion && kofPick && fin && (
-          (kofPick === 'home' && fin.home === pdfChampion) || (kofPick === 'away' && fin.away === pdfChampion)
-        );
         const colOpts = pdfKind === 'finales'
-          ? (round.key === 'r2'
-            ? { accent: 'gold', championStrip: true, championCode: pdfChampion, championAligned: champAligned }
-            : round.key === 'r3p' ? { accent: 'bronze' } : null)
+          ? (round.key === 'r2' ? { accent: 'gold' } : round.key === 'r3p' ? { accent: 'bronze' } : null)
           : null;
-        const champStripH = colOpts && colOpts.championStrip ? 5.2 : 0;
-        const groupH = KO_PDF.HEAD_H + champStripH + chunk.length * matchH + KO_PDF.FOOT_H;
+        const groupH = KO_PDF.HEAD_H + chunk.length * matchH + KO_PDF.FOOT_H;
         placeGroup(groupH, fullWidth);
         const xOff = fullWidth ? M : M + col * (CW + GAP);
         const label = (pdfKind === 'cuartos' || pdfKind === 'semis' || pdfKind === 'finales')

@@ -815,7 +815,9 @@ function buildLeaderboardPrizeSummaryHTML(sorted, prizeShares) {
 function leaderboardHasBreakdown(entries) {
   return (entries || []).some(e => {
     const b = e.breakdown;
-    return b && (b.grupos != null || b.r32 != null || b.r16 != null || b.r8 != null || b.semisEsp != null);
+    return b && (b.grupos != null || b.r32 != null || b.r16 != null || b.r8 != null
+      || b.r4 != null || b.r3p != null || b.r2 != null
+      || b.semisEsp != null || b.finalistEsp != null || b.championEsp != null);
   });
 }
 
@@ -827,7 +829,9 @@ function leaderboardBreakdownSubHTML(e) {
   if (b.r32 != null) chips.push({ label: '16av.', val: b.r32 });
   if (b.r16 != null) chips.push({ label: 'Oct.', val: b.r16 });
   if (b.r8 != null) chips.push({ label: '4t.', val: b.r8 });
+  if (b.r4 != null) chips.push({ label: 'Sem.', val: b.r4 });
   if (b.semisEsp != null) chips.push({ label: 'S.esp.', val: b.semisEsp });
+  if (b.finalistEsp != null) chips.push({ label: 'F.esp.', val: b.finalistEsp });
   if (!chips.length) return '';
   return '<span class="leaderboard-name-sub">' + chips.map(c =>
     '<span class="leaderboard-breakdown-chip"><span class="leaderboard-breakdown-chip-label">' + c.label + '</span>'
@@ -958,6 +962,7 @@ function finalistFlagCell(code) {
 }
 
 function championFlagCell(code) {
+  if (!code) return '<span class="champion-pick-empty" aria-label="Sin campeón"><span class="champion-pick-empty__icon" aria-hidden="true">🏆</span></span>';
   return koPickFlagCell(code, isChampionPickEliminated);
 }
 
@@ -1003,12 +1008,16 @@ function leaderboardBreakdownCells(e, showCols) {
   const r32 = b.r32 != null ? b.r32 : '—';
   const r16 = b.r16 != null ? b.r16 : '—';
   const r8 = b.r8 != null ? b.r8 : '—';
+  const r4 = b.r4 != null ? b.r4 : '—';
   const semisEsp = b.semisEsp != null ? b.semisEsp : '—';
+  const finalistEsp = b.finalistEsp != null ? b.finalistEsp : '—';
   return '<td class="leaderboard-breakdown-col">' + g + '</td>'
     + '<td class="leaderboard-breakdown-col">' + r32 + '</td>'
     + '<td class="leaderboard-breakdown-col">' + r16 + '</td>'
     + '<td class="leaderboard-breakdown-col">' + r8 + '</td>'
-    + '<td class="leaderboard-breakdown-col leaderboard-extras-col">' + semisEsp + '</td>';
+    + '<td class="leaderboard-breakdown-col">' + r4 + '</td>'
+    + '<td class="leaderboard-breakdown-col leaderboard-extras-col">' + semisEsp + '</td>'
+    + '<td class="leaderboard-breakdown-col leaderboard-extras-col">' + finalistEsp + '</td>';
 }
 
 function renderLeaderboard() {

@@ -308,7 +308,7 @@ body.modal-open{overflow:hidden;}
 .leaderboard-table.leaderboard-table--breakdown td.leaderboard-breakdown-col{font-size:.78rem;padding:.48rem .3rem;}
 .leaderboard-scroll{-webkit-overflow-scrolling:touch;margin:0 -.15rem;padding:0 .15rem;}
 .leaderboard-scroll .leaderboard-table{min-width:min(100%,18rem);}
-.leaderboard-table.leaderboard-table--breakdown{min-width:24rem;}
+.leaderboard-table.leaderboard-table--breakdown{min-width:28rem;}
 .leaderboard-table.leaderboard-table--breakdown th.leaderboard-extras-col,
 .leaderboard-table.leaderboard-table--breakdown td.leaderboard-extras-col{color:#fca5a5;}
 .semis-picks-section{margin-top:1.25rem;}
@@ -317,6 +317,10 @@ body.modal-open{overflow:hidden;}
 .semis-picks-table th.finalist-pick-head{background:#4a5568;color:#e2e8f0;text-align:center;}
 .semis-picks-table th.champion-pick-head{background:#ca8a04;color:#1c1917;text-align:center;}
 .semis-picks-table th.champion-pick-head span{font-size:.95em;line-height:1;}
+.semis-picks-table td.champion-pick-col{text-align:center;vertical-align:middle;background:rgba(202,138,4,.07);}
+.semis-picks-table td.champion-pick-col .semis-pick-flag{display:inline-flex;margin:0 auto;}
+.champion-pick-empty{display:inline-flex;align-items:center;justify-content:center;min-width:2.35rem;min-height:2rem;margin:0 auto;border-radius:10px;background:rgba(15,23,42,.72);border:1px dashed rgba(250,204,21,.32);line-height:1;}
+.champion-pick-empty__icon{font-size:1rem;opacity:.55;filter:grayscale(.15);}
 .semis-picks-table .col-h-short{display:none;}
 .semis-picks-table td.semis-pick-col{text-align:center;padding:.45rem .35rem;}
 .semis-picks-table td.leaderboard-name{max-width:11rem;}
@@ -334,22 +338,6 @@ body.modal-open{overflow:hidden;}
   .ko-finals-champion-hero__meta{display:flex;flex-direction:column;align-items:center;}
   .ko-finals-champion-hero__name{font-size:1.05rem;}
   .ko-finals-champion-hero__status{font-size:.72rem;}
-  .ko-list-pair--world-final,
-  .ko-list-pair--bronze-final{grid-template-columns:1fr;gap:.45rem;}
-  .ko-list-pair--world-final .ko-vs--final,
-  .ko-list-pair--bronze-final .ko-vs--bronze{display:none;}
-  .ko-list-pair--world-final .ko-team-pick,
-  .ko-list-pair--bronze-final .ko-team-pick{min-height:3.75rem;min-width:0;touch-action:manipulation;}
-  .ko-list-pair--world-final .ko-team-pick .flag-icon,
-  .ko-list-pair--bronze-final .ko-team-pick .flag-icon{width:30px!important;}
-  .ko-list-pair--world-final .ko-team-pick .ko-team-name,
-  .ko-list-pair--bronze-final .ko-team-pick .ko-team-name{font-size:.86rem;}
-  .ko-list-match--world-final,
-  .ko-list-match--bronze-final{padding:.7rem .55rem .75rem;}
-  .ko-world-final-header,
-  .ko-bronze-final-header{flex-wrap:wrap;}
-  .ko-world-final-title,
-  .ko-bronze-final-title{font-size:.82rem;}
   .ko-finals-stack{gap:.7rem;}
   .leaderboard-scroll{overflow-x:visible;margin:0;padding:0;}
   .leaderboard-scroll .leaderboard-table.leaderboard-table--breakdown{min-width:0;width:100%;}
@@ -378,7 +366,7 @@ body.modal-open{overflow:hidden;}
   .semis-picks-table td.leaderboard-name{max-width:14rem;}
 }
 @media(min-width:520px){
-  .leaderboard-table.leaderboard-table--breakdown{min-width:36rem;}
+  .leaderboard-table.leaderboard-table--breakdown{min-width:42rem;}
   .leaderboard-table.leaderboard-table--breakdown .leaderboard-breakdown-col{display:table-cell;}
   .leaderboard-table.leaderboard-table--breakdown .leaderboard-name-sub{display:none;}
   .leaderboard-table.leaderboard-table--breakdown td.leaderboard-name{white-space:nowrap;max-width:11rem;}
@@ -653,6 +641,9 @@ body.modal-open{overflow:hidden;}
 .ko-access-code-inline-btn:active{transform:scale(.98);}
 .ko-access-code-inline-text{font-size:.82rem;font-weight:600;line-height:1.45;flex:1 1 12rem;min-width:0;}
 .ko-round-card-footer{align-items:center!important;}
+.ko-round-card-footer--count-only{justify-content:flex-end!important;}
+.ko-finals-champion-hero__pick:not(.is-filled) .ko-finals-champion-hero__meta{flex:1;display:flex;align-items:center;justify-content:space-between;gap:.5rem;min-width:0;}
+.ko-finals-champion-hero__pick:not(.is-filled) .ko-finals-champion-hero__name{margin:0;flex:0 0 auto;}
 .ko-bracket-scroll-wrap{position:relative;margin:0 -.25rem;}
 .ko-scroll-hint{display:none;font-size:.68rem;color:#64748b;text-align:center;margin:0 0 .5rem;font-weight:600;}
 .ko-bracket-board{display:flex;align-items:stretch;gap:.35rem;overflow-x:auto;padding:.5rem .35rem 1rem;-webkit-overflow-scrolling:touch;min-height:26rem;overflow-anchor:none;scroll-behavior:auto;scrollbar-width:thin;scrollbar-color:#475569 #111827;}
@@ -938,18 +929,22 @@ body.modal-open{overflow:hidden;}
 .ko-finals-champion-hero__status--out{background:rgba(239,68,68,.12);color:#fecaca;border:1px solid rgba(239,68,68,.35);}
 .ko-finals-champion-hero__status--pick{background:rgba(59,130,246,.12);color:#bfdbfe;border:1px solid rgba(59,130,246,.35);}
 .ko-finals-champion-hero__status--wait,.ko-finals-champion-hero__status--muted{background:rgba(30,41,59,.65);color:#9ca3af;border:1px solid rgba(71,85,105,.45);}
-.ko-list-match--world-final{padding:.75rem .55rem .85rem;border:2px solid rgba(250,204,21,.45);border-radius:14px;margin:.35rem 0;background:linear-gradient(180deg,rgba(26,39,68,.55) 0%,rgba(15,23,42,.85) 100%);}
+.ko-list-match--world-final{padding:.75rem .55rem .85rem;border:2px solid rgba(250,204,21,.45);border-radius:14px;margin:.35rem 0;background:linear-gradient(180deg,rgba(26,39,68,.55) 0%,rgba(15,23,42,.85) 100%);width:100%;box-sizing:border-box;}
 .ko-list-match--world-final.ko-list-match--champion-aligned{border-color:#22c55e;box-shadow:0 0 0 1px rgba(34,197,94,.3);}
 .ko-world-final-header{display:flex;align-items:center;gap:.55rem;margin-bottom:.45rem;}
 .ko-world-final-trophy{width:2.35rem;height:2.35rem;object-fit:contain;flex-shrink:0;}
 .ko-world-final-eyebrow{margin:0;font-size:.6rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fcd34d;}
 .ko-world-final-title{margin:.05rem 0 0;font-size:.92rem;font-weight:800;color:#fff;line-height:1.25;}
 .ko-world-final-meta{margin-bottom:.35rem!important;}
-.ko-list-pair--world-final{display:grid;grid-template-columns:1fr auto 1fr;gap:.35rem;align-items:stretch;}
-.ko-list-pair--world-final .ko-team-pick{min-height:4.75rem;padding:.62rem .5rem;}
+.ko-list-pair--world-final{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:.35rem;align-items:stretch;width:100%;}
+.ko-list-pair--world-final .ko-team-pick{min-height:4.75rem;padding:.62rem .5rem;width:100%;min-width:0;}
+.ko-list-pair--world-final .ko-team-pick--home .ko-team-pick-main{justify-content:flex-start;}
+.ko-list-pair--world-final .ko-team-pick--away .ko-team-pick-main{justify-content:flex-end;}
 .ko-list-pair--world-final .ko-team-pick .flag-icon{width:26px!important;height:auto!important;}
-.ko-list-pair--world-final .ko-team-pick .ko-team-name{font-size:.82rem;white-space:normal;line-height:1.2;}
-.ko-vs--final{align-self:center;font-size:.72rem;font-weight:800;color:#facc15;padding:0 .1rem;}
+.ko-list-pair--world-final .ko-team-pick .ko-team-name{font-size:.82rem;white-space:normal;line-height:1.2;flex:1 1 auto;min-width:0;max-width:none;}
+.ko-list-pair--world-final .ko-team-pick--home .ko-team-name{text-align:left;}
+.ko-list-pair--world-final .ko-team-pick--away .ko-team-name{text-align:right;}
+.ko-vs--final{align-self:center;font-size:.72rem;font-weight:800;color:#facc15;padding:0 .1rem;flex-shrink:0;}
 .ko-world-final-hint{margin:.55rem 0 0;font-size:.7rem;font-weight:600;color:#9ca3af;text-align:center;line-height:1.4;}
 .ko-world-final-hint strong{color:#fde68a;}
 .ko-champion-crown{font-size:.95rem;line-height:1;flex-shrink:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));}
@@ -963,17 +958,59 @@ body.modal-open{overflow:hidden;}
 .ko-round-card--world-final{border-color:rgba(250,204,21,.4);}
 .ko-round-card--world-final .group-header{background:linear-gradient(90deg,rgba(120,90,20,.35),rgba(15,23,42,.95));}
 .ko-round-card--world-final.ko-round-card--focus{border-color:rgba(250,204,21,.6);box-shadow:0 0 0 2px rgba(250,204,21,.22);}
-.ko-list-match--bronze-final{padding:.75rem .55rem .85rem;border:2px solid rgba(180,130,70,.42);border-radius:14px;margin:.35rem 0;background:linear-gradient(180deg,rgba(40,32,22,.55) 0%,rgba(15,23,42,.85) 100%);}
+.ko-list-match--bronze-final{padding:.75rem .55rem .85rem;border:2px solid rgba(180,130,70,.42);border-radius:14px;margin:.35rem 0;background:linear-gradient(180deg,rgba(40,32,22,.55) 0%,rgba(15,23,42,.85) 100%);width:100%;box-sizing:border-box;}
 .ko-bronze-final-header{display:flex;align-items:center;gap:.55rem;margin-bottom:.45rem;}
 .ko-bronze-medal{font-size:1.65rem;line-height:1;flex-shrink:0;}
 .ko-bronze-final-eyebrow{margin:0;font-size:.6rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#d4a574;}
 .ko-bronze-final-title{margin:.05rem 0 0;font-size:.88rem;font-weight:800;color:#fff;line-height:1.25;}
 .ko-bronze-final-meta{margin-bottom:.35rem!important;}
-.ko-list-pair--bronze-final{display:grid;grid-template-columns:1fr auto 1fr;gap:.35rem;align-items:stretch;}
-.ko-list-pair--bronze-final .ko-team-pick{min-height:4.75rem;padding:.62rem .5rem;}
+.ko-list-pair--bronze-final{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:.35rem;align-items:stretch;width:100%;}
+.ko-list-pair--bronze-final .ko-team-pick{min-height:4.75rem;padding:.62rem .5rem;width:100%;min-width:0;}
+.ko-list-pair--bronze-final .ko-team-pick--home .ko-team-pick-main{justify-content:flex-start;}
+.ko-list-pair--bronze-final .ko-team-pick--away .ko-team-pick-main{justify-content:flex-end;}
 .ko-list-pair--bronze-final .ko-team-pick .flag-icon{width:26px!important;height:auto!important;}
-.ko-list-pair--bronze-final .ko-team-pick .ko-team-name{font-size:.82rem;white-space:normal;line-height:1.2;}
-.ko-vs--bronze{align-self:center;font-size:.72rem;font-weight:800;color:#d4a574;padding:0 .1rem;}
+.ko-list-pair--bronze-final .ko-team-pick .ko-team-name{font-size:.82rem;white-space:normal;line-height:1.2;flex:1 1 auto;min-width:0;max-width:none;}
+.ko-list-pair--bronze-final .ko-team-pick--home .ko-team-name{text-align:left;}
+.ko-list-pair--bronze-final .ko-team-pick--away .ko-team-name{text-align:right;}
+.ko-vs--bronze{align-self:center;font-size:.72rem;font-weight:800;color:#d4a574;padding:0 .1rem;flex-shrink:0;}
+
+/* Finales — móvil: siempre horizontal, columnas equilibradas */
+@media(max-width:767px){
+  .ko-list-pair--world-final,
+  .ko-list-pair--bronze-final{
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+    gap:.3rem;
+    width:100%;
+  }
+  .ko-list-pair--world-final .ko-vs--final,
+  .ko-list-pair--bronze-final .ko-vs--bronze{display:flex;}
+  .ko-list-pair--world-final .ko-team-pick,
+  .ko-list-pair--bronze-final .ko-team-pick{
+    min-height:3.5rem;
+    padding:.5rem .38rem;
+    width:100%;
+    min-width:0;
+  }
+  .ko-list-pair--world-final .ko-team-pick .flag-icon,
+  .ko-list-pair--bronze-final .ko-team-pick .flag-icon{width:24px!important;}
+  .ko-list-pair--world-final .ko-team-pick .ko-team-name,
+  .ko-list-pair--bronze-final .ko-team-pick .ko-team-name{
+    font-size:.76rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .ko-list-match--world-final,
+  .ko-list-match--bronze-final{
+    width:100%;
+    box-sizing:border-box;
+    padding:.65rem .5rem .7rem;
+    margin-left:0;
+    margin-right:0;
+  }
+  .ko-world-final-header,
+  .ko-bronze-final-header{justify-content:flex-start;}
+}
 
 @media(min-width:640px){
   .ko-finals-stack{gap:1rem;}
@@ -985,11 +1022,47 @@ body.modal-open{overflow:hidden;}
     grid-template-columns:1fr 1fr;
     grid-template-areas:"hero hero" "bronze final";
     gap:1rem 1.1rem;
-    align-items:start;
+    align-items:stretch;
   }
   .ko-finals-stack .ko-finals-champion-hero{grid-area:hero;margin-bottom:0;}
-  .ko-finals-stack .ko-round-card--bronze{grid-area:bronze;margin-bottom:0;}
-  .ko-finals-stack .ko-round-card--world-final{grid-area:final;margin-bottom:0;}
+  .ko-finals-stack .ko-round-card--bronze,
+  .ko-finals-stack .ko-round-card--world-final{
+    grid-area:bronze;
+    margin-bottom:0;
+    display:flex;
+    flex-direction:column;
+    height:100%;
+  }
+  .ko-finals-stack .ko-round-card--world-final{grid-area:final;}
+  .ko-finals-stack .ko-round-card--bronze > div:nth-child(2),
+  .ko-finals-stack .ko-round-card--world-final > div:nth-child(2){
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .ko-finals-stack .ko-round-matches--stack{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  .ko-finals-stack .ko-list-match--bronze-final,
+  .ko-finals-stack .ko-list-match--world-final{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  .ko-finals-stack .ko-list-pair--bronze-final,
+  .ko-finals-stack .ko-list-pair--world-final{
+    flex:1;
+    align-items:stretch;
+    width:100%;
+  }
+  .ko-finals-stack .ko-list-pair--bronze-final .ko-team-pick,
+  .ko-finals-stack .ko-list-pair--world-final .ko-team-pick{
+    height:100%;
+    min-height:4.75rem;
+  }
   .ko-finals-stack--preview .ko-round-card--bronze{grid-area:bronze;}
   .ko-finals-stack--preview .ko-round-card--world-final{grid-area:final;}
 }
@@ -1202,8 +1275,17 @@ body{overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom,0);}
   .ko-bracket-locked p{font-size:.82rem!important;}
   .ko-round-card-footer{flex-direction:column!important;align-items:flex-start!important;gap:.35rem!important;padding:.65rem .75rem!important;}
   .ko-round-card-footer .text-xs{width:100%;}
+  .ko-round-card--bronze .ko-round-card-footer--count-only,
+  .ko-round-card--world-final .ko-round-card-footer--count-only{
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    padding:.6rem .75rem!important;
+  }
+  .champion-pick-empty{min-width:2.1rem;min-height:1.85rem;}
   .ko-round-card{scroll-margin-top:4.25rem;margin-bottom:.55rem;}
   .ko-finals-stack .ko-round-card{margin-bottom:0;}
+  .ko-finals-stack .ko-round-card > div:nth-child(2){padding:0 .35rem .15rem;width:100%;box-sizing:border-box;}
   .ko-finals-champion-hero{scroll-margin-top:4.25rem;}
   #koStatus{font-size:.72rem!important;line-height:1.45;}
   #koBracketSection h3{font-size:.95rem;margin-bottom:.45rem;}

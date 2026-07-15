@@ -428,6 +428,14 @@
     "KO4-2": {
       "home": "gb-eng",
       "away": "ar"
+    },
+    "KOB-1": {
+      "home": "fr",
+      "away": "gb-eng"
+    },
+    "KOF-1": {
+      "home": "es",
+      "away": "ar"
     }
   },
   "KO16-1": {
@@ -489,5 +497,10 @@
     "home": 0,
     "away": 2,
     "winner": "es"
+  },
+  "KO4-2": {
+    "home": 1,
+    "away": 2,
+    "winner": "ar"
   }
 }
